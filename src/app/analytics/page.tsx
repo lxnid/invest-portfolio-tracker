@@ -5,143 +5,160 @@ import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp,
   TrendingDown,
-  BarChart3,
   PieChart,
-  Calendar,
+  BarChart3,
+  Target,
 } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPie,
+  Pie,
+  Cell,
+} from "recharts";
 
-// Mock analytics data - will be replaced with real calculations
-const mockAnalytics = {
-  performanceData: [
-    { month: "Aug", value: 1850000 },
-    { month: "Sep", value: 1920000 },
-    { month: "Oct", value: 2100000 },
-    { month: "Nov", value: 2050000 },
-    { month: "Dec", value: 2280000 },
-    { month: "Jan", value: 2450000 },
-  ],
-  sectorAllocation: [
-    { sector: "Banking", value: 45, color: "#10b981" },
-    { sector: "Diversified", value: 28, color: "#14b8a6" },
-    { sector: "Manufacturing", value: 15, color: "#f59e0b" },
-    { sector: "Hotels", value: 12, color: "#8b5cf6" },
-  ],
-  topPerformers: [
-    { symbol: "LOLC.N0000", name: "LOLC Holdings", gain: 24.89 },
-    { symbol: "COMB.N0000", name: "Commercial Bank", gain: 14.21 },
-    { symbol: "HNB.N0000", name: "Hatton National Bank", gain: 7.16 },
-  ],
-  worstPerformers: [
-    { symbol: "JKH.N0000", name: "John Keells Holdings", loss: -4.31 },
-  ],
-  monthlyReturns: {
-    current: 7.46,
-    previous: 10.98,
-    ytd: 16.67,
-  },
-};
+// Mock performance data
+const performanceData = [
+  { month: "Aug", value: 1850000 },
+  { month: "Sep", value: 1920000 },
+  { month: "Oct", value: 2050000 },
+  { month: "Nov", value: 1980000 },
+  { month: "Dec", value: 2180000 },
+  { month: "Jan", value: 2450000 },
+];
+
+const sectorData = [
+  { name: "Financial", value: 45, color: "#60a5fa" },
+  { name: "Diversified", value: 25, color: "#5eead4" },
+  { name: "Manufacturing", value: 18, color: "#a78bfa" },
+  { name: "Hotels", value: 12, color: "#fbbf24" },
+];
+
+const topPerformers = [
+  { symbol: "LOLC.N0000", return: 24.89 },
+  { symbol: "COMB.N0000", return: 14.21 },
+  { symbol: "HNB.N0000", return: 7.16 },
+];
+
+const underPerformers = [{ symbol: "JKH.N0000", return: -4.31 }];
 
 export default function AnalyticsPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-100">Analytics</h1>
-          <p className="text-zinc-400 mt-1">
-            Performance insights and portfolio analysis
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-2">
-            <Calendar className="h-3 w-3" />
-            Last 6 months
-          </Badge>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-[#f5f5f5]">Analytics</h1>
+        <p className="text-[#8a8a8a] mt-1">
+          Performance insights and portfolio analysis
+        </p>
       </div>
 
       {/* Performance Summary */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              This Month
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-              <p className="text-3xl font-bold text-emerald-400">
-                +{mockAnalytics.monthlyReturns.current}%
-              </p>
-            </div>
-            <p className="text-sm text-zinc-500 mt-1">
-              LKR {(2450000 * 0.0746).toLocaleString()} gained
-            </p>
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Last Month
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-              <p className="text-3xl font-bold text-zinc-100">
-                +{mockAnalytics.monthlyReturns.previous}%
-              </p>
+          <CardContent className="pt-5 pb-4">
+            <p className="text-sm text-[#8a8a8a]">This Month</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-2xl font-bold text-[#4ade80]">+12.38%</p>
+              <TrendingUp className="h-5 w-5 text-[#4ade80]" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Year to Date
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-              <p className="text-3xl font-bold text-zinc-100">
-                +{mockAnalytics.monthlyReturns.ytd}%
-              </p>
+          <CardContent className="pt-5 pb-4">
+            <p className="text-sm text-[#8a8a8a]">Last Month</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-2xl font-bold text-[#f87171]">-3.43%</p>
+              <TrendingDown className="h-5 w-5 text-[#f87171]" />
             </div>
-            <p className="text-sm text-zinc-500 mt-1">vs ASI: +12.4%</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5 pb-4">
+            <p className="text-sm text-[#8a8a8a]">Year to Date</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-2xl font-bold text-[#4ade80]">+16.67%</p>
+              <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5 pb-4">
+            <p className="text-sm text-[#8a8a8a]">vs ASI</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-2xl font-bold text-[#4ade80]">+8.42%</p>
+              <Target className="h-5 w-5 text-[#5eead4]" />
+            </div>
+            <p className="text-xs text-[#8a8a8a] mt-1">Outperforming</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts Row */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Portfolio Performance Chart Placeholder */}
-        <Card className="col-span-1">
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Portfolio Value Over Time */}
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
+              <BarChart3 className="h-5 w-5 text-[#5eead4]" />
               Portfolio Value Over Time
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-end justify-between gap-2 px-4">
-              {mockAnalytics.performanceData.map((data, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center gap-2 flex-1"
-                >
-                  <div
-                    className="w-full bg-gradient-to-t from-emerald-500 to-teal-500 rounded-t-sm transition-all hover:opacity-80"
-                    style={{
-                      height: `${((data.value - 1800000) / 700000) * 100}%`,
-                      minHeight: "20px",
-                    }}
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={performanceData}>
+                  <XAxis
+                    dataKey="month"
+                    stroke="#666666"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
                   />
-                  <span className="text-xs text-zinc-500">{data.month}</span>
-                </div>
-              ))}
+                  <YAxis
+                    stroke="#666666"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) =>
+                      `${(value / 1000000).toFixed(1)}M`
+                    }
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#262626",
+                      border: "1px solid #3a3a3a",
+                      borderRadius: "8px",
+                      color: "#f5f5f5",
+                    }}
+                    formatter={(value: number) => [
+                      `LKR ${value.toLocaleString()}`,
+                      "Value",
+                    ]}
+                  />
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#5eead4" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#5eead4" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#5eead4"
+                    strokeWidth={2}
+                    dot={false}
+                    fill="url(#colorValue)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -150,63 +167,49 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
+              <PieChart className="h-5 w-5 text-[#a78bfa]" />
               Sector Allocation
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-8">
-              {/* Pie Chart Placeholder */}
-              <div className="relative h-48 w-48 flex-shrink-0">
-                <svg viewBox="0 0 100 100" className="rotate-[-90deg]">
-                  {
-                    mockAnalytics.sectorAllocation.reduce<{
-                      elements: React.ReactNode[];
-                      offset: number;
-                    }>(
-                      (acc, sector, i) => {
-                        const circumference = 2 * Math.PI * 40;
-                        const strokeDasharray = `${(sector.value / 100) * circumference} ${circumference}`;
-                        const strokeDashoffset =
-                          -acc.offset * (circumference / 100);
-
-                        acc.elements.push(
-                          <circle
-                            key={i}
-                            cx="50"
-                            cy="50"
-                            r="40"
-                            fill="none"
-                            stroke={sector.color}
-                            strokeWidth="20"
-                            strokeDasharray={strokeDasharray}
-                            strokeDashoffset={strokeDashoffset}
-                            className="transition-all"
-                          />,
-                        );
-                        acc.offset += sector.value;
-                        return acc;
-                      },
-                      { elements: [], offset: 0 },
-                    ).elements
-                  }
-                </svg>
+              <div className="h-48 w-48 shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPie>
+                    <Pie
+                      data={sectorData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {sectorData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#262626",
+                        border: "1px solid #3a3a3a",
+                        borderRadius: "8px",
+                        color: "#f5f5f5",
+                      }}
+                      formatter={(value: number) => [`${value}%`, "Allocation"]}
+                    />
+                  </RechartsPie>
+                </ResponsiveContainer>
               </div>
-
-              {/* Legend */}
-              <div className="space-y-3 flex-1">
-                {mockAnalytics.sectorAllocation.map((sector, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: sector.color }}
-                      />
-                      <span className="text-sm text-zinc-300">
-                        {sector.sector}
-                      </span>
-                    </div>
-                    <span className="text-sm font-medium text-zinc-100">
+              <div className="flex-1 space-y-3">
+                {sectorData.map((sector) => (
+                  <div key={sector.name} className="flex items-center gap-3">
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: sector.color }}
+                    />
+                    <span className="text-[#a8a8a8] flex-1">{sector.name}</span>
+                    <span className="font-mono text-[#f5f5f5] font-medium">
                       {sector.value}%
                     </span>
                   </div>
@@ -217,88 +220,105 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
-      {/* Top/Worst Performers */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Top & Under Performers */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-emerald-400">
-              <TrendingUp className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-[#4ade80]" />
               Top Performers
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockAnalytics.topPerformers.map((stock, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20"
-                >
-                  <div>
-                    <p className="font-medium text-zinc-100">{stock.symbol}</p>
-                    <p className="text-sm text-zinc-400">{stock.name}</p>
-                  </div>
-                  <Badge variant="success">+{stock.gain.toFixed(2)}%</Badge>
+          <CardContent className="space-y-3">
+            {topPerformers.map((stock, index) => (
+              <div
+                key={stock.symbol}
+                className="flex items-center justify-between p-3 rounded-lg bg-[#333333]"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-[#8a8a8a] font-mono text-sm">
+                    #{index + 1}
+                  </span>
+                  <span className="font-semibold text-[#f5f5f5]">
+                    {stock.symbol}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <Badge variant="success">+{stock.return.toFixed(2)}%</Badge>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-400">
-              <TrendingDown className="h-5 w-5" />
-              Underperformers
+            <CardTitle className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-[#f87171]" />
+              Under Performers
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockAnalytics.worstPerformers.map((stock, i) => (
+          <CardContent className="space-y-3">
+            {underPerformers.length > 0 ? (
+              underPerformers.map((stock, index) => (
                 <div
-                  key={i}
-                  className="flex items-center justify-between p-3 rounded-lg bg-red-500/5 border border-red-500/20"
+                  key={stock.symbol}
+                  className="flex items-center justify-between p-3 rounded-lg bg-[#333333]"
                 >
-                  <div>
-                    <p className="font-medium text-zinc-100">{stock.symbol}</p>
-                    <p className="text-sm text-zinc-400">{stock.name}</p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[#8a8a8a] font-mono text-sm">
+                      #{index + 1}
+                    </span>
+                    <span className="font-semibold text-[#f5f5f5]">
+                      {stock.symbol}
+                    </span>
                   </div>
-                  <Badge variant="destructive">{stock.loss.toFixed(2)}%</Badge>
+                  <Badge variant="destructive">
+                    {stock.return.toFixed(2)}%
+                  </Badge>
                 </div>
-              ))}
-              {mockAnalytics.worstPerformers.length === 1 && (
-                <p className="text-center text-zinc-500 py-4">
-                  Only 1 underperforming stock - great job!
-                </p>
-              )}
-            </div>
+              ))
+            ) : (
+              <p className="text-[#8a8a8a] text-center py-4">
+                No underperformers — great job!
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* ASI Comparison */}
+      {/* Benchmark Comparison */}
       <Card>
         <CardHeader>
           <CardTitle>Benchmark Comparison</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-4 rounded-lg bg-zinc-800/50">
-              <p className="text-sm text-zinc-400 mb-2">Your Portfolio</p>
-              <p className="text-3xl font-bold text-emerald-400">+16.67%</p>
-              <p className="text-xs text-zinc-500 mt-1">YTD Return</p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[#a8a8a8]">Your Portfolio</span>
+              <span className="font-bold text-[#4ade80]">+16.67%</span>
             </div>
-            <div className="text-center p-4 rounded-lg bg-zinc-800/50">
-              <p className="text-sm text-zinc-400 mb-2">ASPI Index</p>
-              <p className="text-3xl font-bold text-zinc-100">+12.40%</p>
-              <p className="text-xs text-zinc-500 mt-1">YTD Return</p>
+            <div className="h-3 rounded-full bg-[#333333] overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#5eead4] to-[#2dd4bf] rounded-full"
+                style={{ width: "67%" }}
+              />
             </div>
-            <div className="text-center p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-              <p className="text-sm text-zinc-400 mb-2">Alpha Generated</p>
-              <p className="text-3xl font-bold text-emerald-400">+4.27%</p>
-              <p className="text-xs text-emerald-400 mt-1">
-                Beating the market!
-              </p>
+            <div className="flex items-center justify-between">
+              <span className="text-[#a8a8a8]">
+                ASPI (All Share Price Index)
+              </span>
+              <span className="font-bold text-[#f5f5f5]">+8.25%</span>
             </div>
+            <div className="h-3 rounded-full bg-[#333333] overflow-hidden">
+              <div
+                className="h-full bg-[#60a5fa] rounded-full"
+                style={{ width: "33%" }}
+              />
+            </div>
+            <p className="text-sm text-[#8a8a8a] pt-2">
+              Your portfolio is outperforming the ASI benchmark by{" "}
+              <span className="text-[#4ade80] font-medium">8.42%</span> this
+              year.
+            </p>
           </div>
         </CardContent>
       </Card>

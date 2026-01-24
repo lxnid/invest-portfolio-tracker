@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Plus,
   ShieldCheck,
   AlertTriangle,
@@ -15,7 +23,11 @@ import {
   BarChart3,
   Pencil,
   Trash2,
-  Power,
+  ToggleLeft,
+  ToggleRight,
+  Target,
+  PieChart,
+  X,
 } from "lucide-react";
 
 type RuleType =
@@ -84,20 +96,27 @@ const mockRules: TradingRule[] = [
   },
 ];
 
-const ruleTypeIcons: Record<RuleType, React.ElementType> = {
-  POSITION_SIZE: Percent,
-  STOP_LOSS: TrendingDown,
-  TAKE_PROFIT: BarChart3,
-  SECTOR_LIMIT: BarChart3,
-  TRADE_FREQUENCY: Clock,
-};
-
-const ruleTypeColors: Record<RuleType, string> = {
-  POSITION_SIZE: "text-blue-400 bg-blue-500/20",
-  STOP_LOSS: "text-red-400 bg-red-500/20",
-  TAKE_PROFIT: "text-emerald-400 bg-emerald-500/20",
-  SECTOR_LIMIT: "text-purple-400 bg-purple-500/20",
-  TRADE_FREQUENCY: "text-amber-400 bg-amber-500/20",
+const ruleTypeConfig: Record<
+  RuleType,
+  { icon: React.ElementType; label: string; color: string }
+> = {
+  POSITION_SIZE: {
+    icon: Percent,
+    label: "Position Size",
+    color: "text-[#60a5fa]",
+  },
+  STOP_LOSS: {
+    icon: TrendingDown,
+    label: "Stop Loss",
+    color: "text-[#f87171]",
+  },
+  TAKE_PROFIT: { icon: Target, label: "Take Profit", color: "text-[#4ade80]" },
+  SECTOR_LIMIT: {
+    icon: PieChart,
+    label: "Sector Limit",
+    color: "text-[#a78bfa]",
+  },
+  TRADE_FREQUENCY: { icon: Clock, label: "Frequency", color: "text-[#fbbf24]" },
 };
 
 export default function RulesPage() {
@@ -107,13 +126,13 @@ export default function RulesPage() {
   const totalViolations = mockRules.reduce((sum, r) => sum + r.violations, 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-100">Trading Rules</h1>
-          <p className="text-zinc-400 mt-1">
-            Personal discipline rules to avoid psychological trading traps
+          <h1 className="text-3xl font-bold text-[#f5f5f5]">Trading Rules</h1>
+          <p className="text-[#8a8a8a] mt-1">
+            Personal discipline rules to minimize psychological trading traps
           </p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
@@ -122,59 +141,81 @@ export default function RulesPage() {
         </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* Summary Stats */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Active Rules
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-emerald-500" />
-              <p className="text-2xl font-bold text-zinc-100">
-                {activeRules.length}
-              </p>
-              <span className="text-zinc-500">/ {mockRules.length}</span>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#8a8a8a]">Active Rules</p>
+                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                  {activeRules.length}
+                  <span className="text-[#8a8a8a] text-lg font-normal">
+                    /{mockRules.length}
+                  </span>
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
+                <ShieldCheck className="h-5 w-5 text-[#4ade80]" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={totalViolations > 0 ? "border-amber-500/50" : ""}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Current Violations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <AlertTriangle
-                className={`h-5 w-5 ${
-                  totalViolations > 0 ? "text-amber-500" : "text-zinc-500"
-                }`}
-              />
-              <p
-                className={`text-2xl font-bold ${
-                  totalViolations > 0 ? "text-amber-500" : "text-zinc-100"
+        <Card className={totalViolations > 0 ? "border-[#fbbf24]/30" : ""}>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#8a8a8a]">Violations</p>
+                <p
+                  className={`text-2xl font-bold mt-1 ${
+                    totalViolations > 0 ? "text-[#fbbf24]" : "text-[#f5f5f5]"
+                  }`}
+                >
+                  {totalViolations}
+                </p>
+              </div>
+              <div
+                className={`p-2.5 rounded-lg ${
+                  totalViolations > 0 ? "bg-[#fbbf24]/10" : "bg-[#333333]"
                 }`}
               >
-                {totalViolations}
-              </p>
+                <AlertTriangle
+                  className={`h-5 w-5 ${
+                    totalViolations > 0 ? "text-[#fbbf24]" : "text-[#8a8a8a]"
+                  }`}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Discipline Score
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <p className="text-2xl font-bold text-emerald-400">87%</p>
-              <span className="text-sm text-zinc-500">This month</span>
+        <Card>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#8a8a8a]">Discipline Score</p>
+                <p className="text-2xl font-bold text-[#4ade80] mt-1">87%</p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
+                <BarChart3 className="h-5 w-5 text-[#4ade80]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#8a8a8a]">This Week</p>
+                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                  3 trades
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#60a5fa]/10">
+                <Clock className="h-5 w-5 text-[#60a5fa]" />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -182,141 +223,176 @@ export default function RulesPage() {
 
       {/* Violations Alert */}
       {totalViolations > 0 && (
-        <Card className="border-amber-500/50 bg-amber-500/5">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-amber-400">
-                  Rule Violations Detected
-                </h3>
-                <p className="text-zinc-400 mt-1">
-                  You have {totalViolations} active rule violation(s). Review
-                  your portfolio to address these issues before making new
-                  trades.
-                </p>
-                <Button variant="outline" size="sm" className="mt-3">
-                  Review Violations
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/20">
+          <AlertTriangle className="h-5 w-5 text-[#fbbf24] shrink-0" />
+          <div className="flex-1">
+            <span className="font-medium text-[#fbbf24]">
+              {totalViolations} rule violation{totalViolations > 1 ? "s" : ""}{" "}
+              detected
+            </span>
+            <span className="text-[#a8a8a8] ml-1">
+              — Review before making new trades
+            </span>
+          </div>
+          <Button variant="outline" size="sm">
+            View Details
+          </Button>
+        </div>
       )}
 
-      {/* Rules Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {mockRules.map((rule) => {
-          const Icon = ruleTypeIcons[rule.ruleType];
-          const colorClass = ruleTypeColors[rule.ruleType];
+      {/* Rules Table */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle>All Rules</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-12">Status</TableHead>
+                <TableHead>Rule</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-right">Threshold</TableHead>
+                <TableHead className="text-center">Violations</TableHead>
+                <TableHead className="text-right w-28">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockRules.map((rule) => {
+                const config = ruleTypeConfig[rule.ruleType];
+                const Icon = config.icon;
 
-          return (
-            <Card
-              key={rule.id}
-              className={`${!rule.isActive ? "opacity-60" : ""} ${
-                rule.violations > 0 ? "border-amber-500/50" : ""
-              }`}
-            >
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${colorClass}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-zinc-100">
-                          {rule.name}
-                        </h3>
-                        {rule.violations > 0 && (
-                          <Badge variant="warning">
-                            {rule.violations} violation
-                            {rule.violations > 1 ? "s" : ""}
-                          </Badge>
+                return (
+                  <TableRow
+                    key={rule.id}
+                    className={!rule.isActive ? "opacity-50" : ""}
+                  >
+                    <TableCell>
+                      <button className="text-[#8a8a8a] hover:text-[#f5f5f5] transition-colors">
+                        {rule.isActive ? (
+                          <ToggleRight className="h-5 w-5 text-[#4ade80]" />
+                        ) : (
+                          <ToggleLeft className="h-5 w-5" />
                         )}
+                      </button>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-semibold text-[#f5f5f5]">
+                          {rule.name}
+                        </p>
+                        <p className="text-sm text-[#8a8a8a] mt-0.5">
+                          {rule.description}
+                        </p>
                       </div>
-                      <p className="text-sm text-zinc-400 mt-1">
-                        {rule.description}
-                      </p>
-                      <div className="flex items-center gap-4 mt-3">
-                        <Badge variant="outline">
-                          Threshold: {rule.threshold}
-                          {rule.ruleType === "POSITION_SIZE" ||
-                          rule.ruleType === "STOP_LOSS" ||
-                          rule.ruleType === "TAKE_PROFIT" ||
-                          rule.ruleType === "SECTOR_LIMIT"
-                            ? "%"
-                            : " trades/week"}
-                        </Badge>
-                        <Badge variant={rule.isActive ? "success" : "outline"}>
-                          {rule.isActive ? "Active" : "Inactive"}
-                        </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Icon className={`h-4 w-4 ${config.color}`} />
+                        <span className="text-[#a8a8a8]">{config.label}</span>
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Power className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-500 hover:text-red-400"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className="font-mono text-[#f5f5f5]">
+                        {rule.threshold}
+                        {rule.ruleType === "TRADE_FREQUENCY" ? "/wk" : "%"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {rule.violations > 0 ? (
+                        <Badge variant="warning">{rule.violations}</Badge>
+                      ) : (
+                        <span className="text-[#666666]">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-[#f87171] hover:text-[#fca5a5]"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-      {/* Add Rule Modal Placeholder */}
+      {/* Add Rule Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <Card className="w-full max-w-md">
-            <CardHeader>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Create Trading Rule</CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setShowAddModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm text-zinc-400">Rule Name</label>
-                <Input placeholder="e.g., Max Position Size" className="mt-1" />
+                <label className="text-sm font-medium text-[#a8a8a8]">
+                  Rule Name
+                </label>
+                <Input
+                  placeholder="e.g., Max Position Size"
+                  className="mt-1.5"
+                />
               </div>
               <div>
-                <label className="text-sm text-zinc-400">Rule Type</label>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  <Button variant="outline" size="sm">
-                    Position Size
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Stop Loss
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Take Profit
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Sector Limit
-                  </Button>
+                <label className="text-sm font-medium text-[#a8a8a8]">
+                  Rule Type
+                </label>
+                <div className="grid grid-cols-2 gap-2 mt-1.5">
+                  {Object.entries(ruleTypeConfig).map(([type, config]) => {
+                    const Icon = config.icon;
+                    return (
+                      <Button
+                        key={type}
+                        variant="outline"
+                        size="sm"
+                        className="justify-start"
+                      >
+                        <Icon className={`h-4 w-4 mr-2 ${config.color}`} />
+                        {config.label}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
               <div>
-                <label className="text-sm text-zinc-400">Threshold (%)</label>
-                <Input type="number" placeholder="e.g., 20" className="mt-1" />
-              </div>
-              <div>
-                <label className="text-sm text-zinc-400">Description</label>
+                <label className="text-sm font-medium text-[#a8a8a8]">
+                  Threshold
+                </label>
                 <Input
-                  placeholder="Describe when this rule should trigger"
-                  className="mt-1"
+                  type="number"
+                  placeholder="e.g., 20"
+                  className="mt-1.5"
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-4">
+              <div>
+                <label className="text-sm font-medium text-[#a8a8a8]">
+                  Description
+                </label>
+                <Input
+                  placeholder="When should this rule trigger?"
+                  className="mt-1.5"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
                 <Button
                   variant="outline"
                   onClick={() => setShowAddModal(false)}

@@ -1,8 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  /* Background Elevation System */
+  --background: #1e1e1e;
+  --surface-1: #262626;
+  --surface-2: #2a2a2a;
+  --surface-3: #333333;
+  --border: #3a3a3a;
+  --border-muted: #2f2f2f;
+
+  /* Text Hierarchy - Higher Contrast */
+  --text-primary: #f5f5f5;
+  --text-secondary: #a8a8a8;
+  --text-muted: #8a8a8a;
+  --text-disabled: #666666;
+
+  /* Semantic Colors - Desaturated for Dark Theme */
+  --color-gain: #4ade80;
+  --color-gain-muted: #22c55e;
+  --color-gain-bg: rgba(74, 222, 128, 0.1);
+  --color-loss: #f87171;
+  --color-loss-muted: #ef4444;
+  --color-loss-bg: rgba(248, 113, 113, 0.1);
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(251, 191, 36, 0.1);
+  --color-accent: #5eead4;
+  --color-accent-muted: #2dd4bf;
+
+  --foreground: var(--text-primary);
 }
 
 @theme inline {
@@ -19,38 +44,50 @@ body {
   min-height: 100vh;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - improved visibility */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #18181b;
+  background: var(--surface-1);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: #4a4a4a;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #5a5a5a;
 }
 
 /* Gradient text utility */
 .gradient-text {
-  background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-accent) 0%,
+    var(--color-accent-muted) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Glow effects */
-.glow-green {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+/* Semantic color utilities */
+.text-gain {
+  color: var(--color-gain);
 }
 
-.glow-red {
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+.text-loss {
+  color: var(--color-loss);
+}
+
+.bg-gain {
+  background-color: var(--color-gain-bg);
+}
+
+.bg-loss {
+  background-color: var(--color-loss-bg);
 }

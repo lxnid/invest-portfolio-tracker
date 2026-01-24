@@ -16,11 +16,11 @@ import {
 import {
   Plus,
   Search,
-  Filter,
   Download,
   TrendingUp,
   TrendingDown,
   ArrowRightLeft,
+  X,
 } from "lucide-react";
 
 type TransactionType = "BUY" | "SELL" | "DIVIDEND";
@@ -103,7 +103,7 @@ function getTypeBadge(type: TransactionType) {
     case "SELL":
       return <Badge variant="destructive">SELL</Badge>;
     case "DIVIDEND":
-      return <Badge variant="warning">DIVIDEND</Badge>;
+      return <Badge variant="warning">DIV</Badge>;
   }
 }
 
@@ -112,8 +112,6 @@ function formatDate(dateString: string) {
     year: "numeric",
     month: "short",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   }).format(new Date(dateString));
 }
 
@@ -143,12 +141,12 @@ export default function TransactionsPage() {
     .reduce((sum, t) => sum + t.totalAmount, 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-100">Transactions</h1>
-          <p className="text-zinc-400 mt-1">Your complete trading history</p>
+          <h1 className="text-3xl font-bold text-[#f5f5f5]">Transactions</h1>
+          <p className="text-[#8a8a8a] mt-1">Your complete trading history</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
@@ -163,64 +161,60 @@ export default function TransactionsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Total Transactions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <ArrowRightLeft className="h-5 w-5 text-zinc-500" />
-              <p className="text-2xl font-bold text-zinc-100">
-                {mockTransactions.length}
-              </p>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#8a8a8a]">Transactions</p>
+                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                  {mockTransactions.length}
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#333333]">
+                <ArrowRightLeft className="h-5 w-5 text-[#a8a8a8]" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Total Buys
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-              <p className="text-2xl font-bold text-emerald-500">
-                LKR {totalBuys.toLocaleString()}
-              </p>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#8a8a8a]">Total Buys</p>
+                <p className="text-2xl font-bold text-[#4ade80] mt-1">
+                  {totalBuys.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
+                <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Total Sells
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-red-500" />
-              <p className="text-2xl font-bold text-red-500">
-                LKR {totalSells.toLocaleString()}
-              </p>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#8a8a8a]">Total Sells</p>
+                <p className="text-2xl font-bold text-[#f87171] mt-1">
+                  {totalSells.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#f87171]/10">
+                <TrendingDown className="h-5 w-5 text-[#f87171]" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Dividends Received
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-amber-500">
-              LKR {totalDividends.toLocaleString()}
+          <CardContent className="pt-5 pb-4">
+            <p className="text-sm text-[#8a8a8a]">Dividends</p>
+            <p className="text-2xl font-bold text-[#fbbf24] mt-1">
+              {totalDividends.toLocaleString()}
             </p>
           </CardContent>
         </Card>
@@ -228,14 +222,14 @@ export default function TransactionsPage() {
 
       {/* Transactions Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <CardTitle>Transaction History</CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666666]" />
                 <Input
-                  placeholder="Search transactions..."
+                  placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -249,21 +243,21 @@ export default function TransactionsPage() {
                     size="sm"
                     onClick={() => setTypeFilter(type)}
                   >
-                    {type}
+                    {type === "DIVIDEND" ? "DIV" : type}
                   </Button>
                 ))}
               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead>Date</TableHead>
-                <TableHead>Symbol</TableHead>
+                <TableHead>Stock</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead className="text-right">Quantity</TableHead>
+                <TableHead className="text-right">Qty</TableHead>
                 <TableHead className="text-right">Price</TableHead>
                 <TableHead className="text-right">Fees</TableHead>
                 <TableHead className="text-right">Total</TableHead>
@@ -272,29 +266,31 @@ export default function TransactionsPage() {
             <TableBody>
               {filteredTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
-                  <TableCell className="text-zinc-400">
+                  <TableCell className="text-[#a8a8a8]">
                     {formatDate(transaction.executedAt)}
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{transaction.symbol}</p>
-                      <p className="text-sm text-zinc-500">
+                      <p className="font-semibold text-[#f5f5f5]">
+                        {transaction.symbol}
+                      </p>
+                      <p className="text-sm text-[#8a8a8a]">
                         {transaction.name}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell>{getTypeBadge(transaction.type)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right font-mono">
                     {transaction.quantity.toLocaleString()}
                   </TableCell>
-                  <TableCell className="text-right">
-                    LKR {transaction.price.toFixed(2)}
+                  <TableCell className="text-right font-mono">
+                    {transaction.price.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-right text-zinc-400">
-                    LKR {transaction.fees.toFixed(2)}
+                  <TableCell className="text-right font-mono text-[#8a8a8a]">
+                    {transaction.fees.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
-                    LKR {transaction.totalAmount.toLocaleString()}
+                  <TableCell className="text-right font-mono font-semibold">
+                    {transaction.totalAmount.toLocaleString()}
                   </TableCell>
                 </TableRow>
               ))}
@@ -302,26 +298,34 @@ export default function TransactionsPage() {
           </Table>
 
           {filteredTransactions.length === 0 && (
-            <div className="text-center py-8 text-zinc-500">
+            <div className="text-center py-8 text-[#8a8a8a]">
               No transactions found.
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Add Transaction Modal Placeholder */}
+      {/* Add Transaction Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <Card className="w-full max-w-md">
-            <CardHeader>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Add Transaction</CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setShowAddModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm text-zinc-400">
+                <label className="text-sm font-medium text-[#a8a8a8]">
                   Transaction Type
                 </label>
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-2 mt-1.5">
                   <Button variant="outline" className="flex-1">
                     BUY
                   </Button>
@@ -329,43 +333,45 @@ export default function TransactionsPage() {
                     SELL
                   </Button>
                   <Button variant="outline" className="flex-1">
-                    DIVIDEND
+                    DIV
                   </Button>
                 </div>
               </div>
               <div>
-                <label className="text-sm text-zinc-400">Stock Symbol</label>
-                <Input placeholder="e.g., LOLC.N0000" className="mt-1" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-zinc-400">Quantity</label>
-                  <Input type="number" placeholder="0" className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-sm text-zinc-400">
-                    Price per Share
-                  </label>
-                  <Input type="number" placeholder="0.00" className="mt-1" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-zinc-400">Fees</label>
-                  <Input type="number" placeholder="0.00" className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-sm text-zinc-400">Date</label>
-                  <Input type="date" className="mt-1" />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm text-zinc-400">
-                  Notes (optional)
+                <label className="text-sm font-medium text-[#a8a8a8]">
+                  Stock Symbol
                 </label>
-                <Input placeholder="Add notes..." className="mt-1" />
+                <Input placeholder="e.g., LOLC.N0000" className="mt-1.5" />
               </div>
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-[#a8a8a8]">
+                    Quantity
+                  </label>
+                  <Input type="number" placeholder="0" className="mt-1.5" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-[#a8a8a8]">
+                    Price
+                  </label>
+                  <Input type="number" placeholder="0.00" className="mt-1.5" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-[#a8a8a8]">
+                    Fees
+                  </label>
+                  <Input type="number" placeholder="0.00" className="mt-1.5" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-[#a8a8a8]">
+                    Date
+                  </label>
+                  <Input type="date" className="mt-1.5" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
                 <Button
                   variant="outline"
                   onClick={() => setShowAddModal(false)}

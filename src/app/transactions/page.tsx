@@ -37,7 +37,7 @@ interface Transaction {
   executedAt: string;
 }
 
-// Mock data - will be replaced with database queries
+// Mock data
 const mockTransactions: Transaction[] = [
   {
     id: 1,
@@ -145,8 +145,10 @@ export default function TransactionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#f5f5f5]">Transactions</h1>
-          <p className="text-[#8a8a8a] mt-1">Your complete trading history</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            Transactions
+          </h1>
+          <p className="text-neutral-500 mt-1">Your complete trading history</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
@@ -166,13 +168,15 @@ export default function TransactionsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Transactions</p>
-                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">
+                  Transactions
+                </p>
+                <p className="text-2xl font-bold text-white mt-1">
                   {mockTransactions.length}
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#333333]">
-                <ArrowRightLeft className="h-5 w-5 text-[#a8a8a8]" />
+              <div className="p-2.5 rounded-lg bg-white/[0.03]">
+                <ArrowRightLeft className="h-5 w-5 text-neutral-500" />
               </div>
             </div>
           </CardContent>
@@ -182,13 +186,15 @@ export default function TransactionsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Total Buys</p>
-                <p className="text-2xl font-bold text-[#4ade80] mt-1">
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">
+                  Total Buys
+                </p>
+                <p className="text-2xl font-bold text-[#00ff88] mt-1">
                   {totalBuys.toLocaleString()}
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
-                <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+              <div className="p-2.5 rounded-lg bg-[#00ff88]/10">
+                <TrendingUp className="h-5 w-5 text-[#00ff88]" />
               </div>
             </div>
           </CardContent>
@@ -198,13 +204,15 @@ export default function TransactionsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Total Sells</p>
-                <p className="text-2xl font-bold text-[#f87171] mt-1">
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">
+                  Total Sells
+                </p>
+                <p className="text-2xl font-bold text-[#ff4757] mt-1">
                   {totalSells.toLocaleString()}
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#f87171]/10">
-                <TrendingDown className="h-5 w-5 text-[#f87171]" />
+              <div className="p-2.5 rounded-lg bg-[#ff4757]/10">
+                <TrendingDown className="h-5 w-5 text-[#ff4757]" />
               </div>
             </div>
           </CardContent>
@@ -212,8 +220,10 @@ export default function TransactionsPage() {
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Dividends</p>
-            <p className="text-2xl font-bold text-[#fbbf24] mt-1">
+            <p className="text-xs text-neutral-500 uppercase tracking-wider">
+              Dividends
+            </p>
+            <p className="text-2xl font-bold text-[#ffc107] mt-1">
               {totalDividends.toLocaleString()}
             </p>
           </CardContent>
@@ -227,7 +237,7 @@ export default function TransactionsPage() {
             <CardTitle>Transaction History</CardTitle>
             <div className="flex items-center gap-3">
               <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666666]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-600" />
                 <Input
                   placeholder="Search..."
                   value={searchQuery}
@@ -266,15 +276,15 @@ export default function TransactionsPage() {
             <TableBody>
               {filteredTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
-                  <TableCell className="text-[#a8a8a8]">
+                  <TableCell className="text-neutral-400">
                     {formatDate(transaction.executedAt)}
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-semibold text-[#f5f5f5]">
+                      <p className="font-semibold text-white">
                         {transaction.symbol}
                       </p>
-                      <p className="text-sm text-[#8a8a8a]">
+                      <p className="text-sm text-neutral-500">
                         {transaction.name}
                       </p>
                     </div>
@@ -286,7 +296,7 @@ export default function TransactionsPage() {
                   <TableCell className="text-right font-mono">
                     {transaction.price.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-[#8a8a8a]">
+                  <TableCell className="text-right font-mono text-neutral-500">
                     {transaction.fees.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right font-mono font-semibold">
@@ -298,7 +308,7 @@ export default function TransactionsPage() {
           </Table>
 
           {filteredTransactions.length === 0 && (
-            <div className="text-center py-8 text-[#8a8a8a]">
+            <div className="text-center py-8 text-neutral-500">
               No transactions found.
             </div>
           )}
@@ -307,7 +317,7 @@ export default function TransactionsPage() {
 
       {/* Add Transaction Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <Card className="w-full max-w-md mx-4">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Add Transaction</CardTitle>
@@ -322,7 +332,7 @@ export default function TransactionsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-[#a8a8a8]">
+                <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                   Transaction Type
                 </label>
                 <div className="flex gap-2 mt-1.5">
@@ -338,20 +348,20 @@ export default function TransactionsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-[#a8a8a8]">
+                <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                   Stock Symbol
                 </label>
                 <Input placeholder="e.g., LOLC.N0000" className="mt-1.5" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                     Quantity
                   </label>
                   <Input type="number" placeholder="0" className="mt-1.5" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                     Price
                   </label>
                   <Input type="number" placeholder="0.00" className="mt-1.5" />
@@ -359,13 +369,13 @@ export default function TransactionsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                     Fees
                   </label>
                   <Input type="number" placeholder="0.00" className="mt-1.5" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                     Date
                   </label>
                   <Input type="date" className="mt-1.5" />

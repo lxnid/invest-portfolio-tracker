@@ -98,8 +98,10 @@ export default function PortfolioPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#f5f5f5]">Portfolio</h1>
-          <p className="text-[#8a8a8a] mt-1">Manage your stock holdings</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            Portfolio
+          </h1>
+          <p className="text-neutral-500 mt-1">Manage your stock holdings</p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
           <Plus className="mr-2 h-4 w-4" />
@@ -111,8 +113,10 @@ export default function PortfolioPage() {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Total Value</p>
-            <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+            <p className="text-xs text-neutral-500 uppercase tracking-wider">
+              Total Value
+            </p>
+            <p className="text-2xl font-bold text-white mt-1">
               LKR {totalValue.toLocaleString()}
             </p>
           </CardContent>
@@ -120,8 +124,10 @@ export default function PortfolioPage() {
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Total Invested</p>
-            <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+            <p className="text-xs text-neutral-500 uppercase tracking-wider">
+              Total Invested
+            </p>
+            <p className="text-2xl font-bold text-white mt-1">
               LKR {totalInvested.toLocaleString()}
             </p>
           </CardContent>
@@ -129,24 +135,26 @@ export default function PortfolioPage() {
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Total P/L</p>
+            <p className="text-xs text-neutral-500 uppercase tracking-wider">
+              Total P/L
+            </p>
             <div className="flex items-center gap-2 mt-1">
               <p
                 className={`text-2xl font-bold ${
-                  totalPL >= 0 ? "text-[#4ade80]" : "text-[#f87171]"
+                  totalPL >= 0 ? "text-[#00ff88]" : "text-[#ff4757]"
                 }`}
               >
                 {totalPL >= 0 ? "+" : ""}LKR {totalPL.toLocaleString()}
               </p>
               {totalPL >= 0 ? (
-                <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+                <TrendingUp className="h-5 w-5 text-[#00ff88]" />
               ) : (
-                <TrendingDown className="h-5 w-5 text-[#f87171]" />
+                <TrendingDown className="h-5 w-5 text-[#ff4757]" />
               )}
             </div>
             <p
               className={`text-sm mt-0.5 ${
-                totalPL >= 0 ? "text-[#4ade80]" : "text-[#f87171]"
+                totalPL >= 0 ? "text-[#00ff88]" : "text-[#ff4757]"
               }`}
             >
               {totalPLPercent >= 0 ? "+" : ""}
@@ -157,8 +165,10 @@ export default function PortfolioPage() {
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Holdings</p>
-            <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+            <p className="text-xs text-neutral-500 uppercase tracking-wider">
+              Holdings
+            </p>
+            <p className="text-2xl font-bold text-white mt-1">
               {mockHoldings.length} stocks
             </p>
           </CardContent>
@@ -171,7 +181,7 @@ export default function PortfolioPage() {
           <div className="flex items-center justify-between">
             <CardTitle>Holdings</CardTitle>
             <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666666]" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-600" />
               <Input
                 placeholder="Search stocks..."
                 value={searchQuery}
@@ -188,7 +198,7 @@ export default function PortfolioPage() {
                 <TableHead>Symbol</TableHead>
                 <TableHead>Company</TableHead>
                 <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Avg. Price</TableHead>
+                <TableHead className="text-right">Avg Price</TableHead>
                 <TableHead className="text-right">Current</TableHead>
                 <TableHead className="text-right">Value</TableHead>
                 <TableHead className="text-right">P/L</TableHead>
@@ -201,7 +211,7 @@ export default function PortfolioPage() {
                   <TableCell className="font-semibold">
                     {holding.symbol}
                   </TableCell>
-                  <TableCell className="text-[#a8a8a8]">
+                  <TableCell className="text-neutral-400">
                     {holding.name}
                   </TableCell>
                   <TableCell className="text-right font-mono">
@@ -221,8 +231,8 @@ export default function PortfolioPage() {
                       <span
                         className={`font-mono ${
                           holding.profitLoss >= 0
-                            ? "text-[#4ade80]"
-                            : "text-[#f87171]"
+                            ? "text-[#00ff88]"
+                            : "text-[#ff4757]"
                         }`}
                       >
                         {holding.profitLoss >= 0 ? "+" : ""}
@@ -246,7 +256,7 @@ export default function PortfolioPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-[#f87171] hover:text-[#fca5a5]"
+                        className="h-8 w-8 text-[#ff4757] hover:text-[#ff6b7a]"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -258,7 +268,7 @@ export default function PortfolioPage() {
           </Table>
 
           {filteredHoldings.length === 0 && (
-            <div className="text-center py-8 text-[#8a8a8a]">
+            <div className="text-center py-8 text-neutral-500">
               No holdings found. Add your first stock to get started.
             </div>
           )}
@@ -267,7 +277,7 @@ export default function PortfolioPage() {
 
       {/* Add Stock Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <Card className="w-full max-w-md mx-4">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Add Stock to Portfolio</CardTitle>
@@ -282,20 +292,20 @@ export default function PortfolioPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-[#a8a8a8]">
+                <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                   Search Stock
                 </label>
                 <Input placeholder="e.g., LOLC.N0000" className="mt-1.5" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                     Quantity
                   </label>
                   <Input type="number" placeholder="0" className="mt-1.5" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                     Avg. Buy Price
                   </label>
                   <Input type="number" placeholder="0.00" className="mt-1.5" />

@@ -45,26 +45,26 @@ function StatCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-[#8a8a8a]">
+        <CardTitle className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
           {title}
         </CardTitle>
-        <div className="p-2 rounded-lg bg-[#333333]">
-          <Icon className="h-4 w-4 text-[#a8a8a8]" />
+        <div className="p-2 rounded-lg bg-white/[0.03]">
+          <Icon className="h-4 w-4 text-neutral-500" />
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-[#f5f5f5]">
+        <div className="text-2xl font-bold text-white">
           {prefix}
           {value}
         </div>
         {change !== undefined && (
           <p className="text-xs mt-1 flex items-center gap-1">
             {isPositive ? (
-              <TrendingUp className="h-3 w-3 text-[#4ade80]" />
+              <TrendingUp className="h-3 w-3 text-[#00ff88]" />
             ) : (
-              <TrendingDown className="h-3 w-3 text-[#f87171]" />
+              <TrendingDown className="h-3 w-3 text-[#ff4757]" />
             )}
-            <span className={isPositive ? "text-[#4ade80]" : "text-[#f87171]"}>
+            <span className={isPositive ? "text-[#00ff88]" : "text-[#ff4757]"}>
               {isPositive ? "+" : ""}
               {change.toLocaleString()} ({changePercent?.toFixed(2)}%)
             </span>
@@ -81,15 +81,17 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#f5f5f5]">Dashboard</h1>
-          <p className="text-[#8a8a8a] mt-1">
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            Dashboard
+          </h1>
+          <p className="text-neutral-500 mt-1">
             Your portfolio overview and market summary
           </p>
         </div>
         <Badge variant="outline" className="gap-2">
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f87171] opacity-75"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#f87171]"></span>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff4757] opacity-75"></span>
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#ff4757]"></span>
           </span>
           Market Closed
         </Badge>
@@ -97,12 +99,12 @@ export default function DashboardPage() {
 
       {/* Portfolio Stats */}
       <div>
-        <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">
+        <h2 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-4">
           Portfolio Overview
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Total Portfolio Value"
+            title="Total Value"
             value={mockData.portfolioValue.toLocaleString()}
             change={mockData.dayChange}
             changePercent={mockData.dayChangePercent}
@@ -133,24 +135,24 @@ export default function DashboardPage() {
 
       {/* Market Overview */}
       <div>
-        <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">
+        <h2 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-4">
           Market Overview
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="border-[#5eead4]/20">
+          <Card className="border-[#00d4ff]/20">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-[#8a8a8a]">
-                All Share Price Index (ASPI)
+              <CardTitle className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                ASPI Index
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-end gap-2">
-                <span className="text-3xl font-bold text-[#f5f5f5]">
+                <span className="text-3xl font-bold text-white">
                   {mockData.asi.value.toLocaleString()}
                 </span>
                 <div className="flex items-center gap-1 mb-1">
-                  <TrendingUp className="h-4 w-4 text-[#4ade80]" />
-                  <span className="text-[#4ade80] text-sm font-medium">
+                  <TrendingUp className="h-4 w-4 text-[#00ff88]" />
+                  <span className="text-[#00ff88] text-sm font-medium">
                     +{mockData.asi.change} ({mockData.asi.changePercent}%)
                   </span>
                 </div>
@@ -160,17 +162,15 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-[#8a8a8a]">
-                Today&apos;s Top Gainer
+              <CardTitle className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Top Gainer
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-lg font-semibold text-[#f5f5f5]">
-                    LOLC.N0000
-                  </p>
-                  <p className="text-sm text-[#8a8a8a]">LOLC Holdings PLC</p>
+                  <p className="text-lg font-semibold text-white">LOLC.N0000</p>
+                  <p className="text-sm text-neutral-500">LOLC Holdings PLC</p>
                 </div>
                 <Badge variant="success">+5.25%</Badge>
               </div>
@@ -179,17 +179,17 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-[#8a8a8a]">
-                Today&apos;s Top Loser
+              <CardTitle className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Top Loser
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-lg font-semibold text-[#f5f5f5]">
-                    JKH.N0000
+                  <p className="text-lg font-semibold text-white">JKH.N0000</p>
+                  <p className="text-sm text-neutral-500">
+                    John Keells Holdings
                   </p>
-                  <p className="text-sm text-[#8a8a8a]">John Keells Holdings</p>
                 </div>
                 <Badge variant="destructive">-2.15%</Badge>
               </div>
@@ -200,47 +200,51 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">
+        <h2 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-4">
           Quick Actions
         </h2>
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors">
+          <Card className="cursor-pointer hover:border-[#00d4ff]/30 transition-colors group">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#4ade80]/10">
-                  <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+                <div className="p-2 rounded-lg bg-[#00ff88]/10 group-hover:bg-[#00ff88]/15 transition-colors">
+                  <TrendingUp className="h-5 w-5 text-[#00ff88]" />
                 </div>
                 <div>
-                  <p className="font-medium text-[#f5f5f5]">Add Transaction</p>
-                  <p className="text-sm text-[#8a8a8a]">Record a new trade</p>
+                  <p className="font-medium text-white">Add Transaction</p>
+                  <p className="text-sm text-neutral-500">Record a new trade</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors">
+          <Card className="cursor-pointer hover:border-[#00d4ff]/30 transition-colors group">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#5eead4]/10">
-                  <Briefcase className="h-5 w-5 text-[#5eead4]" />
+                <div className="p-2 rounded-lg bg-[#00d4ff]/10 group-hover:bg-[#00d4ff]/15 transition-colors">
+                  <Briefcase className="h-5 w-5 text-[#00d4ff]" />
                 </div>
                 <div>
-                  <p className="font-medium text-[#f5f5f5]">Manage Portfolio</p>
-                  <p className="text-sm text-[#8a8a8a]">View & edit holdings</p>
+                  <p className="font-medium text-white">Manage Portfolio</p>
+                  <p className="text-sm text-neutral-500">
+                    View & edit holdings
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors">
+          <Card className="cursor-pointer hover:border-[#00d4ff]/30 transition-colors group">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#fbbf24]/10">
-                  <BarChart3 className="h-5 w-5 text-[#fbbf24]" />
+                <div className="p-2 rounded-lg bg-[#ffc107]/10 group-hover:bg-[#ffc107]/15 transition-colors">
+                  <BarChart3 className="h-5 w-5 text-[#ffc107]" />
                 </div>
                 <div>
-                  <p className="font-medium text-[#f5f5f5]">View Analytics</p>
-                  <p className="text-sm text-[#8a8a8a]">Performance insights</p>
+                  <p className="font-medium text-white">View Analytics</p>
+                  <p className="text-sm text-neutral-500">
+                    Performance insights
+                  </p>
                 </div>
               </div>
             </CardContent>

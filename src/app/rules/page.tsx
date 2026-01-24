@@ -103,20 +103,20 @@ const ruleTypeConfig: Record<
   POSITION_SIZE: {
     icon: Percent,
     label: "Position Size",
-    color: "text-[#60a5fa]",
+    color: "text-[#00d4ff]",
   },
   STOP_LOSS: {
     icon: TrendingDown,
     label: "Stop Loss",
-    color: "text-[#f87171]",
+    color: "text-[#ff4757]",
   },
-  TAKE_PROFIT: { icon: Target, label: "Take Profit", color: "text-[#4ade80]" },
+  TAKE_PROFIT: { icon: Target, label: "Take Profit", color: "text-[#00ff88]" },
   SECTOR_LIMIT: {
     icon: PieChart,
     label: "Sector Limit",
-    color: "text-[#a78bfa]",
+    color: "text-[#a855f7]",
   },
-  TRADE_FREQUENCY: { icon: Clock, label: "Frequency", color: "text-[#fbbf24]" },
+  TRADE_FREQUENCY: { icon: Clock, label: "Frequency", color: "text-[#ffc107]" },
 };
 
 export default function RulesPage() {
@@ -130,8 +130,10 @@ export default function RulesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#f5f5f5]">Trading Rules</h1>
-          <p className="text-[#8a8a8a] mt-1">
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            Trading Rules
+          </h1>
+          <p className="text-neutral-500 mt-1">
             Personal discipline rules to minimize psychological trading traps
           </p>
         </div>
@@ -147,29 +149,33 @@ export default function RulesPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Active Rules</p>
-                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">
+                  Active Rules
+                </p>
+                <p className="text-2xl font-bold text-white mt-1">
                   {activeRules.length}
-                  <span className="text-[#8a8a8a] text-lg font-normal">
+                  <span className="text-neutral-500 text-lg font-normal">
                     /{mockRules.length}
                   </span>
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
-                <ShieldCheck className="h-5 w-5 text-[#4ade80]" />
+              <div className="p-2.5 rounded-lg bg-[#00ff88]/10">
+                <ShieldCheck className="h-5 w-5 text-[#00ff88]" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={totalViolations > 0 ? "border-[#fbbf24]/30" : ""}>
+        <Card className={totalViolations > 0 ? "border-[#ffc107]/30" : ""}>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Violations</p>
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">
+                  Violations
+                </p>
                 <p
                   className={`text-2xl font-bold mt-1 ${
-                    totalViolations > 0 ? "text-[#fbbf24]" : "text-[#f5f5f5]"
+                    totalViolations > 0 ? "text-[#ffc107]" : "text-white"
                   }`}
                 >
                   {totalViolations}
@@ -177,12 +183,12 @@ export default function RulesPage() {
               </div>
               <div
                 className={`p-2.5 rounded-lg ${
-                  totalViolations > 0 ? "bg-[#fbbf24]/10" : "bg-[#333333]"
+                  totalViolations > 0 ? "bg-[#ffc107]/10" : "bg-white/[0.03]"
                 }`}
               >
                 <AlertTriangle
                   className={`h-5 w-5 ${
-                    totalViolations > 0 ? "text-[#fbbf24]" : "text-[#8a8a8a]"
+                    totalViolations > 0 ? "text-[#ffc107]" : "text-neutral-500"
                   }`}
                 />
               </div>
@@ -194,11 +200,13 @@ export default function RulesPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Discipline Score</p>
-                <p className="text-2xl font-bold text-[#4ade80] mt-1">87%</p>
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">
+                  Discipline Score
+                </p>
+                <p className="text-2xl font-bold text-[#00ff88] mt-1">87%</p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
-                <BarChart3 className="h-5 w-5 text-[#4ade80]" />
+              <div className="p-2.5 rounded-lg bg-[#00ff88]/10">
+                <BarChart3 className="h-5 w-5 text-[#00ff88]" />
               </div>
             </div>
           </CardContent>
@@ -208,13 +216,13 @@ export default function RulesPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">This Week</p>
-                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
-                  3 trades
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">
+                  This Week
                 </p>
+                <p className="text-2xl font-bold text-white mt-1">3 trades</p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#60a5fa]/10">
-                <Clock className="h-5 w-5 text-[#60a5fa]" />
+              <div className="p-2.5 rounded-lg bg-[#00d4ff]/10">
+                <Clock className="h-5 w-5 text-[#00d4ff]" />
               </div>
             </div>
           </CardContent>
@@ -223,14 +231,14 @@ export default function RulesPage() {
 
       {/* Violations Alert */}
       {totalViolations > 0 && (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/20">
-          <AlertTriangle className="h-5 w-5 text-[#fbbf24] shrink-0" />
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-[#ffc107]/5 border border-[#ffc107]/20">
+          <AlertTriangle className="h-5 w-5 text-[#ffc107] shrink-0" />
           <div className="flex-1">
-            <span className="font-medium text-[#fbbf24]">
+            <span className="font-medium text-[#ffc107]">
               {totalViolations} rule violation{totalViolations > 1 ? "s" : ""}{" "}
               detected
             </span>
-            <span className="text-[#a8a8a8] ml-1">
+            <span className="text-neutral-400 ml-1">
               — Review before making new trades
             </span>
           </div>
@@ -268,9 +276,9 @@ export default function RulesPage() {
                     className={!rule.isActive ? "opacity-50" : ""}
                   >
                     <TableCell>
-                      <button className="text-[#8a8a8a] hover:text-[#f5f5f5] transition-colors">
+                      <button className="text-neutral-500 hover:text-white transition-colors">
                         {rule.isActive ? (
-                          <ToggleRight className="h-5 w-5 text-[#4ade80]" />
+                          <ToggleRight className="h-5 w-5 text-[#00ff88]" />
                         ) : (
                           <ToggleLeft className="h-5 w-5" />
                         )}
@@ -278,10 +286,8 @@ export default function RulesPage() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-semibold text-[#f5f5f5]">
-                          {rule.name}
-                        </p>
-                        <p className="text-sm text-[#8a8a8a] mt-0.5">
+                        <p className="font-semibold text-white">{rule.name}</p>
+                        <p className="text-sm text-neutral-500 mt-0.5">
                           {rule.description}
                         </p>
                       </div>
@@ -289,11 +295,11 @@ export default function RulesPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Icon className={`h-4 w-4 ${config.color}`} />
-                        <span className="text-[#a8a8a8]">{config.label}</span>
+                        <span className="text-neutral-400">{config.label}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="font-mono text-[#f5f5f5]">
+                      <span className="font-mono text-white">
                         {rule.threshold}
                         {rule.ruleType === "TRADE_FREQUENCY" ? "/wk" : "%"}
                       </span>
@@ -302,7 +308,7 @@ export default function RulesPage() {
                       {rule.violations > 0 ? (
                         <Badge variant="warning">{rule.violations}</Badge>
                       ) : (
-                        <span className="text-[#666666]">—</span>
+                        <span className="text-neutral-600">—</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -313,7 +319,7 @@ export default function RulesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-[#f87171] hover:text-[#fca5a5]"
+                          className="h-8 w-8 text-[#ff4757] hover:text-[#ff6b7a]"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -329,7 +335,7 @@ export default function RulesPage() {
 
       {/* Add Rule Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <Card className="w-full max-w-md mx-4">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Create Trading Rule</CardTitle>
@@ -344,7 +350,7 @@ export default function RulesPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-[#a8a8a8]">
+                <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                   Rule Name
                 </label>
                 <Input
@@ -353,7 +359,7 @@ export default function RulesPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-[#a8a8a8]">
+                <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                   Rule Type
                 </label>
                 <div className="grid grid-cols-2 gap-2 mt-1.5">
@@ -374,7 +380,7 @@ export default function RulesPage() {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-[#a8a8a8]">
+                <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                   Threshold
                 </label>
                 <Input
@@ -384,7 +390,7 @@ export default function RulesPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-[#a8a8a8]">
+                <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
                   Description
                 </label>
                 <Input

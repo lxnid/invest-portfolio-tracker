@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,80 +21,11 @@ import {
   TrendingDown,
   ArrowRightLeft,
   X,
+  Loader2,
 } from "lucide-react";
+import { useTransactions, useCreateTransaction } from "@/lib/hooks";
 
 type TransactionType = "BUY" | "SELL" | "DIVIDEND";
-
-interface Transaction {
-  id: number;
-  symbol: string;
-  name: string;
-  type: TransactionType;
-  quantity: number;
-  price: number;
-  fees: number;
-  totalAmount: number;
-  executedAt: string;
-}
-
-// Mock data
-const mockTransactions: Transaction[] = [
-  {
-    id: 1,
-    symbol: "LOLC.N0000",
-    name: "LOLC Holdings PLC",
-    type: "BUY",
-    quantity: 200,
-    price: 445.0,
-    fees: 890.0,
-    totalAmount: 89890.0,
-    executedAt: "2024-01-15T10:30:00",
-  },
-  {
-    id: 2,
-    symbol: "JKH.N0000",
-    name: "John Keells Holdings PLC",
-    type: "BUY",
-    quantity: 300,
-    price: 180.0,
-    fees: 540.0,
-    totalAmount: 54540.0,
-    executedAt: "2024-01-12T14:15:00",
-  },
-  {
-    id: 3,
-    symbol: "COMB.N0000",
-    name: "Commercial Bank PLC",
-    type: "DIVIDEND",
-    quantity: 1000,
-    price: 5.5,
-    fees: 0,
-    totalAmount: 5500.0,
-    executedAt: "2024-01-10T09:00:00",
-  },
-  {
-    id: 4,
-    symbol: "LOLC.N0000",
-    name: "LOLC Holdings PLC",
-    type: "BUY",
-    quantity: 300,
-    price: 455.0,
-    fees: 1365.0,
-    totalAmount: 137865.0,
-    executedAt: "2024-01-08T11:45:00",
-  },
-  {
-    id: 5,
-    symbol: "HNB.N0000",
-    name: "Hatton National Bank PLC",
-    type: "SELL",
-    quantity: 100,
-    price: 192.0,
-    fees: 192.0,
-    totalAmount: 19008.0,
-    executedAt: "2024-01-05T15:30:00",
-  },
-];
 
 function getTypeBadge(type: TransactionType) {
   switch (type) {
@@ -119,36 +50,78 @@ export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<TransactionType | "ALL">("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
-
-  const filteredTransactions = mockTransactions.filter((t) => {
-    const matchesSearch =
-      t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = typeFilter === "ALL" || t.type === typeFilter;
-    return matchesSearch && matchesType;
+  const [selectedType, setSelectedType] = useState<TransactionType>("BUY");
+  const [formData, setFormData] = useState({
+    symbol: "",
+    name: "",
+    quantity: "",
+    price: "",
+    fees: "",
+    executedAt: new Date().toISOString().split("T")[0],
   });
 
-  const totalBuys = mockTransactions
-    .filter((t) => t.type === "BUY")
-    .reduce((sum, t) => sum + t.totalAmount, 0);
+  const { data: transactions, isLoading } = useTransactions(
+    typeFilter === "ALL" ? undefined : typeFilter,
+  );
+  const createTransaction = useCreateTransaction();
 
-  const totalSells = mockTransactions
-    .filter((t) => t.type === "SELL")
-    .reduce((sum, t) => sum + t.totalAmount, 0);
+  const filteredTransactions = useMemo(() => {
+    if (!transactions) return [];
+    return transactions.filter(
+      (t) =>
+        t.stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.stock.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [transactions, searchQuery]);
 
-  const totalDividends = mockTransactions
-    .filter((t) => t.type === "DIVIDEND")
-    .reduce((sum, t) => sum + t.totalAmount, 0);
+  const totals = useMemo(() => {
+    if (!transactions) return { buys: 0, sells: 0, dividends: 0 };
+    return {
+      buys: transactions
+        .filter((t) => t.type === "BUY")
+        .reduce((sum, t) => sum + parseFloat(t.totalAmount), 0),
+      sells: transactions
+        .filter((t) => t.type === "SELL")
+        .reduce((sum, t) => sum + parseFloat(t.totalAmount), 0),
+      dividends: transactions
+        .filter((t) => t.type === "DIVIDEND")
+        .reduce((sum, t) => sum + parseFloat(t.totalAmount), 0),
+    };
+  }, [transactions]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await createTransaction.mutateAsync({
+        symbol: formData.symbol.toUpperCase(),
+        name: formData.name,
+        type: selectedType,
+        quantity: parseInt(formData.quantity),
+        price: formData.price,
+        fees: formData.fees || "0",
+        executedAt: formData.executedAt,
+      });
+      setShowAddModal(false);
+      setFormData({
+        symbol: "",
+        name: "",
+        quantity: "",
+        price: "",
+        fees: "",
+        executedAt: new Date().toISOString().split("T")[0],
+      });
+    } catch (error) {
+      console.error("Failed to create transaction:", error);
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            Transactions
-          </h1>
-          <p className="text-neutral-500 mt-1">Your complete trading history</p>
+          <h1 className="text-3xl font-bold text-[#f5f5f5]">Transactions</h1>
+          <p className="text-[#8a8a8a] mt-1">Your complete trading history</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
@@ -168,33 +141,17 @@ export default function TransactionsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-neutral-500 uppercase tracking-wider">
-                  Transactions
-                </p>
-                <p className="text-2xl font-bold text-white mt-1">
-                  {mockTransactions.length}
-                </p>
-              </div>
-              <div className="p-2.5 rounded-lg bg-white/[0.03]">
-                <ArrowRightLeft className="h-5 w-5 text-neutral-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-neutral-500 uppercase tracking-wider">
-                  Total Buys
-                </p>
-                <p className="text-2xl font-bold text-[#00ff88] mt-1">
-                  {totalBuys.toLocaleString()}
+                <p className="text-sm text-[#8a8a8a]">Transactions</p>
+                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                  {isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    (transactions?.length ?? 0)
+                  )}
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#00ff88]/10">
-                <TrendingUp className="h-5 w-5 text-[#00ff88]" />
+              <div className="p-2.5 rounded-lg bg-[#333333]">
+                <ArrowRightLeft className="h-5 w-5 text-[#a8a8a8]" />
               </div>
             </div>
           </CardContent>
@@ -204,15 +161,17 @@ export default function TransactionsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-neutral-500 uppercase tracking-wider">
-                  Total Sells
-                </p>
-                <p className="text-2xl font-bold text-[#ff4757] mt-1">
-                  {totalSells.toLocaleString()}
+                <p className="text-sm text-[#8a8a8a]">Total Buys</p>
+                <p className="text-2xl font-bold text-[#4ade80] mt-1">
+                  {isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    totals.buys.toLocaleString()
+                  )}
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#ff4757]/10">
-                <TrendingDown className="h-5 w-5 text-[#ff4757]" />
+              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
+                <TrendingUp className="h-5 w-5 text-[#4ade80]" />
               </div>
             </div>
           </CardContent>
@@ -220,11 +179,33 @@ export default function TransactionsPage() {
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-neutral-500 uppercase tracking-wider">
-              Dividends
-            </p>
-            <p className="text-2xl font-bold text-[#ffc107] mt-1">
-              {totalDividends.toLocaleString()}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#8a8a8a]">Total Sells</p>
+                <p className="text-2xl font-bold text-[#f87171] mt-1">
+                  {isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    totals.sells.toLocaleString()
+                  )}
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#f87171]/10">
+                <TrendingDown className="h-5 w-5 text-[#f87171]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5 pb-4">
+            <p className="text-sm text-[#8a8a8a]">Dividends</p>
+            <p className="text-2xl font-bold text-[#fbbf24] mt-1">
+              {isLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                totals.dividends.toLocaleString()
+              )}
             </p>
           </CardContent>
         </Card>
@@ -237,7 +218,7 @@ export default function TransactionsPage() {
             <CardTitle>Transaction History</CardTitle>
             <div className="flex items-center gap-3">
               <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-600" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666666]" />
                 <Input
                   placeholder="Search..."
                   value={searchQuery}
@@ -261,54 +242,60 @@ export default function TransactionsPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>Date</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Fees</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell className="text-neutral-400">
-                    {formatDate(transaction.executedAt)}
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-semibold text-white">
-                        {transaction.symbol}
-                      </p>
-                      <p className="text-sm text-neutral-500">
-                        {transaction.name}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{getTypeBadge(transaction.type)}</TableCell>
-                  <TableCell className="text-right font-mono">
-                    {transaction.quantity.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {transaction.price.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-neutral-500">
-                    {transaction.fees.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono font-semibold">
-                    {transaction.totalAmount.toLocaleString()}
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-[#5eead4]" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Date</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead className="text-right">Qty</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-right">Fees</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredTransactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell className="text-[#a8a8a8]">
+                      {formatDate(transaction.executedAt)}
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-semibold text-[#f5f5f5]">
+                          {transaction.stock.symbol}
+                        </p>
+                        <p className="text-sm text-[#8a8a8a]">
+                          {transaction.stock.name}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getTypeBadge(transaction.type)}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      {transaction.quantity.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {parseFloat(transaction.price).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-[#8a8a8a]">
+                      {parseFloat(transaction.fees).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-semibold">
+                      {parseFloat(transaction.totalAmount).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
 
-          {filteredTransactions.length === 0 && (
-            <div className="text-center py-8 text-neutral-500">
+          {!isLoading && filteredTransactions.length === 0 && (
+            <div className="text-center py-8 text-[#8a8a8a]">
               No transactions found.
             </div>
           )}
@@ -317,7 +304,7 @@ export default function TransactionsPage() {
 
       {/* Add Transaction Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <Card className="w-full max-w-md mx-4">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Add Transaction</CardTitle>
@@ -330,67 +317,135 @@ export default function TransactionsPage() {
                 <X className="h-4 w-4" />
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                  Transaction Type
-                </label>
-                <div className="flex gap-2 mt-1.5">
-                  <Button variant="outline" className="flex-1">
-                    BUY
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-[#a8a8a8]">
+                    Transaction Type
+                  </label>
+                  <div className="flex gap-2 mt-1.5">
+                    {(["BUY", "SELL", "DIVIDEND"] as const).map((type) => (
+                      <Button
+                        key={type}
+                        type="button"
+                        variant={selectedType === type ? "default" : "outline"}
+                        className="flex-1"
+                        onClick={() => setSelectedType(type)}
+                      >
+                        {type === "DIVIDEND" ? "DIV" : type}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-[#a8a8a8]">
+                    Stock Symbol
+                  </label>
+                  <Input
+                    placeholder="e.g., LOLC.N0000"
+                    className="mt-1.5"
+                    value={formData.symbol}
+                    onChange={(e) =>
+                      setFormData({ ...formData, symbol: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-[#a8a8a8]">
+                    Company Name
+                  </label>
+                  <Input
+                    placeholder="e.g., LOLC Holdings PLC"
+                    className="mt-1.5"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-[#a8a8a8]">
+                      Quantity
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      className="mt-1.5"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        setFormData({ ...formData, quantity: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-[#a8a8a8]">
+                      Price
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="mt-1.5"
+                      value={formData.price}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-[#a8a8a8]">
+                      Fees
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="mt-1.5"
+                      value={formData.fees}
+                      onChange={(e) =>
+                        setFormData({ ...formData, fees: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-[#a8a8a8]">
+                      Date
+                    </label>
+                    <Input
+                      type="date"
+                      className="mt-1.5"
+                      value={formData.executedAt}
+                      onChange={(e) =>
+                        setFormData({ ...formData, executedAt: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAddModal(false)}
+                  >
+                    Cancel
                   </Button>
-                  <Button variant="outline" className="flex-1">
-                    SELL
+                  <Button type="submit" disabled={createTransaction.isPending}>
+                    {createTransaction.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : null}
+                    Add Transaction
                   </Button>
-                  <Button variant="outline" className="flex-1">
-                    DIV
-                  </Button>
                 </div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                  Stock Symbol
-                </label>
-                <Input placeholder="e.g., LOLC.N0000" className="mt-1.5" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                    Quantity
-                  </label>
-                  <Input type="number" placeholder="0" className="mt-1.5" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                    Price
-                  </label>
-                  <Input type="number" placeholder="0.00" className="mt-1.5" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                    Fees
-                  </label>
-                  <Input type="number" placeholder="0.00" className="mt-1.5" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                    Date
-                  </label>
-                  <Input type="date" className="mt-1.5" />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button>Add Transaction</Button>
-              </div>
-            </CardContent>
+              </CardContent>
+            </form>
           </Card>
         </div>
       )}

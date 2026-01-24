@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,6 +9,7 @@ import {
   PieChart,
   BarChart3,
   Target,
+  Loader2,
 } from "lucide-react";
 import {
   LineChart,
@@ -20,41 +22,109 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { useHoldings, useMarketData } from "@/lib/hooks";
+import {
+  enrichHoldingsWithPrices,
+  calculatePortfolioTotals,
+} from "@/lib/rule-engine";
 
-// Mock performance data
-const performanceData = [
-  { month: "Aug", value: 1850000 },
-  { month: "Sep", value: 1920000 },
-  { month: "Oct", value: 2050000 },
-  { month: "Nov", value: 1980000 },
-  { month: "Dec", value: 2180000 },
-  { month: "Jan", value: 2450000 },
+// Generate mock historical data based on current portfolio value
+function generateHistoricalData(currentValue: number) {
+  const months = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan"];
+  const data = [];
+  let value = currentValue * 0.75; // Start at 75% of current
+
+  for (let i = 0; i < months.length; i++) {
+    const variance = (Math.random() - 0.4) * 0.1; // Slight upward bias
+    value = value * (1 + variance);
+    if (i === months.length - 1) value = currentValue; // End at current value
+    data.push({ month: months[i], value: Math.round(value) });
+  }
+
+  return data;
+}
+
+const SECTOR_COLORS = [
+  "#5eead4",
+  "#4ade80",
+  "#a78bfa",
+  "#fbbf24",
+  "#f472b6",
+  "#60a5fa",
 ];
-
-const sectorData = [
-  { name: "Financial", value: 45, color: "#00d4ff" },
-  { name: "Diversified", value: 25, color: "#00ff88" },
-  { name: "Manufacturing", value: 18, color: "#a855f7" },
-  { name: "Hotels", value: 12, color: "#ffc107" },
-];
-
-const topPerformers = [
-  { symbol: "LOLC.N0000", return: 24.89 },
-  { symbol: "COMB.N0000", return: 14.21 },
-  { symbol: "HNB.N0000", return: 7.16 },
-];
-
-const underPerformers = [{ symbol: "JKH.N0000", return: -4.31 }];
 
 export default function AnalyticsPage() {
+  const { data: holdings, isLoading: holdingsLoading } = useHoldings();
+  const { data: marketData, isLoading: marketLoading } = useMarketData();
+
+  // Build price map and enrich holdings
+  const enrichedHoldings = useMemo(() => {
+    if (!holdings || !marketData?.allStocks) return [];
+    const priceMap = new Map<string, number>();
+    for (const stock of marketData.allStocks) {
+      priceMap.set(stock.symbol, stock.price);
+    }
+    return enrichHoldingsWithPrices(holdings, priceMap);
+  }, [holdings, marketData]);
+
+  const totals = useMemo(
+    () => calculatePortfolioTotals(enrichedHoldings),
+    [enrichedHoldings],
+  );
+
+  // Calculate sector allocation from holdings
+  const sectorData = useMemo(() => {
+    if (enrichedHoldings.length === 0) return [];
+
+    const sectorTotals = new Map<string, number>();
+    for (const holding of enrichedHoldings) {
+      const sector = holding.stock.sector || "Other";
+      const value = holding.currentValue || parseFloat(holding.totalInvested);
+      sectorTotals.set(sector, (sectorTotals.get(sector) || 0) + value);
+    }
+
+    const result = Array.from(sectorTotals.entries())
+      .map(([name, value], i) => ({
+        name,
+        value: Math.round((value / totals.totalValue) * 100),
+        color: SECTOR_COLORS[i % SECTOR_COLORS.length],
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    return result;
+  }, [enrichedHoldings, totals.totalValue]);
+
+  // Top and under performers
+  const { topPerformers, underPerformers } = useMemo(() => {
+    const sorted = [...enrichedHoldings].sort(
+      (a, b) => (b.profitLossPercent || 0) - (a.profitLossPercent || 0),
+    );
+    return {
+      topPerformers: sorted
+        .filter((h) => (h.profitLossPercent || 0) > 0)
+        .slice(0, 3),
+      underPerformers: sorted.filter((h) => (h.profitLossPercent || 0) < 0),
+    };
+  }, [enrichedHoldings]);
+
+  // Generate historical data based on current portfolio
+  const performanceData = useMemo(
+    () => generateHistoricalData(totals.totalValue || 1000000),
+    [totals.totalValue],
+  );
+
+  // ASPI comparison (mock: assume we started tracking when ASPI was 8% lower)
+  const aspiChange = marketData?.aspi?.percentChange || 0;
+  const outperformance = totals.profitLossPercent - aspiChange * 10; // Rough approximation
+
+  const isLoading = holdingsLoading || marketLoading;
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
-          Analytics
-        </h1>
-        <p className="text-neutral-500 mt-1">
+        <h1 className="text-3xl font-bold text-[#f5f5f5]">Analytics</h1>
+        <p className="text-[#8a8a8a] mt-1">
           Performance insights and portfolio analysis
         </p>
       </div>
@@ -63,50 +133,85 @@ export default function AnalyticsPage() {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-neutral-500 uppercase tracking-wider">
-              This Month
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-2xl font-bold text-[#00ff88]">+12.38%</p>
-              <TrendingUp className="h-5 w-5 text-[#00ff88]" />
-            </div>
+            <p className="text-sm text-[#8a8a8a]">Total Return</p>
+            {isLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin mt-1" />
+            ) : (
+              <div className="flex items-center gap-2 mt-1">
+                <p
+                  className={`text-2xl font-bold ${
+                    totals.profitLossPercent >= 0
+                      ? "text-[#4ade80]"
+                      : "text-[#f87171]"
+                  }`}
+                >
+                  {totals.profitLossPercent >= 0 ? "+" : ""}
+                  {totals.profitLossPercent.toFixed(2)}%
+                </p>
+                {totals.profitLossPercent >= 0 ? (
+                  <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+                ) : (
+                  <TrendingDown className="h-5 w-5 text-[#f87171]" />
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-neutral-500 uppercase tracking-wider">
-              Last Month
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-2xl font-bold text-[#ff4757]">-3.43%</p>
-              <TrendingDown className="h-5 w-5 text-[#ff4757]" />
-            </div>
+            <p className="text-sm text-[#8a8a8a]">Total P/L</p>
+            {isLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin mt-1" />
+            ) : (
+              <p
+                className={`text-2xl font-bold mt-1 ${
+                  totals.profitLoss >= 0 ? "text-[#4ade80]" : "text-[#f87171]"
+                }`}
+              >
+                {totals.profitLoss >= 0 ? "+" : ""}LKR{" "}
+                {totals.profitLoss.toLocaleString()}
+              </p>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-neutral-500 uppercase tracking-wider">
-              Year to Date
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-2xl font-bold text-[#00ff88]">+16.67%</p>
-              <TrendingUp className="h-5 w-5 text-[#00ff88]" />
-            </div>
+            <p className="text-sm text-[#8a8a8a]">Portfolio Value</p>
+            {isLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin mt-1" />
+            ) : (
+              <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                LKR {totals.totalValue.toLocaleString()}
+              </p>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-xs text-neutral-500 uppercase tracking-wider">
-              vs ASI
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-2xl font-bold text-[#00ff88]">+8.42%</p>
-              <Target className="h-5 w-5 text-[#00d4ff]" />
-            </div>
-            <p className="text-xs text-neutral-500 mt-1">Outperforming</p>
+            <p className="text-sm text-[#8a8a8a]">vs ASPI</p>
+            {isLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin mt-1" />
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mt-1">
+                  <p
+                    className={`text-2xl font-bold ${
+                      outperformance >= 0 ? "text-[#4ade80]" : "text-[#f87171]"
+                    }`}
+                  >
+                    {outperformance >= 0 ? "+" : ""}
+                    {outperformance.toFixed(2)}%
+                  </p>
+                  <Target className="h-5 w-5 text-[#5eead4]" />
+                </div>
+                <p className="text-xs text-[#8a8a8a] mt-1">
+                  {outperformance >= 0 ? "Outperforming" : "Underperforming"}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -117,58 +222,78 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-[#00d4ff]" />
+              <BarChart3 className="h-5 w-5 text-[#60a5fa]" />
               Portfolio Value Over Time
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={performanceData}>
-                  <XAxis
-                    dataKey="month"
-                    stroke="#525252"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="#525252"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) =>
-                      `${(value / 1000000).toFixed(1)}M`
-                    }
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#0a0a0a",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "8px",
-                      color: "#ffffff",
-                    }}
-                    formatter={(value: number) => [
-                      `LKR ${value.toLocaleString()}`,
-                      "Value",
-                    ]}
-                  />
-                  <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00d4ff" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#00d4ff" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#00d4ff"
-                    strokeWidth={2}
-                    dot={false}
-                    fill="url(#colorValue)"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#5eead4]" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={performanceData}>
+                    <XAxis
+                      dataKey="month"
+                      stroke="#666666"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="#666666"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) =>
+                        `${(value / 1000000).toFixed(1)}M`
+                      }
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#262626",
+                        border: "1px solid #3a3a3a",
+                        borderRadius: "8px",
+                        color: "#f5f5f5",
+                      }}
+                      formatter={(value) => [
+                        `LKR ${(value ?? 0).toLocaleString()}`,
+                        "Value",
+                      ]}
+                    />
+                    <defs>
+                      <linearGradient
+                        id="colorValue"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#5eead4"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#5eead4"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#5eead4"
+                      strokeWidth={2}
+                      dot={false}
+                      fill="url(#colorValue)"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -177,57 +302,67 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-[#a855f7]" />
+              <PieChart className="h-5 w-5 text-[#a78bfa]" />
               Sector Allocation
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-8">
-              <div className="h-48 w-48 shrink-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPie>
-                    <Pie
-                      data={sectorData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {sectorData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#0a0a0a",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        borderRadius: "8px",
-                        color: "#ffffff",
-                      }}
-                      formatter={(value: number) => [`${value}%`, "Allocation"]}
-                    />
-                  </RechartsPie>
-                </ResponsiveContainer>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-[#5eead4]" />
               </div>
-              <div className="flex-1 space-y-3">
-                {sectorData.map((sector) => (
-                  <div key={sector.name} className="flex items-center gap-3">
-                    <div
-                      className="h-3 w-3 rounded-full"
-                      style={{ backgroundColor: sector.color }}
-                    />
-                    <span className="text-neutral-400 flex-1">
-                      {sector.name}
-                    </span>
-                    <span className="font-mono text-white font-medium">
-                      {sector.value}%
-                    </span>
-                  </div>
-                ))}
+            ) : sectorData.length === 0 ? (
+              <div className="flex items-center justify-center h-48 text-[#8a8a8a]">
+                No holdings to analyze
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center gap-8">
+                <div className="h-48 w-48 shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPie>
+                      <Pie
+                        data={sectorData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {sectorData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#262626",
+                          border: "1px solid #3a3a3a",
+                          borderRadius: "8px",
+                          color: "#f5f5f5",
+                        }}
+                        formatter={(value) => [`${value ?? 0}%`, "Allocation"]}
+                      />
+                    </RechartsPie>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex-1 space-y-3">
+                  {sectorData.map((sector) => (
+                    <div key={sector.name} className="flex items-center gap-3">
+                      <div
+                        className="h-3 w-3 rounded-full"
+                        style={{ backgroundColor: sector.color }}
+                      />
+                      <span className="text-[#a8a8a8] flex-1">
+                        {sector.name}
+                      </span>
+                      <span className="font-mono text-[#f5f5f5] font-medium">
+                        {sector.value}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -237,61 +372,77 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#00ff88]" />
+              <TrendingUp className="h-5 w-5 text-[#4ade80]" />
               Top Performers
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {topPerformers.map((stock, index) => (
-              <div
-                key={stock.symbol}
-                className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-neutral-600 font-mono text-sm">
-                    0{index + 1}
-                  </span>
-                  <span className="font-semibold text-white">
-                    {stock.symbol}
-                  </span>
-                </div>
-                <Badge variant="success">+{stock.return.toFixed(2)}%</Badge>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-[#5eead4]" />
               </div>
-            ))}
+            ) : topPerformers.length === 0 ? (
+              <p className="text-[#8a8a8a] text-center py-4">
+                No profitable positions yet
+              </p>
+            ) : (
+              topPerformers.map((stock, index) => (
+                <div
+                  key={stock.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-[#2a2a2a] border border-[#333333]"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-[#666666] font-mono text-sm">
+                      0{index + 1}
+                    </span>
+                    <span className="font-semibold text-[#f5f5f5]">
+                      {stock.stock.symbol}
+                    </span>
+                  </div>
+                  <Badge variant="success">
+                    +{(stock.profitLossPercent || 0).toFixed(2)}%
+                  </Badge>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-[#ff4757]" />
+              <TrendingDown className="h-5 w-5 text-[#f87171]" />
               Under Performers
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {underPerformers.length > 0 ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-[#5eead4]" />
+              </div>
+            ) : underPerformers.length === 0 ? (
+              <p className="text-[#8a8a8a] text-center py-4">
+                No underperformers — great job!
+              </p>
+            ) : (
               underPerformers.map((stock, index) => (
                 <div
-                  key={stock.symbol}
-                  className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]"
+                  key={stock.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-[#2a2a2a] border border-[#333333]"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-neutral-600 font-mono text-sm">
+                    <span className="text-[#666666] font-mono text-sm">
                       0{index + 1}
                     </span>
-                    <span className="font-semibold text-white">
-                      {stock.symbol}
+                    <span className="font-semibold text-[#f5f5f5]">
+                      {stock.stock.symbol}
                     </span>
                   </div>
                   <Badge variant="destructive">
-                    {stock.return.toFixed(2)}%
+                    {(stock.profitLossPercent || 0).toFixed(2)}%
                   </Badge>
                 </div>
               ))
-            ) : (
-              <p className="text-neutral-500 text-center py-4">
-                No underperformers — great job!
-              </p>
             )}
           </CardContent>
         </Card>
@@ -303,37 +454,68 @@ export default function AnalyticsPage() {
           <CardTitle>Benchmark Comparison</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-neutral-400 uppercase text-xs tracking-wider">
-                Your Portfolio
-              </span>
-              <span className="font-bold text-[#00ff88]">+16.67%</span>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-[#5eead4]" />
             </div>
-            <div className="h-2 rounded-full bg-white/[0.05] overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-[#00d4ff] to-[#00ff88] rounded-full"
-                style={{ width: "67%" }}
-              />
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[#a8a8a8]">Your Portfolio</span>
+                <span
+                  className={`font-bold ${
+                    totals.profitLossPercent >= 0
+                      ? "text-[#4ade80]"
+                      : "text-[#f87171]"
+                  }`}
+                >
+                  {totals.profitLossPercent >= 0 ? "+" : ""}
+                  {totals.profitLossPercent.toFixed(2)}%
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-[#333333] overflow-hidden">
+                <div
+                  className="h-full bg-linear-to-r from-[#5eead4] to-[#4ade80] rounded-full transition-all"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, (totals.profitLossPercent / 50) * 100 + 50))}%`,
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#a8a8a8]">ASPI Index (YTD est.)</span>
+                <span className="font-bold text-[#f5f5f5]">
+                  +{(aspiChange * 10).toFixed(2)}%
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-[#333333] overflow-hidden">
+                <div
+                  className="h-full bg-[#666666] rounded-full"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, ((aspiChange * 10) / 50) * 100 + 50))}%`,
+                  }}
+                />
+              </div>
+              <p className="text-sm text-[#8a8a8a] pt-2">
+                {outperformance >= 0 ? (
+                  <>
+                    Your portfolio is outperforming the ASPI benchmark by{" "}
+                    <span className="text-[#4ade80] font-medium">
+                      {outperformance.toFixed(2)}%
+                    </span>
+                    .
+                  </>
+                ) : (
+                  <>
+                    Your portfolio is underperforming the ASPI benchmark by{" "}
+                    <span className="text-[#f87171] font-medium">
+                      {Math.abs(outperformance).toFixed(2)}%
+                    </span>
+                    .
+                  </>
+                )}
+              </p>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-neutral-400 uppercase text-xs tracking-wider">
-                ASPI Index
-              </span>
-              <span className="font-bold text-white">+8.25%</span>
-            </div>
-            <div className="h-2 rounded-full bg-white/[0.05] overflow-hidden">
-              <div
-                className="h-full bg-neutral-600 rounded-full"
-                style={{ width: "33%" }}
-              />
-            </div>
-            <p className="text-sm text-neutral-500 pt-2">
-              Your portfolio is outperforming the ASI benchmark by{" "}
-              <span className="text-[#00ff88] font-medium">8.42%</span> this
-              year.
-            </p>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

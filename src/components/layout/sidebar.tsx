@@ -27,7 +27,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-[#2f2f2f] px-6">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-teal-400 to-cyan-400">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-teal-400 to-cyan-400">
             <TrendingUp className="h-5 w-5 text-[#1e1e1e]" />
           </div>
           <span className="text-lg font-bold text-[#f5f5f5]">CSE Tracker</span>

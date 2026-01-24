@@ -49,7 +49,14 @@ export interface TradingRule {
     | "TRADE_FREQUENCY";
   threshold: string;
   isActive: boolean;
+
   createdAt: string;
+}
+
+export interface Settings {
+  id: number;
+  capital: string;
+  updatedAt: string;
 }
 
 export interface MarketData {
@@ -156,6 +163,35 @@ export function useStockPrice(symbol: string) {
     queryFn: () => fetchStockPrice(symbol),
     enabled: !!symbol,
     staleTime: 30000,
+  });
+}
+
+export function useSettings() {
+  return useQuery<Settings>({
+    queryKey: ["settings"],
+    queryFn: async () => {
+      const res = await fetch("/api/settings");
+      if (!res.ok) throw new Error("Failed to fetch settings");
+      return res.json();
+    },
+  });
+}
+
+export function useUpdateSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (settings: { capital: number }) => {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      if (!res.ok) throw new Error("Failed to update settings");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+    },
   });
 }
 

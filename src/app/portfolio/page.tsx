@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import {
   Table,
   TableBody,
@@ -22,12 +24,17 @@ import {
   Trash2,
   X,
   Loader2,
+  Wallet,
+  Calculator,
+  Save,
 } from "lucide-react";
 import {
   useHoldings,
   useMarketData,
   useCreateHolding,
   useDeleteHolding,
+  useSettings,
+  useUpdateSettings,
 } from "@/lib/hooks";
 import {
   enrichHoldingsWithPrices,
@@ -37,6 +44,8 @@ import {
 export default function PortfolioPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Form State
   const [formData, setFormData] = useState({
     symbol: "",
     name: "",
@@ -45,10 +54,43 @@ export default function PortfolioPage() {
     avgBuyPrice: "",
   });
 
-  const { data: holdings, isLoading } = useHoldings();
+  // Autocomplete State
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Capital Allocation State
+  const [allocationPercent, setAllocationPercent] = useState<number>(0);
+  const [capitalInput, setCapitalInput] = useState("");
+  const [isEditingCapital, setIsEditingCapital] = useState(false);
+
+  // Hooks
+  const { data: holdings, isLoading: holdingsLoading } = useHoldings();
   const { data: marketData } = useMarketData();
+  const { data: settings, isLoading: settingsLoading } = useSettings();
   const createHolding = useCreateHolding();
   const deleteHolding = useDeleteHolding();
+  const updateSettings = useUpdateSettings();
+
+  // Effects
+  useEffect(() => {
+    if (settings?.capital) {
+      setCapitalInput(settings.capital);
+    }
+  }, [settings]);
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Build price map
   const stockPrices = useMemo(() => {
@@ -61,7 +103,24 @@ export default function PortfolioPage() {
     return map;
   }, [marketData]);
 
-  // Enrich holdings with current prices
+  // Stocks for autocomplete
+  const availableStocks = useMemo(() => {
+    return marketData?.allStocks || [];
+  }, [marketData]);
+
+  const filteredStocks = useMemo(() => {
+    if (!formData.symbol) return [];
+    const query = formData.symbol.toLowerCase();
+    return availableStocks
+      .filter(
+        (s) =>
+          s.symbol.toLowerCase().includes(query) ||
+          s.name.toLowerCase().includes(query),
+      )
+      .slice(0, 5);
+  }, [availableStocks, formData.symbol]);
+
+  // Enrich holdings
   const enrichedHoldings = useMemo(() => {
     if (!holdings) return [];
     return enrichHoldingsWithPrices(holdings, stockPrices);
@@ -77,6 +136,44 @@ export default function PortfolioPage() {
     () => calculatePortfolioTotals(enrichedHoldings),
     [enrichedHoldings],
   );
+
+  const totalCapital = parseFloat(settings?.capital || "0");
+  const unallocatedCapital = totalCapital - totals.totalInvested;
+
+  // Handlers
+  const handleSaveCapital = async () => {
+    try {
+      await updateSettings.mutateAsync({ capital: parseFloat(capitalInput) });
+      setIsEditingCapital(false);
+    } catch (error) {
+      console.error("Failed to update capital", error);
+    }
+  };
+
+  const handleSelectStock = (stock: any) => {
+    setFormData({
+      ...formData,
+      symbol: stock.symbol,
+      name: stock.name,
+      sector: stock.sector || "",
+      avgBuyPrice: stock.price.toString(),
+    });
+    setShowSuggestions(false);
+  };
+
+  const handleAllocationChange = (value: number[]) => {
+    const percent = value[0];
+    setAllocationPercent(percent);
+
+    // Calculate quantity based on total capital
+    // Quantity = (Total Capital * Percent) / Price
+    const price = parseFloat(formData.avgBuyPrice);
+    if (price > 0 && totalCapital > 0) {
+      const amountToInvest = totalCapital * (percent / 100);
+      const qty = Math.floor(amountToInvest / price);
+      setFormData((prev) => ({ ...prev, quantity: qty.toString() }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +193,7 @@ export default function PortfolioPage() {
         quantity: "",
         avgBuyPrice: "",
       });
+      setAllocationPercent(0);
     } catch (error) {
       console.error("Failed to create holding:", error);
     }
@@ -111,6 +209,8 @@ export default function PortfolioPage() {
     }
   };
 
+  const isLoading = holdingsLoading || settingsLoading;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -119,10 +219,60 @@ export default function PortfolioPage() {
           <h1 className="text-3xl font-bold text-[#f5f5f5]">Portfolio</h1>
           <p className="text-[#8a8a8a] mt-1">Manage your stock holdings</p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Stock
-        </Button>
+        <div className="flex gap-3">
+          {/* Capital Settings */}
+          {isEditingCapital ? (
+            <div className="flex items-center gap-2 bg-[#1e1e1e] border border-[#333333] rounded-lg p-1 pr-3 shadow-lg animate-in fade-in slide-in-from-top-2">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a8a8a8] text-sm">
+                  LKR
+                </span>
+                <Input
+                  value={capitalInput}
+                  onChange={(e) => setCapitalInput(e.target.value)}
+                  className="h-8 w-32 pl-10 bg-[#262626] border-none focus-visible:ring-1"
+                  autoFocus
+                />
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-[#4ade80]"
+                onClick={handleSaveCapital}
+              >
+                <Save className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-[#8a8a8a]"
+                onClick={() => setIsEditingCapital(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              className="gap-2 border-[#333333] bg-[#1e1e1e] hover:bg-[#262626]"
+              onClick={() => setIsEditingCapital(true)}
+            >
+              <Wallet className="h-4 w-4 text-[#5eead4]" />
+              <span className="text-[#a8a8a8]">Capital:</span>
+              <span className="font-mono font-medium text-[#f5f5f5]">
+                {parseInt(settings?.capital || "0").toLocaleString()}
+              </span>
+            </Button>
+          )}
+
+          <Button
+            onClick={() => setShowAddModal(true)}
+            className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-0"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Stock
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -143,13 +293,33 @@ export default function PortfolioPage() {
         <Card>
           <CardContent className="pt-5 pb-4">
             <p className="text-sm text-[#8a8a8a]">Total Invested</p>
-            <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
-              {isLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                `LKR ${totals.totalInvested.toLocaleString()}`
-              )}
-            </p>
+            <div className="flex justify-between items-end mt-1">
+              <p className="text-2xl font-bold text-[#f5f5f5]">
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  `LKR ${totals.totalInvested.toLocaleString()}`
+                )}
+              </p>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wider text-[#666666]">
+                  Available
+                </p>
+                <p className="text-xs font-mono text-[#5eead4]">
+                  {unallocatedCapital.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* ProgressBar */}
+            <div className="h-1 w-full bg-[#333333] mt-3 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#5eead4] rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(100, (totals.totalInvested / (totalCapital || 1)) * 100)}%`,
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -317,71 +487,153 @@ export default function PortfolioPage() {
 
       {/* Add Stock Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <Card className="w-full max-w-md mx-4">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Add Stock to Portfolio</CardTitle>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <Card className="w-full max-w-lg mx-4 border-[#333333] shadow-2xl bg-[#1e1e1e]">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-[#2f2f2f] pb-4">
+              <CardTitle>Add Stock</CardTitle>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 rounded-full hover:bg-[#333333]"
                 onClick={() => setShowAddModal(false)}
               >
                 <X className="h-4 w-4" />
               </Button>
             </CardHeader>
             <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
-                    Stock Symbol
-                  </label>
-                  <Input
-                    placeholder="e.g., LOLC.N0000"
-                    className="mt-1.5"
-                    value={formData.symbol}
-                    onChange={(e) =>
-                      setFormData({ ...formData, symbol: e.target.value })
-                    }
-                    required
-                  />
+              <CardContent className="space-y-6 pt-6">
+                {/* Symbol + Autocomplete */}
+                <div className="relative" ref={wrapperRef}>
+                  <Label className="text-[#a8a8a8]">Stock Symbol</Label>
+                  <div className="relative mt-1.5">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#666666]" />
+                    <Input
+                      placeholder="Search to autofill..."
+                      className="pl-9 font-mono uppercase focus:ring-teal-500/20"
+                      value={formData.symbol}
+                      onChange={(e) => {
+                        setFormData({ ...formData, symbol: e.target.value });
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      required
+                    />
+                  </div>
+
+                  {/* Suggestions Dropdown */}
+                  {showSuggestions && filteredStocks.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 overflow-hidden bg-[#262626] border border-[#333333] rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-100">
+                      {filteredStocks.map((stock) => (
+                        <div
+                          key={stock.symbol}
+                          className="flex items-center justify-between px-4 py-3 hover:bg-[#333333] cursor-pointer transition-colors"
+                          onClick={() => handleSelectStock(stock)}
+                        >
+                          <div>
+                            <p className="font-bold text-[#f5f5f5]">
+                              {stock.symbol}
+                            </p>
+                            <p className="text-xs text-[#a8a8a8]">
+                              {stock.name}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-mono text-[#5eead4]">
+                              LKR {stock.price.toFixed(2)}
+                            </p>
+                            <p
+                              className={`text-xs ${stock.percentChange >= 0 ? "text-[#4ade80]" : "text-[#f87171]"}`}
+                            >
+                              {stock.percentChange > 0 ? "+" : ""}
+                              {stock.percentChange}%
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
-                    Company Name
-                  </label>
-                  <Input
-                    placeholder="e.g., LOLC Holdings PLC"
-                    className="mt-1.5"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
-                    Sector (optional)
-                  </label>
-                  <Input
-                    placeholder="e.g., Financial"
-                    className="mt-1.5"
-                    value={formData.sector}
-                    onChange={(e) =>
-                      setFormData({ ...formData, sector: e.target.value })
-                    }
-                  />
-                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-[#a8a8a8]">
-                      Quantity
-                    </label>
+                    <Label className="text-[#a8a8a8]">Company Name</Label>
+                    <Input
+                      placeholder="e.g. LOLC Holdings"
+                      className="mt-1.5"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[#a8a8a8]">Sector</Label>
+                    <Input
+                      placeholder="Optional"
+                      className="mt-1.5"
+                      value={formData.sector}
+                      onChange={(e) =>
+                        setFormData({ ...formData, sector: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Capital Allocation Calculator */}
+                <div className="p-4 rounded-lg bg-[#262626] border border-[#333333] space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calculator className="h-4 w-4 text-[#5eead4]" />
+                      <span className="text-sm font-medium text-[#f5f5f5]">
+                        Capital Allocation
+                      </span>
+                    </div>
+                    <span className="text-xs text-[#a8a8a8]">
+                      Available:{" "}
+                      <span className="font-mono text-[#f5f5f5]">
+                        LKR {unallocatedCapital.toLocaleString()}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#a8a8a8]">
+                        Allocate % of Total Capital
+                      </span>
+                      <span className="font-mono text-[#5eead4]">
+                        {allocationPercent}%
+                      </span>
+                    </div>
+                    <Slider
+                      value={[allocationPercent]}
+                      max={100}
+                      step={1}
+                      onValueChange={handleAllocationChange}
+                      className="py-1"
+                    />
+                    <div className="flex gap-2">
+                      {[5, 10, 20, 25, 50].map((pct) => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => handleAllocationChange([pct])}
+                          className="text-[10px] px-2 py-1 rounded bg-[#333333] hover:bg-[#404040] text-[#a8a8a8] transition-colors"
+                        >
+                          {pct}%
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-[#a8a8a8]">Quantity</Label>
                     <Input
                       type="number"
-                      placeholder="0"
-                      className="mt-1.5"
+                      className="mt-1.5 font-mono text-lg"
                       value={formData.quantity}
                       onChange={(e) =>
                         setFormData({ ...formData, quantity: e.target.value })
@@ -390,14 +642,11 @@ export default function PortfolioPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-[#a8a8a8]">
-                      Avg. Buy Price
-                    </label>
+                    <Label className="text-[#a8a8a8]">Avg. Buy Price</Label>
                     <Input
                       type="number"
                       step="0.01"
-                      placeholder="0.00"
-                      className="mt-1.5"
+                      className="mt-1.5 font-mono text-lg"
                       value={formData.avgBuyPrice}
                       onChange={(e) =>
                         setFormData({
@@ -409,19 +658,27 @@ export default function PortfolioPage() {
                     />
                   </div>
                 </div>
-                <div className="flex justify-end gap-2 pt-2">
+
+                <div className="flex justify-end gap-3 pt-2">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => setShowAddModal(false)}
+                    className="hover:bg-[#333333]"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createHolding.isPending}>
+                  <Button
+                    type="submit"
+                    disabled={createHolding.isPending}
+                    className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-0"
+                  >
                     {createHolding.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : null}
-                    Add Stock
+                    ) : (
+                      <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    Add Validated Stock
                   </Button>
                 </div>
               </CardContent>

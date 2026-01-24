@@ -7,6 +7,8 @@ import {
 } from "@/lib/cse-api";
 
 // GET market overview data from CSE
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     // Fetch all data in parallel
@@ -17,12 +19,23 @@ export async function GET() {
       getAllStockPrices(),
     ]);
 
+    // Deduplicate stocks by symbol
+    const stockMap = new Map();
+    if (stockPrices.data?.reqDetailTrades) {
+      for (const trade of stockPrices.data.reqDetailTrades) {
+        const cleanSymbol = trade.symbol?.trim().toUpperCase();
+        if (cleanSymbol && !stockMap.has(cleanSymbol)) {
+          stockMap.set(cleanSymbol, { ...trade, symbol: cleanSymbol });
+        }
+      }
+    }
+
     return NextResponse.json({
       data: {
         marketStatus: marketStatus.data,
         aspi: aspi.data,
         sp20: sp20.data,
-        allStocks: stockPrices.data?.reqDetailTrades || [],
+        allStocks: Array.from(stockMap.values()),
       },
       errors: {
         marketStatus: marketStatus.error,

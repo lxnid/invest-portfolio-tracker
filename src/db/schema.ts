@@ -55,23 +55,20 @@ export const holdingsRelations = relations(holdings, ({ one }) => ({
 }));
 
 // ============================================================================
-// TRANSACTIONS - Trade history
+// TRANSACTIONS - Historical buy/sell records
 // ============================================================================
-export type TransactionType = "BUY" | "SELL" | "DIVIDEND";
-
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   stockId: integer("stock_id")
     .references(() => stocks.id, { onDelete: "cascade" })
     .notNull(),
-  type: varchar("type", { length: 20 }).$type<TransactionType>().notNull(),
+  type: varchar("type", { length: 10 }).notNull(), // BUY, SELL, DIVIDEND
   quantity: integer("quantity").notNull(),
   price: decimal("price", { precision: 15, scale: 2 }).notNull(),
-  fees: decimal("fees", { precision: 15, scale: 2 }).default("0"),
-  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  date: timestamp("date").defaultNow().notNull(),
   notes: text("notes"),
-  executedAt: timestamp("executed_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -82,21 +79,17 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
 }));
 
 // ============================================================================
-// TRADING RULES - Personal trading discipline
+// TRADING RULES - User defined rules for the engine
 // ============================================================================
 export type RuleType =
   | "POSITION_SIZE"
   | "STOP_LOSS"
   | "TAKE_PROFIT"
   | "SECTOR_LIMIT"
-  | "TRADE_FREQUENCY"
-  | "CUSTOM";
+  | "TRADE_FREQUENCY";
 
 export interface RuleCondition {
-  type: RuleType;
-  threshold?: number;
-  percentage?: number;
-  days?: number;
+  threshold: number; // Percentage or Count
   sector?: string;
   customExpression?: string;
 }
@@ -109,6 +102,17 @@ export const tradingRules = pgTable("trading_rules", {
   conditions: jsonb("conditions").$type<RuleCondition>().notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ============================================================================
+// SETTINGS - User global settings
+// ============================================================================
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(), // Single row expected
+  capital: decimal("capital", { precision: 15, scale: 2 })
+    .default("0")
+    .notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
@@ -126,3 +130,6 @@ export type NewTransaction = typeof transactions.$inferInsert;
 
 export type TradingRule = typeof tradingRules.$inferSelect;
 export type NewTradingRule = typeof tradingRules.$inferInsert;
+
+export type Settings = typeof settings.$inferSelect;
+export type NewSettings = typeof settings.$inferInsert;

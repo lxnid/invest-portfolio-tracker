@@ -25,19 +25,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
-    // Role-based protection for "Demo" users trying to mutate data
-    // GET requests are safe (read-only)
-    // POST/PUT/DELETE are blocked for "guest" role
-    if (
-      session.role === "guest" &&
-      request.method !== "GET" &&
-      request.nextUrl.pathname.startsWith("/api")
-    ) {
-      return NextResponse.json(
-        { error: "Demo users function in Read-Only mode." },
-        { status: 403 },
-      );
-    }
+    // Guest users are now allowed to write (with limits enforced in API routes)
+    // Data cleanup happens on logout
 
     return await updateSession();
   }

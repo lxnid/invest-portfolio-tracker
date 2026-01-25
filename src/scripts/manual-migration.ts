@@ -35,6 +35,12 @@ async function runMigration() {
       sql`ALTER TABLE "transactions" ADD COLUMN IF NOT EXISTS "user_id" varchar(100) DEFAULT 'admin-user' NOT NULL;`,
     );
 
+    // 5. Stocks (for tracking guest creations)
+    console.log("Migrating stocks...");
+    await db.execute(
+      sql`ALTER TABLE "stocks" ADD COLUMN IF NOT EXISTS "created_by" varchar(100) DEFAULT 'system' NOT NULL;`,
+    );
+
     console.log("Migration completed successfully!");
     process.exit(0);
   } catch (error) {

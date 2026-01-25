@@ -37,6 +37,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check demo limits
+    const { checkDemoRulesLimit } = await import("@/lib/demo-limits");
+    const ruleLimit = await checkDemoRulesLimit(session.userId);
+    if (!ruleLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: `Demo limit reached: Max ${ruleLimit.max} rules allowed. You have ${ruleLimit.current}.`,
+        },
+        { status: 403 },
+      );
+    }
+
     const body = await request.json();
     const { name, description, ruleType, threshold, isActive } = body;
 

@@ -209,7 +209,10 @@ export function useUpdateSettings() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       });
-      if (!res.ok) throw new Error("Failed to update settings");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to update settings");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -235,7 +238,10 @@ export function useCreateHolding() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create holding");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to create holding");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -252,7 +258,10 @@ export function useDeleteHolding() {
       const res = await fetch(`/api/holdings/${id}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Failed to delete holding");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete holding");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -281,7 +290,10 @@ export function useCreateTransaction() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create transaction");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to create transaction");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -307,7 +319,10 @@ export function useCreateRule() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create rule");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to create rule");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -324,7 +339,10 @@ export function useDeleteRule() {
       const res = await fetch(`/api/rules/${id}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Failed to delete rule");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete rule");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -343,7 +361,10 @@ export function useToggleRule() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive }),
       });
-      if (!res.ok) throw new Error("Failed to update rule");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to update rule");
+      }
       return res.json();
     },
     onSuccess: () => {

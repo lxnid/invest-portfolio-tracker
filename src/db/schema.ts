@@ -19,6 +19,7 @@ export const stocks = pgTable("stocks", {
   name: varchar("name", { length: 255 }).notNull(),
   sector: varchar("sector", { length: 100 }),
   logoPath: varchar("logo_path", { length: 255 }),
+  createdBy: varchar("created_by", { length: 100 }).default("system").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -82,6 +82,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check demo limits
+    const { checkDemoTransactionLimit, checkDemoHoldingsLimit } =
+      await import("@/lib/demo-limits");
+    const txLimit = await checkDemoTransactionLimit(session.userId);
+    if (!txLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: `Demo limit reached: Max ${txLimit.max} transactions allowed. You have ${txLimit.current}.`,
+        },
+        { status: 403 },
+      );
+    }
+
     const body = await request.json();
     const {
       symbol,
@@ -104,7 +117,12 @@ export async function POST(request: Request) {
     if (!stock) {
       const [newStock] = await db
         .insert(stocks)
-        .values({ symbol, name, sector })
+        .values({
+          symbol,
+          name,
+          sector,
+          createdBy: session.userId, // Track creator
+        })
         .returning();
       stock = newStock;
     }

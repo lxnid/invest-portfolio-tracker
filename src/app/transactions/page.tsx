@@ -372,6 +372,10 @@ function TransactionModal({
     date: new Date().toISOString().split("T")[0],
   });
 
+  // Error State
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Simulation State
   const [simulating, setSimulating] = useState(false);
   const [simulationResult, setSimulationResult] = useState<any>(null);
@@ -492,17 +496,28 @@ function TransactionModal({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      symbol: formData.symbol.toUpperCase(),
-      name: formData.name,
-      type: selectedType,
-      quantity: parseInt(formData.quantity),
-      price: formData.price,
-      fees: formData.fees,
-      executedAt: new Date(formData.date).toISOString(),
-    });
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit({
+        symbol: formData.symbol.toUpperCase(),
+        name: formData.name,
+        type: selectedType,
+        quantity: parseInt(formData.quantity),
+        price: formData.price,
+        fees: formData.fees,
+        executedAt: new Date(formData.date).toISOString(),
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to create transaction";
+      setError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Need to import RuleComplianceCard
@@ -790,6 +805,13 @@ function TransactionModal({
               </div>
             )}
 
+            {/* Error Display */}
+            {error && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
@@ -802,8 +824,16 @@ function TransactionModal({
               <Button
                 type="submit"
                 className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-0"
+                disabled={isSubmitting}
               >
-                Add Transaction
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Transaction"
+                )}
               </Button>
             </div>
           </CardContent>

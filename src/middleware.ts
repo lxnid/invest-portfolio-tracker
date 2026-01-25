@@ -28,6 +28,11 @@ export async function middleware(request: NextRequest) {
     // Guest users are now allowed to write (with limits enforced in API routes)
     // Data cleanup happens on logout
 
+    // Skip session refresh for logout route to prevent cookie conflict
+    if (request.nextUrl.pathname.startsWith("/api/auth/logout")) {
+      return NextResponse.next();
+    }
+
     return await updateSession();
   }
 

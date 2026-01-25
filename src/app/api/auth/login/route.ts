@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createSession } from "@/lib/auth";
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PASSWORD) {
+  throw new Error("ADMIN_PASSWORD environment variable is required");
+}
 
 export async function POST(request: Request) {
   try {

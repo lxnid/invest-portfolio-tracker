@@ -25,8 +25,18 @@ export function Sidebar() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/login";
+    console.log("Logging out...");
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        cache: "no-store",
+      });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      // Force hard redirect to clear client state
+      window.location.href = "/login";
+    }
   };
 
   return (

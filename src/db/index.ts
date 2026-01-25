@@ -1,11 +1,12 @@
-import { neon, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import ws from "ws";
 import * as schema from "./schema";
 
 // Configure Neon for Cloudflare Workers
-// Use fetch mode for better compatibility in edge environments
-// This is critical for preventing "Failed query" errors in Cloudflare Workers
-neonConfig.fetchConnectionCache = true;
+// We need to configure the WebSocket constructor for the serverless driver
+// to work in non-browser environments like Cloudflare Workers
+neonConfig.webSocketConstructor = ws;
 
 // Lazy initialization for Cloudflare Workers compatibility
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -18,9 +19,9 @@ function getDb() {
     throw new Error("DATABASE_URL environment variable is required");
   }
 
-  // Create the Neon HTTP client
-  const sql = neon(connectionString);
-  _db = drizzle(sql, { schema });
+  // Create the Neon WebSocket Pool
+  const pool = new Pool({ connectionString });
+  _db = drizzle(pool, { schema });
   return _db;
 }
 

@@ -145,17 +145,20 @@ export default function TransactionsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-[#f5f5f5]">Transactions</h1>
           <p className="text-[#8a8a8a] mt-1">Your complete trading history</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button variant="outline" className="flex-1 md:flex-none">
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button onClick={() => setShowAddModal(true)}>
+          <Button
+            onClick={() => setShowAddModal(true)}
+            className="flex-1 md:flex-none"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Transaction
           </Button>
@@ -163,7 +166,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
@@ -241,25 +244,26 @@ export default function TransactionsPage() {
       {/* Transactions Table */}
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <CardTitle>Transaction History</CardTitle>
-            <div className="flex items-center gap-3">
-              <div className="relative w-64">
+          <div className="flex flex-col md:flex-row justify-between gap-4 w-full">
+            <CardTitle className="my-auto">Transaction History</CardTitle>
+            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+              <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666666]" />
                 <Input
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 w-full"
                 />
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 overflow-x-auto pb-1 md:pb-0">
                 {(["ALL", "BUY", "SELL", "DIVIDEND"] as const).map((type) => (
                   <Button
                     key={type}
                     variant={typeFilter === type ? "default" : "outline"}
                     size="sm"
                     onClick={() => setTypeFilter(type)}
+                    className="whitespace-nowrap"
                   >
                     {type === "DIVIDEND" ? "DIV" : type}
                   </Button>
@@ -527,8 +531,8 @@ function TransactionModal({
 
   // Need to import RuleComplianceCard
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto py-8">
-      <Card className="w-full max-w-lg mx-4 bg-[#1e1e1e] border-[#333333] shadow-2xl my-auto">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-0 md:p-8">
+      <Card className="w-full h-full md:h-auto md:max-w-lg bg-[#1e1e1e] border-[#333333] shadow-2xl rounded-none md:rounded-xl overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between border-b border-[#2f2f2f] pb-4">
           <CardTitle>Add Transaction</CardTitle>
           <Button

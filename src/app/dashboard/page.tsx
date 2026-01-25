@@ -154,7 +154,7 @@ export default function DashboardPage() {
         <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">
           Portfolio Overview
         </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Portfolio Value"
             value={totals.totalValue.toLocaleString()}
@@ -194,7 +194,7 @@ export default function DashboardPage() {
         <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">
           Market Overview
         </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <Card className="border-[#5eead4]/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-[#8a8a8a]">
@@ -303,7 +303,7 @@ export default function DashboardPage() {
         <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">
           Quick Actions
         </h2>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
           <Link href="/transactions">
             <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors h-full">
               <CardContent className="pt-6">

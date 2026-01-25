@@ -111,7 +111,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Performance Summary */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-5 pb-4">
             <p className="text-sm text-[#8a8a8a]">Total Return</p>
@@ -301,7 +301,7 @@ export default function AnalyticsPage() {
                 No holdings to analyze
               </div>
             ) : (
-              <div className="flex items-center gap-8">
+              <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="h-48 w-48 shrink-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsPie>

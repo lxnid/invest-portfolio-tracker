@@ -1,31 +1,28 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool as PgPool } from "pg";
-import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
-import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
-import ws from "ws";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL!;
+// Lazy initialization for Cloudflare Workers compatibility
+let _db: ReturnType<typeof drizzle> | null = null;
 
-// Check if we are using Neon
-const isNeon = connectionString.includes("neon.tech");
+function getDb() {
+  if (_db) return _db;
 
-// Configure WebSocket for Node environment if using Neon
-if (isNeon) {
-  neonConfig.webSocketConstructor = ws;
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL environment variable is required");
+  }
+
+  const sql = neon(connectionString);
+  _db = drizzle(sql, { schema });
+  return _db;
 }
 
-let db: ReturnType<typeof drizzle> | ReturnType<typeof drizzleNeon>;
+// Export a proxy that lazily initializes the db
+export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+  get(_, prop) {
+    return (getDb() as any)[prop];
+  },
+});
 
-if (isNeon) {
-  const pool = new NeonPool({ connectionString });
-  db = drizzleNeon(pool, { schema });
-} else {
-  const pool = new PgPool({
-    connectionString,
-  });
-  db = drizzle(pool, { schema });
-}
-
-export { db };
 export default db;

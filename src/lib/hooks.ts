@@ -416,3 +416,45 @@ export function useToggleRule() {
     },
   });
 }
+
+export function useUpdateRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      name,
+      description,
+      ruleType,
+      threshold,
+      isActive,
+    }: {
+      id: number;
+      name?: string;
+      description?: string;
+      ruleType?: TradingRule["ruleType"];
+      threshold?: string;
+      isActive?: boolean;
+    }) => {
+      const res = await fetch(`/api/rules/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          description,
+          ruleType,
+          threshold,
+          isActive,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to update rule");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rules"] });
+    },
+  });
+}

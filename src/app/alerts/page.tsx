@@ -41,6 +41,7 @@ import {
   useCreateRule,
   useDeleteRule,
   useToggleRule,
+  useUpdateRule,
   useSettings,
   type TradingRule,
 } from "@/lib/hooks";
@@ -92,8 +93,9 @@ const ruleTypeConfig: Record<
   },
 };
 
-export default function RulesPage() {
+export default function AlertsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [expandedRules, setExpandedRules] = useState<number[]>([]);
   const [selectedType, setSelectedType] = useState<RuleType>("POSITION_SIZE");
   const [formData, setFormData] = useState({
@@ -108,6 +110,7 @@ export default function RulesPage() {
   const { data: marketData } = useMarketData();
   const { data: settings } = useSettings();
   const createRule = useCreateRule();
+  const updateRule = useUpdateRule();
   const deleteRule = useDeleteRule();
   const toggleRule = useToggleRule();
 
@@ -144,18 +147,47 @@ export default function RulesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createRule.mutateAsync({
-        name: formData.name,
-        description: formData.description || undefined,
-        ruleType: selectedType,
-        threshold: formData.threshold,
-        isActive: true,
-      });
+      if (editingId) {
+        await updateRule.mutateAsync({
+          id: editingId,
+          name: formData.name,
+          description: formData.description || undefined,
+          ruleType: selectedType,
+          threshold: formData.threshold,
+          isActive: true,
+        });
+      } else {
+        await createRule.mutateAsync({
+          name: formData.name,
+          description: formData.description || undefined,
+          ruleType: selectedType,
+          threshold: formData.threshold,
+          isActive: true,
+        });
+      }
       setShowAddModal(false);
+      setEditingId(null);
       setFormData({ name: "", description: "", threshold: "" });
     } catch (error) {
-      console.error("Failed to create rule:", error);
+      console.error("Failed to save alert:", error);
     }
+  };
+
+  const handleEdit = (rule: TradingRule) => {
+    setEditingId(rule.id);
+    setFormData({
+      name: rule.name,
+      description: rule.description || "",
+      threshold: rule.threshold,
+    });
+    setSelectedType(rule.ruleType);
+    setShowAddModal(true);
+  };
+
+  const closeModal = () => {
+    setShowAddModal(false);
+    setEditingId(null);
+    setFormData({ name: "", description: "", threshold: "" });
   };
 
   const handleToggle = async (rule: TradingRule) => {
@@ -181,14 +213,20 @@ export default function RulesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#f5f5f5]">Trading Rules</h1>
+          <h1 className="text-3xl font-bold text-[#f5f5f5]">Trading Alerts</h1>
           <p className="text-[#8a8a8a] mt-1">
-            Personal discipline rules to minimize psychological trading traps
+            Market monitors and portfolio alerts
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
+        <Button
+          onClick={() => {
+            setEditingId(null);
+            setFormData({ name: "", description: "", threshold: "" });
+            setShowAddModal(true);
+          }}
+        >
           <Plus className="mr-2 h-4 w-4" />
-          Add Rule
+          Add Alert
         </Button>
       </div>
 
@@ -198,7 +236,7 @@ export default function RulesPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Active Rules</p>
+                <p className="text-sm text-[#8a8a8a]">Active Alerts</p>
                 <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
                   {rulesLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />
@@ -299,7 +337,7 @@ export default function RulesPage() {
       {/* Rules Table */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>All Rules</CardTitle>
+          <CardTitle>All Alerts</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {rulesLoading ? (
@@ -311,7 +349,7 @@ export default function RulesPage() {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-12">Status</TableHead>
-                  <TableHead>Rule</TableHead>
+                  <TableHead>Alert Config</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead className="text-right">Threshold</TableHead>
                   <TableHead className="text-center">Violations</TableHead>
@@ -401,6 +439,7 @@ export default function RulesPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
+                              onClick={() => handleEdit(rule)}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -454,23 +493,25 @@ export default function RulesPage() {
 
           {!rulesLoading && (!rules || rules.length === 0) && (
             <div className="text-center py-8 text-[#8a8a8a]">
-              No rules configured. Add your first trading rule to get started.
+              No alerts configured. Add your first trading alert to get started.
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Add Rule Modal */}
+      {/* Add Alert Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <Card className="w-full max-w-md mx-4">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Create Trading Rule</CardTitle>
+              <CardTitle>
+                {editingId ? "Edit Trading Alert" : "Create Trading Alert"}
+              </CardTitle>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => setShowAddModal(false)}
+                onClick={closeModal}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -479,7 +520,7 @@ export default function RulesPage() {
               <CardContent className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-[#a8a8a8]">
-                    Rule Name
+                    Alert Name
                   </label>
                   <Input
                     placeholder="e.g., Max Position Size"
@@ -493,7 +534,7 @@ export default function RulesPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-[#a8a8a8]">
-                    Rule Type
+                    Alert Type
                   </label>
                   <div className="grid grid-cols-2 gap-2 mt-1.5">
                     {(
@@ -550,7 +591,7 @@ export default function RulesPage() {
                     Description (optional)
                   </label>
                   <Input
-                    placeholder="When should this rule trigger?"
+                    placeholder="When should this alert trigger?"
                     className="mt-1.5"
                     value={formData.description}
                     onChange={(e) =>
@@ -559,18 +600,17 @@ export default function RulesPage() {
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAddModal(false)}
-                  >
+                  <Button type="button" variant="outline" onClick={closeModal}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createRule.isPending}>
-                    {createRule.isPending ? (
+                  <Button
+                    type="submit"
+                    disabled={createRule.isPending || updateRule.isPending}
+                  >
+                    {createRule.isPending || updateRule.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : null}
-                    Create Rule
+                    {editingId ? "Update Alert" : "Create Alert"}
                   </Button>
                 </div>
               </CardContent>

@@ -270,14 +270,6 @@ export default function PortfolioPage() {
               </span>
             </Button>
           )}
-
-          <Button
-            onClick={() => setShowAddModal(true)}
-            className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-0"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Buy Stock
-          </Button>
         </div>
       </div>
 
@@ -430,16 +422,24 @@ export default function PortfolioPage() {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead>Symbol</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Avg. Price</TableHead>
-                  <TableHead className="text-right">Init. Price</TableHead>
-                  <TableHead className="text-right">Last Price</TableHead>
-                  <TableHead className="text-right">Current</TableHead>
-                  <TableHead className="text-right">Value</TableHead>
+                  <TableHead className="w-[120px]">Symbol</TableHead>
+                  <TableHead className="w-[200px]">Company</TableHead>
+                  <TableHead className="text-right w-[80px]">Qty</TableHead>
+                  <TableHead className="text-right w-[100px]">
+                    Avg. Price
+                  </TableHead>
+                  <TableHead className="text-right w-[100px]">
+                    Init. Price
+                  </TableHead>
+                  <TableHead className="text-right w-[100px]">
+                    Last Price
+                  </TableHead>
+                  <TableHead className="text-right w-[100px]">
+                    Current
+                  </TableHead>
+                  <TableHead className="text-right w-[120px]">Value</TableHead>
                   <TableHead className="text-right">P/L</TableHead>
-                  <TableHead className="text-right w-24"></TableHead>
+                  <TableHead className="text-right w-8"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

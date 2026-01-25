@@ -75,5 +75,11 @@ export async function updateSession() {
 }
 
 export async function deleteSession() {
-  (await cookies()).delete("session");
+  (await cookies()).set("session", "", {
+    httpOnly: true,
+    secure: true,
+    expires: new Date(0), // Expire immediately
+    sameSite: "lax",
+    path: "/", // Matches the path used in createSession
+  });
 }

@@ -34,6 +34,7 @@ import {
   useMarketData,
   useSettings,
   useHoldings,
+  type Holding,
 } from "@/lib/hooks";
 
 type TransactionType = "BUY" | "SELL" | "DIVIDEND";
@@ -389,6 +390,10 @@ function TransactionModal({
   const [allocationPercent, setAllocationPercent] = useState<number>(0);
   const totalCapital = parseFloat(settings?.capital || "0");
 
+  // Sell Percentage State
+  const [sellPercent, setSellPercent] = useState<number>(100);
+  const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
+
   // Auto-calculate fees
   useEffect(() => {
     const qty = parseFloat(formData.quantity);
@@ -552,7 +557,23 @@ function TransactionModal({
                           ? "bg-red-600 hover:bg-red-700"
                           : ""
                     }`}
-                    onClick={() => setSelectedType(type)}
+                    onClick={() => {
+                      setSelectedType(type);
+                      // Reset form data when switching types
+                      setFormData({
+                        symbol: "",
+                        name: "",
+                        stockId: 0,
+                        quantity: "",
+                        price: "",
+                        fees: "",
+                        date: new Date().toISOString().split("T")[0],
+                      });
+                      setSelectedHolding(null);
+                      setSellPercent(100);
+                      setAllocationPercent(0);
+                      setSimulationResult(null);
+                    }}
                   >
                     {type === "DIVIDEND" ? "DIV" : type}
                   </Button>
@@ -561,7 +582,7 @@ function TransactionModal({
             </div>
 
             {/* Symbol Selection - Conditional on Type */}
-            {selectedType === "DIVIDEND" ? (
+            {selectedType === "DIVIDEND" || selectedType === "SELL" ? (
               <div>
                 <Label className="text-[#a8a8a8]">
                   Select Stock (Active Holdings)
@@ -573,15 +594,29 @@ function TransactionModal({
                       (h) => h.stock.symbol === e.target.value,
                     );
                     if (holding) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        symbol: holding.stock.symbol,
-                        name: holding.stock.name,
-                        stockId: holding.stockId,
-                        quantity: holding.quantity.toString(),
-                        price: "", // Reset dividend per share
-                        fees: "0", // No fees for dividends
-                      }));
+                      setSelectedHolding(holding);
+                      if (selectedType === "DIVIDEND") {
+                        setFormData((prev) => ({
+                          ...prev,
+                          symbol: holding.stock.symbol,
+                          name: holding.stock.name,
+                          stockId: holding.stockId,
+                          quantity: holding.quantity.toString(),
+                          price: "", // Reset dividend per share
+                          fees: "0", // No fees for dividends
+                        }));
+                      } else {
+                        // SELL - set full quantity by default, user can adjust with slider
+                        setSellPercent(100);
+                        setFormData((prev) => ({
+                          ...prev,
+                          symbol: holding.stock.symbol,
+                          name: holding.stock.name,
+                          stockId: holding.stockId,
+                          quantity: holding.quantity.toString(),
+                          price: holding.avgBuyPrice?.toString() || "",
+                        }));
+                      }
                     }
                   }}
                   value={formData.symbol}
@@ -589,13 +624,14 @@ function TransactionModal({
                   <option value="">Select a stock...</option>
                   {holdings?.map((h) => (
                     <option key={h.id} value={h.stock.symbol}>
-                      {h.stock.symbol} - {h.quantity} Shares
+                      {h.stock.symbol} - {h.quantity} Shares @ LKR{" "}
+                      {parseFloat(h.avgBuyPrice || "0").toFixed(2)}
                     </option>
                   ))}
                 </select>
               </div>
             ) : (
-              // Standard Autocomplete for BUY/SELL
+              // Standard Autocomplete for BUY only
               <div className="relative" ref={wrapperRef}>
                 <Label className="text-[#a8a8a8]">Stock Symbol</Label>
                 <div className="relative mt-1.5">
@@ -638,8 +674,8 @@ function TransactionModal({
               </div>
             )}
 
-            {/* Auto-filled Name */}
-            {formData.name && selectedType !== "DIVIDEND" && (
+            {/* Auto-filled Name (Only for BUY when using search) */}
+            {formData.name && selectedType === "BUY" && (
               <div className="text-sm text-[#a8a8a8] px-1">{formData.name}</div>
             )}
 
@@ -698,6 +734,96 @@ function TransactionModal({
               </div>
             )}
 
+            {/* Sell Quantity Selector (Only for SELL) */}
+            {selectedType === "SELL" && selectedHolding && (
+              <div className="p-4 rounded-lg bg-[#262626] border border-[#333333] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="h-4 w-4 text-[#f87171]" />
+                    <span className="text-sm font-medium text-[#f5f5f5]">
+                      Sell Quantity
+                    </span>
+                  </div>
+                  <span className="text-xs text-[#a8a8a8]">
+                    Available:{" "}
+                    <span className="font-mono text-[#f5f5f5]">
+                      {selectedHolding.quantity} Shares
+                    </span>
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#a8a8a8]">Sell % of Holding</span>
+                    <span className="font-mono text-[#f87171]">
+                      {sellPercent}% (
+                      {Math.floor(
+                        selectedHolding.quantity * (sellPercent / 100),
+                      )}{" "}
+                      Shares)
+                    </span>
+                  </div>
+                  <Slider
+                    value={[sellPercent]}
+                    max={100}
+                    min={1}
+                    step={1}
+                    onValueChange={(value) => {
+                      const pct = value[0];
+                      setSellPercent(pct);
+                      const qty = Math.floor(
+                        selectedHolding.quantity * (pct / 100),
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        quantity: qty.toString(),
+                      }));
+                    }}
+                    className="py-1"
+                  />
+                  <div className="flex gap-2">
+                    {[25, 50, 75, 100].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => {
+                          setSellPercent(pct);
+                          const qty = Math.floor(
+                            selectedHolding.quantity * (pct / 100),
+                          );
+                          setFormData((prev) => ({
+                            ...prev,
+                            quantity: qty.toString(),
+                          }));
+                        }}
+                        className={`text-[10px] px-2 py-1 rounded transition-colors ${
+                          sellPercent === pct
+                            ? "bg-[#f87171] text-white"
+                            : "bg-[#333333] hover:bg-[#404040] text-[#a8a8a8]"
+                        }`}
+                      >
+                        {pct}%
+                      </button>
+                    ))}
+                  </div>
+                  <div className="pt-2 border-t border-[#333333] flex justify-between text-sm">
+                    <span className="text-[#a8a8a8]">Estimated Value:</span>
+                    <span className="font-mono text-[#f5f5f5]">
+                      LKR{" "}
+                      {(
+                        Math.floor(
+                          selectedHolding.quantity * (sellPercent / 100),
+                        ) * parseFloat(formData.price || "0")
+                      ).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-[#a8a8a8]">Quantity</Label>
@@ -709,7 +835,9 @@ function TransactionModal({
                     setFormData({ ...formData, quantity: e.target.value })
                   }
                   required
-                  disabled={selectedType === "DIVIDEND"}
+                  disabled={
+                    selectedType === "DIVIDEND" || selectedType === "SELL"
+                  }
                 />
               </div>
               <div>

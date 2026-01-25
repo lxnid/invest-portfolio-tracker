@@ -23,7 +23,7 @@ interface ComplianceCardProps {
 
 export function RuleComplianceCard({
   isValid,
-  violations,
+  violations = [],
   newTotals,
 }: ComplianceCardProps) {
   const criticalViolations = violations.filter(

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "build:pages": "opennextjs-cloudflare build && cp .open-next/worker.js .open-next/assets/_worker.js",
+    "build:pages": "opennextjs-cloudflare build",
     "preview": "opennextjs-cloudflare preview",
     "start": "next start",
     "lint": "eslint",

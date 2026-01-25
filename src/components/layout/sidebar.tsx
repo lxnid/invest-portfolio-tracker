@@ -12,6 +12,8 @@ import {
   LogOut,
 } from "lucide-react";
 
+import { BrandingFooter } from "@/components/branding-footer";
+
 const navItems = [
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -25,6 +27,7 @@ export function Sidebar() {
   const router = useRouter();
 
   const handleLogout = async () => {
+    // ... (same implementation)
     console.log("Logging out...");
     try {
       await fetch("/api/auth/logout", {
@@ -42,7 +45,7 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col border-r border-[#2f2f2f] bg-[#1e1e1e]">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-[#2f2f2f] px-6">
+      <div className="flex h-16 items-center border-b border-[#2f2f2f] px-6 shrink-0">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-teal-400 to-cyan-400">
             <TrendingUp className="h-5 w-5 text-[#1e1e1e]" />
@@ -52,7 +55,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-1 p-4">
+      <nav className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -76,7 +79,9 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-[#2f2f2f] p-4">
+      <div className="border-t border-[#2f2f2f] p-4 bg-[#1e1e1e] shrink-0">
+        <BrandingFooter className="border-0 pt-0 mt-0 mb-2" />
+
         {/* Logout Button */}
         <button
           onClick={handleLogout}
@@ -87,7 +92,7 @@ export function Sidebar() {
         </button>
 
         {/* Market Status */}
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm px-3">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f87171] opacity-75"></span>
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[#f87171]"></span>

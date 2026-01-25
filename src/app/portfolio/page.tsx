@@ -275,7 +275,7 @@ export default function PortfolioPage() {
 
       {/* Summary Cards (Active Only) */}
       {viewMode === "active" && (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-2">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4 animate-in fade-in slide-in-from-bottom-2">
           <Card>
             <CardContent className="pt-5 pb-4">
               <p className="text-sm text-[#8a8a8a]">Total Value</p>

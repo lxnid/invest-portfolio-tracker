@@ -13,6 +13,7 @@ import {
   X,
   Menu,
 } from "lucide-react";
+import { BrandingFooter } from "@/components/branding-footer";
 import { useState, useEffect } from "react";
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
 ];
 
 export function MobileSidebar() {
+  // ... (hooks and state)
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -85,11 +87,11 @@ export function MobileSidebar() {
       {/* Sidebar Panel */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-xs transform border-r border-[#2f2f2f] bg-[#1e1e1e] transition-transform duration-300 ease-in-out lg:hidden",
+          "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-xs transform border-r border-[#2f2f2f] bg-[#1e1e1e] transition-transform duration-300 ease-in-out lg:hidden flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b border-[#2f2f2f] px-6">
+        <div className="flex h-16 items-center justify-between border-b border-[#2f2f2f] px-6 shrink-0">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-teal-400 to-cyan-400">
               <TrendingUp className="h-5 w-5 text-[#1e1e1e]" />
@@ -106,7 +108,7 @@ export function MobileSidebar() {
           </button>
         </div>
 
-        <nav className="flex flex-col gap-1 p-4">
+        <nav className="flex-1 overflow-y-auto flex flex-col gap-1 p-4">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
@@ -129,7 +131,9 @@ export function MobileSidebar() {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 border-t border-[#2f2f2f] p-4">
+        <div className="border-t border-[#2f2f2f] p-4 shrink-0">
+          <BrandingFooter className="border-0 pt-0 mt-0 mb-4" mobile />
+
           <button
             onClick={handleLogout}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#a8a8a8] hover:bg-[#2a2a2a] hover:text-[#f5f5f5] transition-all duration-200 mb-3"
@@ -138,7 +142,7 @@ export function MobileSidebar() {
             Logout
           </button>
 
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm px-3">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f87171] opacity-75"></span>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#f87171]"></span>

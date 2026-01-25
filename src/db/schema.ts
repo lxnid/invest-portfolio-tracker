@@ -110,6 +110,18 @@ export const tradingRules = pgTable("trading_rules", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ============================================================================
+// FEEDBACK (User Submitted)
+// ============================================================================
+export const feedback = pgTable("feedback", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 100 }).default("anonymous").notNull(),
+  type: varchar("type", { length: 20 }).notNull(), // FEATURE, BUG, OTHER
+  message: text("message").notNull(),
+  status: varchar("status", { length: 20 }).default("new").notNull(), // NEW, READ, ARCHIVED
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Types based on schema
 export type Stock = typeof stocks.$inferSelect;
 export type NewStock = typeof stocks.$inferInsert;
@@ -124,3 +136,6 @@ export type TradingRule = typeof tradingRules.$inferSelect;
 export type NewTradingRule = typeof tradingRules.$inferInsert;
 
 export type Settings = typeof settings.$inferSelect;
+
+export type Feedback = typeof feedback.$inferSelect;
+export type NewFeedback = typeof feedback.$inferInsert;

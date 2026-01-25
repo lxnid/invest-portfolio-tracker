@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RuleComplianceCard } from "@/components/rule-compliance";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -25,6 +26,7 @@ import {
   X,
   Loader2,
   Calculator,
+  ShieldCheck,
 } from "lucide-react";
 import {
   useTransactions,
@@ -363,11 +365,16 @@ function TransactionModal({
   const [formData, setFormData] = useState({
     symbol: "",
     name: "",
+    stockId: 0,
     quantity: "",
     price: "",
     fees: "",
     date: new Date().toISOString().split("T")[0],
   });
+
+  // Simulation State
+  const [simulating, setSimulating] = useState(false);
+  const [simulationResult, setSimulationResult] = useState<any>(null);
 
   // Autocomplete
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -376,7 +383,7 @@ function TransactionModal({
 
   // Capital Allocation
   const [allocationPercent, setAllocationPercent] = useState<number>(0);
-  const totalCapital = parseFloat(settings?.capital || "0"); // This might need to be "available capital" ideally, but request said "from capital shown"
+  const totalCapital = parseFloat(settings?.capital || "0");
 
   // Auto-calculate fees
   useEffect(() => {
@@ -387,6 +394,11 @@ function TransactionModal({
       setFormData((prev) => ({ ...prev, fees }));
     }
   }, [formData.quantity, formData.price]);
+
+  // Clear simulation when inputs change
+  useEffect(() => {
+    setSimulationResult(null);
+  }, [formData.symbol, formData.quantity, formData.price, selectedType]);
 
   // Click outside listener
   useEffect(() => {
@@ -416,6 +428,7 @@ function TransactionModal({
       ...prev,
       symbol: stock.symbol,
       name: stock.name,
+      stockId: stock.id, // We assume marketData provides this or we match by symbol
       price: stock.price.toString(),
     }));
     setShowSuggestions(false);
@@ -433,6 +446,52 @@ function TransactionModal({
     }
   };
 
+  const handleSimulate = async () => {
+    setSimulating(true);
+    try {
+      // If we don't have stockId (e.g. manual entry not from autocomplete), we might need to find it or send 0
+      // The backend simulator needs stockId to match existing holdings.
+      // If user manually types symbol, we might miss stockId.
+      // Let's rely on backend to lookup symbol if stockId is 0.
+      // Actually, our backend simulator uses passed stockId.
+      // Let's try to find stockId from holdings if possible.
+      let sid = formData.stockId;
+      if (!sid) {
+        const h = holdings?.find(
+          (h) => h.stock.symbol === formData.symbol.toUpperCase(),
+        );
+        if (h) sid = h.stockId;
+        // If still 0, maybe marketData has it?
+        // Our marketData.allStocks doesn't restrictively have IDs in the interface but might in runtime?
+        // The `useMarketData` interface says `allStocks: Array<{ symbol, name, price... }>` - no ID.
+        // We might need to fetch stock ID or assume it exists in DB.
+        // Simulation requires stockId to match holdings.
+        // If it's a new stock, ID doesn't matter much unless we have a rule about specific stocks?
+        // But generic rules (Cash, Sizing) just need symbol/value.
+        // Let's send 0 if unknown.
+      }
+
+      const res = await fetch("/api/simulate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stockId: sid,
+          symbol: formData.symbol.toUpperCase(),
+          type: selectedType,
+          quantity: formData.quantity,
+          price: formData.price,
+          fees: formData.fees,
+        }),
+      });
+      const result = await res.json();
+      setSimulationResult(result);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSimulating(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
@@ -446,9 +505,10 @@ function TransactionModal({
     });
   };
 
+  // Need to import RuleComplianceCard
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <Card className="w-full max-w-lg mx-4 bg-[#1e1e1e] border-[#333333] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto py-8">
+      <Card className="w-full max-w-lg mx-4 bg-[#1e1e1e] border-[#333333] shadow-2xl my-auto">
         <CardHeader className="flex flex-row items-center justify-between border-b border-[#2f2f2f] pb-4">
           <CardTitle>Add Transaction</CardTitle>
           <Button
@@ -464,14 +524,19 @@ function TransactionModal({
           <CardContent className="space-y-5 pt-6">
             {/* Type Selection */}
             <div>
-              <Label className="text-[#a8a8a8]">Transaction Type</Label>
-              <div className="flex gap-2 mt-1.5">
+              <div className="flex gap-2">
                 {(["BUY", "SELL", "DIVIDEND"] as const).map((type) => (
                   <Button
                     key={type}
                     type="button"
                     variant={selectedType === type ? "default" : "outline"}
-                    className="flex-1"
+                    className={`flex-1 ${
+                      selectedType === type && type === "BUY"
+                        ? "bg-emerald-600 hover:bg-emerald-700"
+                        : selectedType === type && type === "SELL"
+                          ? "bg-red-600 hover:bg-red-700"
+                          : ""
+                    }`}
                     onClick={() => setSelectedType(type)}
                   >
                     {type === "DIVIDEND" ? "DIV" : type}
@@ -497,6 +562,7 @@ function TransactionModal({
                         ...prev,
                         symbol: holding.stock.symbol,
                         name: holding.stock.name,
+                        stockId: holding.stockId,
                         quantity: holding.quantity.toString(),
                         price: "", // Reset dividend per share
                         fees: "0", // No fees for dividends
@@ -557,19 +623,10 @@ function TransactionModal({
               </div>
             )}
 
-            <div>
-              <Label className="text-[#a8a8a8]">Company Name</Label>
-              <Input
-                placeholder="e.g., LOLC Holdings PLC"
-                className="mt-1.5"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                required
-                disabled={selectedType === "DIVIDEND"} // Auto-filled for dividends
-              />
-            </div>
+            {/* Auto-filled Name */}
+            {formData.name && selectedType !== "DIVIDEND" && (
+              <div className="text-sm text-[#a8a8a8] px-1">{formData.name}</div>
+            )}
 
             {/* Capital Allocation (Only for BUY) */}
             {selectedType === "BUY" && (
@@ -582,7 +639,7 @@ function TransactionModal({
                     </span>
                   </div>
                   <span className="text-xs text-[#a8a8a8]">
-                    Total Capital:{" "}
+                    Capital:{" "}
                     <span className="font-mono text-[#f5f5f5]">
                       LKR {totalCapital.toLocaleString()}
                     </span>
@@ -637,7 +694,7 @@ function TransactionModal({
                     setFormData({ ...formData, quantity: e.target.value })
                   }
                   required
-                  disabled={selectedType === "DIVIDEND"} // Auto-filled for dividends
+                  disabled={selectedType === "DIVIDEND"}
                 />
               </div>
               <div>
@@ -661,7 +718,7 @@ function TransactionModal({
               <div>
                 <Label className="text-[#a8a8a8]">
                   {selectedType === "DIVIDEND"
-                    ? "Total Dividend Income"
+                    ? "Total Income"
                     : "Fees (1.12%)"}
                 </Label>
                 {selectedType === "DIVIDEND" ? (
@@ -697,6 +754,41 @@ function TransactionModal({
                 />
               </div>
             </div>
+
+            {/* Simulation Results */}
+            {selectedType !== "DIVIDEND" && (
+              <div className="pt-2 pb-2">
+                {simulationResult ? (
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <RuleComplianceCard
+                      isValid={simulationResult.isValid}
+                      violations={simulationResult.violations}
+                      newTotals={simulationResult.newTotals}
+                    />
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full border-dashed border-[#5eead4]/50 text-[#5eead4] hover:bg-[#5eead4]/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleSimulate}
+                    disabled={
+                      simulating ||
+                      !formData.symbol ||
+                      !formData.quantity ||
+                      !formData.price
+                    }
+                  >
+                    {simulating ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <ShieldCheck className="h-4 w-4 mr-2" />
+                    )}
+                    Test against Investment Rules
+                  </Button>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button

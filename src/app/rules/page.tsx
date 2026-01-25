@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,10 +15,13 @@ import {
 } from "@/components/ui/table";
 import {
   Plus,
+  ChevronDown,
+  ChevronUp,
   ShieldCheck,
   AlertTriangle,
   Percent,
   TrendingDown,
+  TrendingUp,
   Clock,
   BarChart3,
   Pencil,
@@ -38,6 +41,7 @@ import {
   useCreateRule,
   useDeleteRule,
   useToggleRule,
+  useSettings,
   type TradingRule,
 } from "@/lib/hooks";
 import {
@@ -45,6 +49,7 @@ import {
   getTotalViolationCount,
   calculateDisciplineScore,
   enrichHoldingsWithPrices,
+  type RuleViolation,
 } from "@/lib/rule-engine";
 
 type RuleType = TradingRule["ruleType"];
@@ -70,10 +75,26 @@ const ruleTypeConfig: Record<
     color: "text-[#a78bfa]",
   },
   TRADE_FREQUENCY: { icon: Clock, label: "Frequency", color: "text-[#fbbf24]" },
+  CASH_BUFFER: {
+    icon: ShieldCheck,
+    label: "Cash Buffer",
+    color: "text-[#10b981]",
+  },
+  BUY_CONDITION: {
+    icon: TrendingDown,
+    label: "Buy Signal",
+    color: "text-[#3b82f6]",
+  },
+  SELL_CONDITION: {
+    icon: TrendingUp,
+    label: "Sell Signal",
+    color: "text-[#f43f5e]",
+  },
 };
 
 export default function RulesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [expandedRules, setExpandedRules] = useState<number[]>([]);
   const [selectedType, setSelectedType] = useState<RuleType>("POSITION_SIZE");
   const [formData, setFormData] = useState({
     name: "",
@@ -85,6 +106,7 @@ export default function RulesPage() {
   const { data: holdings } = useHoldings();
   const { data: transactions } = useTransactions();
   const { data: marketData } = useMarketData();
+  const { data: settings } = useSettings();
   const createRule = useCreateRule();
   const deleteRule = useDeleteRule();
   const toggleRule = useToggleRule();
@@ -102,8 +124,8 @@ export default function RulesPage() {
   // Evaluate rule violations
   const violations = useMemo(() => {
     if (!rules) return new Map();
-    return evaluateRules(rules, enrichedHoldings, transactions || []);
-  }, [rules, enrichedHoldings, transactions]);
+    return evaluateRules(rules, enrichedHoldings, transactions || [], settings);
+  }, [rules, enrichedHoldings, transactions, settings]);
 
   const totalViolations = getTotalViolationCount(violations);
   const activeRules = rules?.filter((r) => r.isActive) || [];
@@ -300,76 +322,130 @@ export default function RulesPage() {
                 {rules?.map((rule) => {
                   const config = ruleTypeConfig[rule.ruleType];
                   const Icon = config.icon;
-                  const ruleViolations = violations.get(rule.id)?.length || 0;
+                  const ruleViolations = violations.get(rule.id) || [];
+                  const count = ruleViolations.length;
+                  const isExpanded = expandedRules.includes(rule.id);
+
+                  const toggleExpand = () => {
+                    setExpandedRules((prev) =>
+                      prev.includes(rule.id)
+                        ? prev.filter((id) => id !== rule.id)
+                        : [...prev, rule.id],
+                    );
+                  };
 
                   return (
-                    <TableRow
-                      key={rule.id}
-                      className={!rule.isActive ? "opacity-50" : ""}
-                    >
-                      <TableCell>
-                        <button
-                          className="text-[#8a8a8a] hover:text-[#f5f5f5] transition-colors"
-                          onClick={() => handleToggle(rule)}
-                          disabled={toggleRule.isPending}
-                        >
-                          {rule.isActive ? (
-                            <ToggleRight className="h-5 w-5 text-[#4ade80]" />
+                    <Fragment key={rule.id}>
+                      <TableRow
+                        className={`${!rule.isActive ? "opacity-50" : ""} cursor-pointer hover:bg-[#262626]`}
+                        onClick={toggleExpand}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <button
+                            className="text-[#8a8a8a] hover:text-[#f5f5f5] transition-colors"
+                            onClick={() => handleToggle(rule)}
+                            disabled={toggleRule.isPending}
+                          >
+                            {rule.isActive ? (
+                              <ToggleRight className="h-5 w-5 text-[#4ade80]" />
+                            ) : (
+                              <ToggleLeft className="h-5 w-5" />
+                            )}
+                          </button>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {count > 0 && (
+                              <div className="text-[#a8a8a8]">
+                                {isExpanded ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-semibold text-[#f5f5f5]">
+                                {rule.name}
+                              </p>
+                              <p className="text-sm text-[#8a8a8a] mt-0.5">
+                                {rule.description}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Icon className={`h-4 w-4 ${config.color}`} />
+                            <span className="text-[#a8a8a8]">
+                              {config.label}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="font-mono text-[#f5f5f5]">
+                            {rule.threshold}
+                            {rule.ruleType === "TRADE_FREQUENCY" ? "/wk" : "%"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {count > 0 ? (
+                            <Badge variant="warning">{count}</Badge>
                           ) : (
-                            <ToggleLeft className="h-5 w-5" />
+                            <span className="text-[#666666]">—</span>
                           )}
-                        </button>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-semibold text-[#f5f5f5]">
-                            {rule.name}
-                          </p>
-                          <p className="text-sm text-[#8a8a8a] mt-0.5">
-                            {rule.description}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Icon className={`h-4 w-4 ${config.color}`} />
-                          <span className="text-[#a8a8a8]">{config.label}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className="font-mono text-[#f5f5f5]">
-                          {rule.threshold}
-                          {rule.ruleType === "TRADE_FREQUENCY" ? "/wk" : "%"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {ruleViolations > 0 ? (
-                          <Badge variant="warning">{ruleViolations}</Badge>
-                        ) : (
-                          <span className="text-[#666666]">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-[#f87171] hover:text-[#fca5a5]"
-                            onClick={() => handleDelete(rule.id)}
-                            disabled={deleteRule.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-[#f87171] hover:text-[#fca5a5]"
+                              onClick={() => handleDelete(rule.id)}
+                              disabled={deleteRule.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+
+                      {isExpanded && count > 0 && (
+                        <TableRow className="bg-[#262626]/50 hover:bg-[#262626]/50 border-0">
+                          <TableCell colSpan={6} className="p-0">
+                            <div className="p-4 space-y-2 border-l-2 border-[#fbbf24] ml-4 bg-[#1e1e1e]">
+                              {ruleViolations.map(
+                                (v: RuleViolation, i: number) => (
+                                  <div
+                                    key={i}
+                                    className="flex items-start gap-2 text-sm"
+                                  >
+                                    <AlertTriangle className="h-4 w-4 text-[#fbbf24] mt-0.5 shrink-0" />
+                                    <div>
+                                      <p className="text-[#f5f5f5]">
+                                        {v.message}
+                                      </p>
+                                      {v.impact && (
+                                        <p className="text-[#a8a8a8] text-xs mt-1">
+                                          {v.impact}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
                   );
                 })}
               </TableBody>

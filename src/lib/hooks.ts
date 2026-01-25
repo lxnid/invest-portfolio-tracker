@@ -8,17 +8,19 @@ export interface Stock {
   symbol: string;
   name: string;
   sector?: string;
-  logoPath?: string;
+  logoPath?: string | null;
 }
 
 export interface Holding {
   id: number;
+  stockId: number;
   quantity: number;
   avgBuyPrice: string;
   initialBuyPrice?: string;
   lastBuyPrice?: string;
   totalInvested: string;
   status: string;
+  createdAt: string;
   updatedAt: string;
   stock: Stock;
   currentPrice?: number;
@@ -49,7 +51,10 @@ export interface TradingRule {
     | "STOP_LOSS"
     | "TAKE_PROFIT"
     | "SECTOR_LIMIT"
-    | "TRADE_FREQUENCY";
+    | "TRADE_FREQUENCY"
+    | "CASH_BUFFER"
+    | "BUY_CONDITION"
+    | "SELL_CONDITION";
   threshold: string;
   isActive: boolean;
 

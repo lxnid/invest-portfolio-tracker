@@ -1,4 +1,4 @@
-import type { Holding, TradingRule, Transaction } from "./hooks";
+import type { Holding, TradingRule, Transaction, Settings } from "./hooks";
 
 export interface RuleViolation {
   ruleId: number;
@@ -9,10 +9,14 @@ export interface RuleViolation {
   message: string;
   severity: "warning" | "critical";
   relatedSymbol?: string;
+  impact?: string;
 }
 
 // Calculate portfolio totals
-export function calculatePortfolioTotals(holdings: Holding[]) {
+export function calculatePortfolioTotals(
+  holdings: Holding[],
+  settings?: Settings,
+) {
   const totalInvested = holdings.reduce(
     (sum, h) => sum + parseFloat(h.totalInvested),
     0,
@@ -25,12 +29,23 @@ export function calculatePortfolioTotals(holdings: Holding[]) {
   const profitLossPercent =
     totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
 
+  const totalCapital = settings?.capital
+    ? parseFloat(settings.capital)
+    : totalInvested;
+  const cashBalance = Math.max(0, totalCapital - totalInvested);
+  const cashPercent = totalCapital > 0 ? (cashBalance / totalCapital) * 100 : 0;
+  const netLiquidationValue = totalCapital + profitLoss;
+
   return {
     totalInvested,
     totalValue,
     profitLoss,
     profitLossPercent,
     holdingsCount: holdings.length,
+    totalCapital,
+    cashBalance,
+    cashPercent,
+    netLiquidationValue,
   };
 }
 
@@ -66,22 +81,43 @@ export function evaluateRules(
   rules: TradingRule[],
   holdings: Holding[],
   transactions: Transaction[],
+  settings?: Settings,
 ): Map<number, RuleViolation[]> {
   const violations = new Map<number, RuleViolation[]>();
   const activeRules = rules.filter((r) => r.isActive);
-  const totals = calculatePortfolioTotals(holdings);
+  const totals = calculatePortfolioTotals(holdings, settings);
 
   for (const rule of activeRules) {
     const ruleViolations: RuleViolation[] = [];
     const threshold = parseFloat(rule.threshold);
 
     switch (rule.ruleType) {
+      case "CASH_BUFFER":
+        // Rule 1: Never invest more than 80% (Keep 20% cash)
+        if (totals.cashPercent < threshold) {
+          ruleViolations.push({
+            ruleId: rule.id,
+            ruleName: rule.name,
+            ruleType: rule.ruleType,
+            threshold,
+            currentValue: totals.cashPercent,
+            message: `Cash buffer is ${totals.cashPercent.toFixed(1)}% (minimum: ${threshold}%). Invested: ${totals.totalInvested.toLocaleString()} / ${totals.totalCapital.toLocaleString()}`,
+            severity: "critical",
+            impact: `You have ${totals.cashBalance.toLocaleString()} cash remaining. You need ${(totals.totalCapital * (threshold / 100)).toLocaleString()} to meet the rule.`,
+          });
+        }
+        break;
+
       case "POSITION_SIZE":
         // Check if any holding exceeds threshold % of portfolio
         for (const holding of holdings) {
           const holdingValue =
             holding.currentValue || parseFloat(holding.totalInvested);
-          const percentOfPortfolio = (holdingValue / totals.totalValue) * 100;
+
+          // Denominator choice: Total Capital (Conservative) vs Total Value (Market Value)
+          // Rule 2 says "Max allocation per stock: 30%". Usually this means 30% of portfolio value.
+          const portfolioRefValue = totals.netLiquidationValue;
+          const percentOfPortfolio = (holdingValue / portfolioRefValue) * 100;
 
           if (percentOfPortfolio > threshold) {
             ruleViolations.push({
@@ -154,8 +190,10 @@ export function evaluateRules(
           sectorTotals.set(sector, (sectorTotals.get(sector) || 0) + value);
         }
 
+        const portfolioRefValue = totals.netLiquidationValue;
+
         for (const [sector, value] of sectorTotals) {
-          const percentOfPortfolio = (value / totals.totalValue) * 100;
+          const percentOfPortfolio = (value / portfolioRefValue) * 100;
           if (percentOfPortfolio > threshold) {
             ruleViolations.push({
               ruleId: rule.id,

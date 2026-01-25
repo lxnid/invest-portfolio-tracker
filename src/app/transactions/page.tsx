@@ -31,6 +31,7 @@ import {
   useCreateTransaction,
   useMarketData,
   useSettings,
+  useHoldings,
 } from "@/lib/hooks";
 
 type TransactionType = "BUY" | "SELL" | "DIVIDEND";
@@ -357,6 +358,7 @@ function TransactionModal({
 }) {
   const { data: marketData } = useMarketData();
   const { data: settings } = useSettings();
+  const { data: holdings } = useHoldings();
   const [selectedType, setSelectedType] = useState<TransactionType>("BUY");
   const [formData, setFormData] = useState({
     symbol: "",
@@ -478,47 +480,82 @@ function TransactionModal({
               </div>
             </div>
 
-            {/* Symbol Autocomplete */}
-            <div className="relative" ref={wrapperRef}>
-              <Label className="text-[#a8a8a8]">Stock Symbol</Label>
-              <div className="relative mt-1.5">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#666666]" />
-                <Input
-                  placeholder="Search symbol..."
-                  className="pl-9 font-mono uppercase"
-                  value={formData.symbol}
+            {/* Symbol Selection - Conditional on Type */}
+            {selectedType === "DIVIDEND" ? (
+              <div>
+                <Label className="text-[#a8a8a8]">
+                  Select Stock (Active Holdings)
+                </Label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1.5"
                   onChange={(e) => {
-                    setFormData({ ...formData, symbol: e.target.value });
-                    setShowSuggestions(true);
+                    const holding = holdings?.find(
+                      (h) => h.stock.symbol === e.target.value,
+                    );
+                    if (holding) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        symbol: holding.stock.symbol,
+                        name: holding.stock.name,
+                        quantity: holding.quantity.toString(),
+                        price: "", // Reset dividend per share
+                        fees: "0", // No fees for dividends
+                      }));
+                    }
                   }}
-                  onFocus={() => setShowSuggestions(true)}
-                  required
-                />
-              </div>
-              {showSuggestions && filteredStocks.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 overflow-hidden bg-[#262626] border border-[#333333] rounded-md shadow-lg">
-                  {filteredStocks.map((stock) => (
-                    <div
-                      key={stock.symbol}
-                      className="flex items-center justify-between px-4 py-3 hover:bg-[#333333] cursor-pointer"
-                      onClick={() => handleSelectStock(stock)}
-                    >
-                      <div>
-                        <p className="font-bold text-[#f5f5f5]">
-                          {stock.symbol}
-                        </p>
-                        <p className="text-xs text-[#a8a8a8]">{stock.name}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-mono text-[#5eead4]">
-                          LKR {stock.price.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
+                  value={formData.symbol}
+                >
+                  <option value="">Select a stock...</option>
+                  {holdings?.map((h) => (
+                    <option key={h.id} value={h.stock.symbol}>
+                      {h.stock.symbol} - {h.quantity} Shares
+                    </option>
                   ))}
+                </select>
+              </div>
+            ) : (
+              // Standard Autocomplete for BUY/SELL
+              <div className="relative" ref={wrapperRef}>
+                <Label className="text-[#a8a8a8]">Stock Symbol</Label>
+                <div className="relative mt-1.5">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#666666]" />
+                  <Input
+                    placeholder="Search symbol..."
+                    className="pl-9 font-mono uppercase"
+                    value={formData.symbol}
+                    onChange={(e) => {
+                      setFormData({ ...formData, symbol: e.target.value });
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    required
+                  />
                 </div>
-              )}
-            </div>
+                {showSuggestions && filteredStocks.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 overflow-hidden bg-[#262626] border border-[#333333] rounded-md shadow-lg">
+                    {filteredStocks.map((stock) => (
+                      <div
+                        key={stock.symbol}
+                        className="flex items-center justify-between px-4 py-3 hover:bg-[#333333] cursor-pointer"
+                        onClick={() => handleSelectStock(stock)}
+                      >
+                        <div>
+                          <p className="font-bold text-[#f5f5f5]">
+                            {stock.symbol}
+                          </p>
+                          <p className="text-xs text-[#a8a8a8]">{stock.name}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono text-[#5eead4]">
+                            LKR {stock.price.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <Label className="text-[#a8a8a8]">Company Name</Label>
@@ -530,6 +567,7 @@ function TransactionModal({
                   setFormData({ ...formData, name: e.target.value })
                 }
                 required
+                disabled={selectedType === "DIVIDEND"} // Auto-filled for dividends
               />
             </div>
 
@@ -599,10 +637,13 @@ function TransactionModal({
                     setFormData({ ...formData, quantity: e.target.value })
                   }
                   required
+                  disabled={selectedType === "DIVIDEND"} // Auto-filled for dividends
                 />
               </div>
               <div>
-                <Label className="text-[#a8a8a8]">Price</Label>
+                <Label className="text-[#a8a8a8]">
+                  {selectedType === "DIVIDEND" ? "Dividend Per Share" : "Price"}
+                </Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -618,16 +659,30 @@ function TransactionModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-[#a8a8a8]">Fees (1.12%)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  className="mt-1.5 font-mono text-[#a8a8a8]"
-                  value={formData.fees}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fees: e.target.value })
-                  }
-                />
+                <Label className="text-[#a8a8a8]">
+                  {selectedType === "DIVIDEND"
+                    ? "Total Dividend Income"
+                    : "Fees (1.12%)"}
+                </Label>
+                {selectedType === "DIVIDEND" ? (
+                  <div className="flex h-10 w-full items-center rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-2 text-sm text-[#f5f5f5] font-mono mt-1.5">
+                    LKR{" "}
+                    {(
+                      (parseFloat(formData.quantity) || 0) *
+                      (parseFloat(formData.price) || 0)
+                    ).toFixed(2)}
+                  </div>
+                ) : (
+                  <Input
+                    type="number"
+                    step="0.01"
+                    className="mt-1.5 font-mono text-[#a8a8a8]"
+                    value={formData.fees}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fees: e.target.value })
+                    }
+                  />
+                )}
               </div>
               <div>
                 <Label className="text-[#a8a8a8]">Date</Label>

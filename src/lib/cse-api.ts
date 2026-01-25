@@ -92,7 +92,22 @@ export async function getAllStockPrices(): Promise<
 export async function getStockPrice(
   symbol: string,
 ): Promise<CSEApiResponse<DetailedTradesResponse>> {
-  return cseRequest<DetailedTradesResponse>("detailedTrades", { symbol });
+  const response = await cseRequest<DetailedTradesResponse>("detailedTrades", {
+    symbol,
+  });
+  if (response.data?.reqDetailTrades) {
+    // The CSE API might ignore the symbol param and return all, so we double-check/filter here
+    const filtered = response.data.reqDetailTrades.filter(
+      (t) => t.symbol === symbol,
+    );
+    return {
+      ...response,
+      data: {
+        reqDetailTrades: filtered,
+      },
+    };
+  }
+  return response;
 }
 
 // ============================================================================
@@ -105,6 +120,11 @@ export interface CompanyInfo {
     symbol: string;
     name: string;
     sector?: string;
+    lastTradedPrice?: number;
+    change?: number;
+    changePercentage?: number;
+    tdyShareVolume?: number;
+    tdyTradeVolume?: number;
     [key: string]: unknown;
   };
 }

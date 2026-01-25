@@ -244,9 +244,14 @@ export default function DashboardPage() {
               ) : topGainer ? (
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-lg font-semibold text-[#f5f5f5]">
-                      {topGainer.symbol}
-                    </p>
+                    <Link
+                      href={`/portfolio/${topGainer.symbol}`}
+                      className="block hover:text-[#5eead4] hover:underline transition-colors"
+                    >
+                      <p className="text-lg font-semibold text-[#f5f5f5]">
+                        {topGainer.symbol}
+                      </p>
+                    </Link>
                     <p className="text-sm text-[#8a8a8a]">{topGainer.name}</p>
                   </div>
                   <Badge variant="success">
@@ -271,9 +276,14 @@ export default function DashboardPage() {
               ) : topLoser ? (
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-lg font-semibold text-[#f5f5f5]">
-                      {topLoser.symbol}
-                    </p>
+                    <Link
+                      href={`/portfolio/${topLoser.symbol}`}
+                      className="block hover:text-[#f87171] hover:underline transition-colors"
+                    >
+                      <p className="text-lg font-semibold text-[#f5f5f5]">
+                        {topLoser.symbol}
+                      </p>
+                    </Link>
                     <p className="text-sm text-[#8a8a8a]">{topLoser.name}</p>
                   </div>
                   <Badge variant="destructive">

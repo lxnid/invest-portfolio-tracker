@@ -169,6 +169,21 @@ export function useStockPrice(symbol: string) {
   });
 }
 
+export function useStockDetails(symbol: string) {
+  return useQuery({
+    queryKey: ["stockDetails", symbol],
+    queryFn: async () => {
+      const res = await fetch(`/api/stocks/${symbol}`);
+      if (!res.ok) throw new Error("Failed to fetch stock details");
+      const json = await res.json();
+      return json.data;
+    },
+    enabled: !!symbol,
+    staleTime: 30000, // 30 seconds
+    refetchInterval: 60000,
+  });
+}
+
 export function useSettings() {
   return useQuery<Settings>({
     queryKey: ["settings"],

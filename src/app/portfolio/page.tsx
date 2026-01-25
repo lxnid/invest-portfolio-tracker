@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -445,7 +446,12 @@ export default function PortfolioPage() {
                 {filteredHoldings.map((holding) => (
                   <TableRow key={holding.id}>
                     <TableCell className="font-semibold">
-                      {holding.stock.symbol}
+                      <Link
+                        href={`/portfolio/${holding.stock.symbol}`}
+                        className="hover:text-[#5eead4] hover:underline transition-colors"
+                      >
+                        {holding.stock.symbol}
+                      </Link>
                       {holding.status === "inactive" && (
                         <Badge
                           variant="outline"

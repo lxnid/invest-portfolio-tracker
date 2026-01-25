@@ -13,6 +13,7 @@ A comprehensive stock portfolio tracking application designed for the Colombo St
 - **Trading Rules Engine**: A unique compliance system designed to mitigate emotional decision-making. Configure and monitor rules for Cash Buffers (to prevent over-investing), Position Sizing (concentration risk), Stop-Loss/Take-Profit limits, and Trade Frequency (to prevent over-trading), all aggregating into a "Discipline Score" to track your adherence to your own strategy.
 - **Demo & Simulation**: Built-in demo mode and stock price simulation tools for testing strategies.
 - **Responsive Design**: Modern, mobile-first UI built with Tailwind CSS and Shadcn UI.
+- **Feedback System**: Integrated user feedback collection system with automated email notifications powered by [Resend](https://resend.com/).
 
 ## 🛠️ Tech Stack
 
@@ -23,6 +24,7 @@ A comprehensive stock portfolio tracking application designed for the Colombo St
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **UI Components**: [Shadcn UI](https://ui.shadcn.com/) & [Radix UI](https://www.radix-ui.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
+- **Email**: [Resend](https://resend.com/)
 - **Deployment**: Configured for Cloudflare via OpenNext
 
 ## 📦 Prerequisites
@@ -52,6 +54,7 @@ Create a `.env.local` file in the root directory and add your database connectio
 
 ```env
 DATABASE_URL="postgresql://user:password@endpoint.neon.tech/neondb?sslmode=require"
+RESEND_API_KEY="re_..."
 ```
 
 ### 4. Database Setup
@@ -114,6 +117,13 @@ The application uses a relational schema with the following key entities:
 ### External Integration
 
 The `src/lib/cse-api.ts` module handles all communications with the Colombo Stock Exchange API, providing a typed interface for market data retrieval.
+
+### Feedback & Notifications
+
+The feedback system uses a dual-write approach:
+
+1.  **Persistence**: Feedback is stored in the `feedback` table in Neon/Postgres for record-keeping.
+2.  **Notification**: A serverless function triggers an email via **Resend** to the administrator immediately upon submission.
 
 ## 🌍 Deployment Strategy
 

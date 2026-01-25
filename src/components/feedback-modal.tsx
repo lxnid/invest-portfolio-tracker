@@ -1,6 +1,5 @@
-"use client";
-
-import { useState } from "react";
+import { createPortal } from "react-dom";
+import { useState, useEffect } from "react";
 import { Loader2, X, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,8 +16,13 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<"IDLE" | "SUCCESS" | "ERROR">("IDLE");
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +51,8 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
       <Card className="w-full max-w-md bg-[#1e1e1e] border-[#333333] shadow-2xl">
         <CardHeader className="flex flex-row items-center justify-between border-b border-[#2f2f2f] pb-4">
           <CardTitle className="text-[#f5f5f5]">Share Feedback</CardTitle>
@@ -140,6 +144,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           )}
         </CardContent>
       </Card>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -4,6 +4,7 @@ import { transactions, stocks } from "@/db/schema";
 import { PortfolioService } from "@/lib/portfolio-service";
 import { eq, desc, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { z } from "zod";
 
 // GET all transactions
 export async function GET(request: Request) {
@@ -96,6 +97,27 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    // Validate with Zod
+    const schema = z.object({
+      symbol: z.string().min(1),
+      name: z.string(),
+      sector: z.string().optional(),
+      type: z.enum(["BUY", "SELL", "DIVIDEND"]),
+      quantity: z.number().positive(),
+      price: z.coerce.number().positive(),
+      fees: z.coerce.number().min(0).optional().default(0),
+      notes: z.string().optional(),
+      executedAt: z.coerce.date().optional(), // Coerce to valid Date object or fail validation
+    });
+
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid input", details: parsed.error },
+        { status: 400 },
+      );
+    }
+
     const {
       symbol,
       name,
@@ -105,8 +127,8 @@ export async function POST(request: Request) {
       price,
       fees,
       notes,
-      executedAt, // Frontend sends executedAt, we map to date
-    } = body;
+      executedAt,
+    } = parsed.data;
 
     // Find or create stock (Stocks are GLOBAL/SHARED)
     let [stock] = await db
@@ -136,7 +158,7 @@ export async function POST(request: Request) {
         quantity,
         price: price.toString(),
         fees: fees ? fees.toString() : "0",
-        date: executedAt ? new Date(executedAt) : new Date(),
+        date: executedAt || new Date(),
         notes,
       },
     );

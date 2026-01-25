@@ -6,11 +6,18 @@ import {
   getAllStockPrices,
 } from "@/lib/cse-api";
 
+import { getSession } from "@/lib/auth";
+
 // GET market overview data from CSE
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Fetch all data in parallel
     const [marketStatus, aspi, sp20, stockPrices] = await Promise.all([
       getMarketStatus(),

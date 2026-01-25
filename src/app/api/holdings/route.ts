@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { holdings, stocks } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
+import { z } from "zod";
 
 // GET all holdings with stock info
 export async function GET() {
@@ -47,8 +48,33 @@ export async function GET() {
 // POST - Add new holding
 export async function POST(request: Request) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { symbol, name, sector, quantity, avgBuyPrice } = body;
+
+    // Zod Validation
+    const schema = z.object({
+      symbol: z.string().min(1),
+      name: z.string(),
+      sector: z.string().optional(),
+      quantity: z.coerce.number().positive(), // Allow numeric strings for consistency
+      avgBuyPrice: z
+        .union([z.string(), z.number()])
+        .transform((val) => String(val)),
+    });
+
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid input", details: parsed.error },
+        { status: 400 },
+      );
+    }
+
+    const { symbol, name, sector, quantity, avgBuyPrice } = parsed.data;
 
     // First, create or find the stock
     let [stock] = await db

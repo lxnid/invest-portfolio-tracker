@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getStockPrice, getCompanyInfo } from "@/lib/cse-api";
 
+import { getSession } from "@/lib/auth";
+
 interface RouteParams {
   params: Promise<{ symbol: string }>;
 }
@@ -8,6 +10,11 @@ interface RouteParams {
 // GET stock details by symbol
 export async function GET(request: Request, { params }: RouteParams) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { symbol } = await params;
 
     const [priceData, companyInfo] = await Promise.all([

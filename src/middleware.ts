@@ -14,6 +14,11 @@ export async function middleware(request: NextRequest) {
       !request.nextUrl.pathname.startsWith("/static") &&
       !request.nextUrl.pathname.includes(".") // Files like favicon.ico
     ) {
+      // If it's an API route, return 401 JSON instead of redirecting
+      if (request.nextUrl.pathname.startsWith("/api")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      // Otherwise redirect to login page
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }

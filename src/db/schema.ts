@@ -139,3 +139,15 @@ export type Settings = typeof settings.$inferSelect;
 
 export type Feedback = typeof feedback.$inferSelect;
 export type NewFeedback = typeof feedback.$inferInsert;
+
+// ============================================================================
+// RATE LIMITS - DDoS Protection
+// ============================================================================
+export const rateLimits = pgTable("rate_limits", {
+  key: varchar("key", { length: 255 }).primaryKey(), // IP or UserID
+  count: integer("count").default(0).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+export type RateLimit = typeof rateLimits.$inferSelect;
+export type NewRateLimit = typeof rateLimits.$inferInsert;

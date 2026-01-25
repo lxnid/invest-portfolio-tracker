@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
-// STOCKS - Master list of stocks
+// STOCKS - Master list of stocks (Shared Global Data)
 // ============================================================================
 export const stocks = pgTable("stocks", {
   id: serial("id").primaryKey(),
@@ -29,10 +29,11 @@ export const stocksRelations = relations(stocks, ({ many }) => ({
 }));
 
 // ============================================================================
-// HOLDINGS - Current portfolio positions
+// HOLDINGS - Current portfolio positions (User Specific)
 // ============================================================================
 export const holdings = pgTable("holdings", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
   stockId: integer("stock_id")
     .references(() => stocks.id, { onDelete: "cascade" })
     .notNull(),
@@ -57,10 +58,11 @@ export const holdingsRelations = relations(holdings, ({ one }) => ({
 }));
 
 // ============================================================================
-// TRANSACTIONS - Historical buy/sell records
+// TRANSACTIONS - Historical buy/sell records (User Specific)
 // ============================================================================
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
   stockId: integer("stock_id")
     .references(() => stocks.id, { onDelete: "cascade" })
     .notNull(),
@@ -82,10 +84,11 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
 }));
 
 // ============================================================================
-// SETTINGS - User Preferences
+// SETTINGS - User Preferences (User Specific)
 // ============================================================================
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
   capital: decimal("capital", { precision: 15, scale: 2 })
     .default("0")
     .notNull(),
@@ -93,10 +96,11 @@ export const settings = pgTable("settings", {
 });
 
 // ============================================================================
-// TRADING RULES
+// TRADING RULES (User Specific)
 // ============================================================================
 export const tradingRules = pgTable("trading_rules", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
   ruleType: varchar("rule_type", { length: 50 }).notNull(), // STOP_LOSS, TAKE_PROFIT, etc.

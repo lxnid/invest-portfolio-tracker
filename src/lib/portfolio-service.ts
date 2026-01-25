@@ -8,7 +8,8 @@ export class PortfolioService {
    * This is the core accounting engine.
    */
   static async processTransaction(
-    txData: Omit<NewTransaction, "id" | "createdAt" | "updatedAt">,
+    userId: string,
+    txData: Omit<NewTransaction, "id" | "createdAt" | "updatedAt" | "userId">,
   ) {
     return await db.transaction(async (tx) => {
       // 1. Create the transaction record
@@ -16,16 +17,22 @@ export class PortfolioService {
         .insert(transactions)
         .values({
           ...txData,
+          userId,
           fees: (txData.fees || "0").toString(),
           date: txData.date ? new Date(txData.date) : new Date(),
         })
         .returning();
 
-      // 2. Fetch existing holding
+      // 2. Fetch existing holding for this USER
       const existingHoldings = await tx
         .select()
         .from(holdings)
-        .where(eq(holdings.stockId, txData.stockId));
+        .where(
+          and(
+            eq(holdings.stockId, txData.stockId),
+            eq(holdings.userId, userId),
+          ),
+        );
 
       const currentHolding = existingHoldings[0];
 
@@ -39,6 +46,7 @@ export class PortfolioService {
           const avgBuyPrice = totalInvested / txData.quantity;
 
           await tx.insert(holdings).values({
+            userId,
             stockId: txData.stockId,
             quantity: txData.quantity,
             avgBuyPrice: avgBuyPrice.toFixed(2),
@@ -110,8 +118,7 @@ export class PortfolioService {
           .set({
             quantity: newQty,
             // If newQty is 0, totalInvested is 0.
-            // Otherwise, we update it. Technically avgBuyPrice stays same, but we can recompute to align with totalInvested if we want,
-            // but sticking to currentAvgPrice prevents drift unless we want to recalc from totalInvested.
+            // Otherwise, we update it.
             totalInvested: newTotalInvested.toFixed(2),
             status: newStatus,
             updatedAt: new Date(),

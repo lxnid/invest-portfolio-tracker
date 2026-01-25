@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { tradingRules } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 // GET single rule
 export async function GET(
@@ -39,7 +40,6 @@ export async function GET(
   }
 }
 
-// PUT - Update rule
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },

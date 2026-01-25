@@ -3,11 +3,17 @@ import { db } from "@/db";
 import { holdings, transactions, tradingRules, settings } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { simulateTransaction } from "@/lib/simulation";
+import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { stockId, symbol, type, quantity, price, fees } = body;
 
@@ -18,13 +24,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Fetch necessary data for simulation
+    // 1. Fetch necessary data for simulation (User Scoped)
     const [currentHoldings, currentTransactions, rules, appSettings] =
       await Promise.all([
-        db.select().from(holdings), // In a real app we might fetch only relevant ones, but for portfolio size calc we need all
-        db.select().from(transactions),
-        db.select().from(tradingRules),
-        db.select().from(settings).limit(1),
+        db.select().from(holdings).where(eq(holdings.userId, session.userId)),
+        db
+          .select()
+          .from(transactions)
+          .where(eq(transactions.userId, session.userId)),
+        db
+          .select()
+          .from(tradingRules)
+          .where(eq(tradingRules.userId, session.userId)),
+        db
+          .select()
+          .from(settings)
+          .where(eq(settings.userId, session.userId))
+          .limit(1),
       ]);
 
     // Enrich holdings (simplification: we don't enrich with live price here to keep simulation fast/stateless essentially,

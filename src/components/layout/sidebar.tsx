@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -9,6 +9,7 @@ import {
   ArrowRightLeft,
   ShieldCheck,
   TrendingUp,
+  LogOut,
 } from "lucide-react";
 
 const navItems = [
@@ -21,6 +22,13 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-[#2f2f2f] bg-[#1e1e1e]">
@@ -58,8 +66,18 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Market Status Footer */}
+      {/* Footer */}
       <div className="absolute bottom-0 left-0 right-0 border-t border-[#2f2f2f] p-4">
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#a8a8a8] hover:bg-[#2a2a2a] hover:text-[#f5f5f5] transition-all duration-200 mb-3"
+        >
+          <LogOut className="h-5 w-5" />
+          Logout
+        </button>
+
+        {/* Market Status */}
         <div className="flex items-center gap-2 text-sm">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f87171] opacity-75"></span>

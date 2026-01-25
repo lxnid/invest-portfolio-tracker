@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { holdings, stocks } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 // GET all holdings with stock info
 export async function GET() {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const holdingsData = await db
       .select({
         id: holdings.id,
@@ -14,7 +20,7 @@ export async function GET() {
         initialBuyPrice: holdings.initialBuyPrice,
         lastBuyPrice: holdings.lastBuyPrice,
         totalInvested: holdings.totalInvested,
-        status: holdings.status, // Added status field
+        status: holdings.status,
         updatedAt: holdings.updatedAt,
         stock: {
           id: stocks.id,
@@ -25,16 +31,14 @@ export async function GET() {
         },
       })
       .from(holdings)
-      .innerJoin(stocks, eq(holdings.stockId, stocks.id));
+      .innerJoin(stocks, eq(holdings.stockId, stocks.id))
+      .where(eq(holdings.userId, session.userId));
 
     return NextResponse.json({ data: holdingsData });
   } catch (error) {
     console.error("Error fetching holdings:", error);
     return NextResponse.json(
-      {
-        error: "Failed to fetch holdings",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Failed to fetch holdings" },
       { status: 500 },
     );
   }

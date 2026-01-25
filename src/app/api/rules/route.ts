@@ -2,23 +2,24 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { tradingRules } from "@/db/schema";
 
-// GET all trading rules
+import { eq, desc } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
+
+// GET all rules
 export async function GET() {
   try {
-    const rules = await db.select().from(tradingRules);
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // Transform conditions to extract threshold for frontend
-    const transformedRules = rules.map((rule) => ({
-      id: rule.id,
-      name: rule.name,
-      description: rule.description,
-      ruleType: rule.ruleType,
-      threshold: rule.threshold,
-      isActive: rule.isActive,
-      createdAt: rule.createdAt,
-    }));
+    const rules = await db
+      .select()
+      .from(tradingRules)
+      .where(eq(tradingRules.userId, session.userId))
+      .orderBy(desc(tradingRules.createdAt));
 
-    return NextResponse.json({ data: transformedRules });
+    return NextResponse.json({ data: rules });
   } catch (error) {
     console.error("Error fetching rules:", error);
     return NextResponse.json(
@@ -31,13 +32,18 @@ export async function GET() {
 // POST - Create new rule
 export async function POST(request: Request) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { name, description, ruleType, threshold, isActive } = body;
 
-    // Store threshold in conditions JSONB
     const [newRule] = await db
       .insert(tradingRules)
       .values({
+        userId: session.userId,
         name,
         description,
         ruleType,
@@ -46,18 +52,7 @@ export async function POST(request: Request) {
       })
       .returning();
 
-    // Transform for frontend
-    const transformed = {
-      id: newRule.id,
-      name: newRule.name,
-      description: newRule.description,
-      ruleType: newRule.ruleType,
-      threshold: threshold.toString(),
-      isActive: newRule.isActive,
-      createdAt: newRule.createdAt,
-    };
-
-    return NextResponse.json({ data: transformed }, { status: 201 });
+    return NextResponse.json({ data: newRule }, { status: 201 });
   } catch (error) {
     console.error("Error creating rule:", error);
     return NextResponse.json(

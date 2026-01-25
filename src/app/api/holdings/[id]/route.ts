@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { holdings, stocks } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -81,21 +82,33 @@ export async function PUT(request: Request, { params }: RouteParams) {
 }
 
 // DELETE - Remove holding
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
-    const { id } = await params;
-    const holdingId = parseInt(id);
-
-    const [deleted] = await db
-      .delete(holdings)
-      .where(eq(holdings.id, holdingId))
-      .returning();
-
-    if (!deleted) {
-      return NextResponse.json({ error: "Holding not found" }, { status: 404 });
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    return NextResponse.json({ message: "Holding deleted successfully" });
+    const { id } = await params;
+
+    const deleted = await db
+      .delete(holdings)
+      .where(
+        and(eq(holdings.id, parseInt(id)), eq(holdings.userId, session.userId)),
+      )
+      .returning();
+
+    if (deleted.length === 0) {
+      return NextResponse.json(
+        { error: "Holding not found or unauthorized" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting holding:", error);
     return NextResponse.json(

@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { transactions, stocks } from "@/db/schema";
 import { PortfolioService } from "@/lib/portfolio-service";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 // GET all transactions
 export async function GET(request: Request) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
     const limit = parseInt(searchParams.get("limit") || "50");
@@ -29,6 +35,7 @@ export async function GET(request: Request) {
       })
       .from(transactions)
       .innerJoin(stocks, eq(transactions.stockId, stocks.id))
+      .where(eq(transactions.userId, session.userId))
       .orderBy(desc(transactions.date))
       .limit(limit);
 
@@ -70,6 +77,11 @@ export async function GET(request: Request) {
 // POST - Create new transaction
 export async function POST(request: Request) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const {
       symbol,
@@ -83,7 +95,7 @@ export async function POST(request: Request) {
       executedAt, // Frontend sends executedAt, we map to date
     } = body;
 
-    // Find or create stock
+    // Find or create stock (Stocks are GLOBAL/SHARED)
     let [stock] = await db
       .select()
       .from(stocks)
@@ -98,15 +110,18 @@ export async function POST(request: Request) {
     }
 
     // Use PortfolioService to handle global sync logic
-    const newTransaction = await PortfolioService.processTransaction({
-      stockId: stock.id,
-      type: type as "BUY" | "SELL" | "DIVIDEND",
-      quantity,
-      price: price.toString(),
-      fees: fees ? fees.toString() : "0",
-      date: executedAt ? new Date(executedAt) : new Date(),
-      notes,
-    });
+    const newTransaction = await PortfolioService.processTransaction(
+      session.userId,
+      {
+        stockId: stock.id,
+        type: type as "BUY" | "SELL" | "DIVIDEND",
+        quantity,
+        price: price.toString(),
+        fees: fees ? fees.toString() : "0",
+        date: executedAt ? new Date(executedAt) : new Date(),
+        notes,
+      },
+    );
 
     return NextResponse.json({ data: newTransaction });
   } catch (error) {

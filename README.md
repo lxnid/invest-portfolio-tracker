@@ -2,13 +2,15 @@
 
 A comprehensive stock portfolio tracking application designed for the Colombo Stock Exchange (CSE). This application allows investors to track their holdings, monitor market performance in real-time, and analyze their investment portfolio with advanced features like compliance rules and historical analytics.
 
+![Demo Preview](./demo.png)
+
 ## 🚀 Features
 
 - **Real-time Market Data**: Live integration with CSE API to fetch ASPI, S&P SL20 indices, and individual stock prices.
 - **Portfolio Management**: Track multiple stock holdings with automatic calculation of average buy price, total invested, and current value.
 - **Transaction History**: Record all Buy, Sell, and Dividend transactions with detailed fee tracking.
 - **Advanced Analytics**: Visual analytics for portfolio performance, sector allocation, and historical trends.
-- **Trading Rules Engine**: Set and monitor innovative trading rules like Stop-Loss and Take-Profit thresholds active on your portfolio.
+- **Trading Rules Engine**: A unique compliance system designed to mitigate emotional decision-making. Configure and monitor rules for Cash Buffers (to prevent over-investing), Position Sizing (concentration risk), Stop-Loss/Take-Profit limits, and Trade Frequency (to prevent over-trading), all aggregating into a "Discipline Score" to track your adherence to your own strategy.
 - **Demo & Simulation**: Built-in demo mode and stock price simulation tools for testing strategies.
 - **Responsive Design**: Modern, mobile-first UI built with Tailwind CSS and Shadcn UI.
 

@@ -110,12 +110,12 @@ export function RuleComplianceCard({
               </div>
             ))}
           </div>
-        ) : (
+        ) : isValid ? (
           <div className="flex items-center gap-2 text-[#4ade80] text-sm p-3 rounded-lg bg-[#4ade80]/10 border border-[#4ade80]/20">
             <CheckCircle className="h-4 w-4" />
             <p>Trade complies with all investment rules.</p>
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -532,8 +532,8 @@ function TransactionModal({
   // Need to import RuleComplianceCard
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-0 md:p-8">
-      <Card className="w-full h-full md:h-auto md:max-w-lg bg-[#1e1e1e] border-[#333333] shadow-2xl rounded-none md:rounded-xl overflow-y-auto">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-[#2f2f2f] pb-4">
+      <Card className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-5xl bg-[#1e1e1e] border-[#333333] shadow-2xl rounded-none md:rounded-xl flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-[#2f2f2f] pb-4 shrink-0">
           <CardTitle>Add Transaction</CardTitle>
           <Button
             variant="ghost"
@@ -544,432 +544,462 @@ function TransactionModal({
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-5 pt-6">
-            {/* Type Selection */}
-            <div>
-              <div className="flex gap-2">
-                {(["BUY", "SELL", "DIVIDEND"] as const).map((type) => (
-                  <Button
-                    key={type}
-                    type="button"
-                    variant={selectedType === type ? "default" : "outline"}
-                    className={`flex-1 ${
-                      selectedType === type && type === "BUY"
-                        ? "bg-emerald-600 hover:bg-emerald-700"
-                        : selectedType === type && type === "SELL"
-                          ? "bg-red-600 hover:bg-red-700"
-                          : ""
-                    }`}
-                    onClick={() => {
-                      setSelectedType(type);
-                      // Reset form data when switching types
-                      setFormData({
-                        symbol: "",
-                        name: "",
-                        stockId: 0,
-                        quantity: "",
-                        price: "",
-                        fees: "",
-                        date: new Date().toISOString().split("T")[0],
-                      });
-                      setSelectedHolding(null);
-                      setSellPercent(100);
-                      setAllocationPercent(0);
-                      setSimulationResult(null);
-                    }}
-                  >
-                    {type === "DIVIDEND" ? "DIV" : type}
-                  </Button>
-                ))}
-              </div>
-            </div>
 
-            {/* Symbol Selection - Conditional on Type */}
-            {selectedType === "DIVIDEND" || selectedType === "SELL" ? (
-              <div>
-                <Label className="text-[#a8a8a8]">
-                  Select Stock (Active Holdings)
-                </Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1.5"
-                  onChange={(e) => {
-                    const holding = holdings?.find(
-                      (h) => h.stock.symbol === e.target.value,
-                    );
-                    if (holding) {
-                      setSelectedHolding(holding);
-                      if (selectedType === "DIVIDEND") {
-                        setFormData((prev) => ({
-                          ...prev,
-                          symbol: holding.stock.symbol,
-                          name: holding.stock.name,
-                          stockId: holding.stockId,
-                          quantity: holding.quantity.toString(),
-                          price: "", // Reset dividend per share
-                          fees: "0", // No fees for dividends
-                        }));
-                      } else {
-                        // SELL - set full quantity by default, user can adjust with slider
-                        setSellPercent(100);
-                        setFormData((prev) => ({
-                          ...prev,
-                          symbol: holding.stock.symbol,
-                          name: holding.stock.name,
-                          stockId: holding.stockId,
-                          quantity: holding.quantity.toString(),
-                          price: holding.avgBuyPrice?.toString() || "",
-                        }));
-                      }
-                    }
-                  }}
-                  value={formData.symbol}
-                >
-                  <option value="">Select a stock...</option>
-                  {holdings?.map((h) => (
-                    <option key={h.id} value={h.stock.symbol}>
-                      {h.stock.symbol} - {h.quantity} Shares @ LKR{" "}
-                      {parseFloat(h.avgBuyPrice || "0").toFixed(2)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              // Standard Autocomplete for BUY only
-              <div className="relative" ref={wrapperRef}>
-                <Label className="text-[#a8a8a8]">Stock Symbol</Label>
-                <div className="relative mt-1.5">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#666666]" />
-                  <Input
-                    placeholder="Search symbol..."
-                    className="pl-9 font-mono uppercase"
-                    value={formData.symbol}
-                    onChange={(e) => {
-                      setFormData({ ...formData, symbol: e.target.value });
-                      setShowSuggestions(true);
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
-                    required
-                  />
-                </div>
-                {showSuggestions && filteredStocks.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 overflow-hidden bg-[#262626] border border-[#333333] rounded-md shadow-lg">
-                    {filteredStocks.map((stock) => (
-                      <div
-                        key={stock.symbol}
-                        className="flex items-center justify-between px-4 py-3 hover:bg-[#333333] cursor-pointer"
-                        onClick={() => handleSelectStock(stock)}
+        <div className="overflow-y-auto flex-1">
+          <form onSubmit={handleSubmit}>
+            <CardContent className="p-6">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Left Column: Input Fields */}
+                <div className="space-y-6">
+                  {/* Type Selection */}
+                  <div>
+                    <div className="flex gap-2">
+                      {(["BUY", "SELL", "DIVIDEND"] as const).map((type) => (
+                        <Button
+                          key={type}
+                          type="button"
+                          variant={
+                            selectedType === type ? "default" : "outline"
+                          }
+                          className={`flex-1 ${
+                            selectedType === type && type === "BUY"
+                              ? "bg-emerald-600 hover:bg-emerald-700"
+                              : selectedType === type && type === "SELL"
+                                ? "bg-red-600 hover:bg-red-700"
+                                : ""
+                          }`}
+                          onClick={() => {
+                            setSelectedType(type);
+                            setFormData({
+                              symbol: "",
+                              name: "",
+                              stockId: 0,
+                              quantity: "",
+                              price: "",
+                              fees: "",
+                              date: new Date().toISOString().split("T")[0],
+                            });
+                            setSelectedHolding(null);
+                            setSellPercent(100);
+                            setAllocationPercent(0);
+                            setSimulationResult(null);
+                          }}
+                        >
+                          {type === "DIVIDEND" ? "DIV" : type}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Symbol Selection */}
+                  {selectedType === "DIVIDEND" || selectedType === "SELL" ? (
+                    <div>
+                      <Label className="text-[#a8a8a8]">
+                        Select Stock (Active Holdings)
+                      </Label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1.5"
+                        onChange={(e) => {
+                          const holding = holdings?.find(
+                            (h) => h.stock.symbol === e.target.value,
+                          );
+                          if (holding) {
+                            setSelectedHolding(holding);
+                            if (selectedType === "DIVIDEND") {
+                              setFormData((prev) => ({
+                                ...prev,
+                                symbol: holding.stock.symbol,
+                                name: holding.stock.name,
+                                stockId: holding.stockId,
+                                quantity: holding.quantity.toString(),
+                                price: "",
+                                fees: "0",
+                              }));
+                            } else {
+                              setSellPercent(100);
+                              setFormData((prev) => ({
+                                ...prev,
+                                symbol: holding.stock.symbol,
+                                name: holding.stock.name,
+                                stockId: holding.stockId,
+                                quantity: holding.quantity.toString(),
+                                price: holding.avgBuyPrice?.toString() || "",
+                              }));
+                            }
+                          }
+                        }}
+                        value={formData.symbol}
                       >
-                        <div>
-                          <p className="font-bold text-[#f5f5f5]">
-                            {stock.symbol}
-                          </p>
-                          <p className="text-xs text-[#a8a8a8]">{stock.name}</p>
+                        <option value="">Select a stock...</option>
+                        {holdings?.map((h) => (
+                          <option key={h.id} value={h.stock.symbol}>
+                            {h.stock.symbol} - {h.quantity} Shares @ LKR{" "}
+                            {parseFloat(h.avgBuyPrice || "0").toFixed(2)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="relative" ref={wrapperRef}>
+                      <Label className="text-[#a8a8a8]">Stock Symbol</Label>
+                      <div className="relative mt-1.5">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#666666]" />
+                        <Input
+                          placeholder="Search symbol..."
+                          className="pl-9 font-mono uppercase"
+                          value={formData.symbol}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              symbol: e.target.value,
+                            });
+                            setShowSuggestions(true);
+                          }}
+                          onFocus={() => setShowSuggestions(true)}
+                          required
+                        />
+                      </div>
+                      {showSuggestions && filteredStocks.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 overflow-hidden bg-[#262626] border border-[#333333] rounded-md shadow-lg">
+                          {filteredStocks.map((stock) => (
+                            <div
+                              key={stock.symbol}
+                              className="flex items-center justify-between px-4 py-3 hover:bg-[#333333] cursor-pointer"
+                              onClick={() => handleSelectStock(stock)}
+                            >
+                              <div>
+                                <p className="font-bold text-[#f5f5f5]">
+                                  {stock.symbol}
+                                </p>
+                                <p className="text-xs text-[#a8a8a8]">
+                                  {stock.name}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-mono text-[#5eead4]">
+                                  LKR {stock.price.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="text-right">
-                          <p className="font-mono text-[#5eead4]">
-                            LKR {stock.price.toFixed(2)}
-                          </p>
+                      )}
+                    </div>
+                  )}
+
+                  {formData.name && selectedType === "BUY" && (
+                    <div className="text-sm text-[#a8a8a8] px-1">
+                      {formData.name}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-[#a8a8a8]">Quantity</Label>
+                      <Input
+                        type="number"
+                        className="mt-1.5 font-mono"
+                        value={formData.quantity}
+                        onChange={(e) =>
+                          setFormData({ ...formData, quantity: e.target.value })
+                        }
+                        required
+                        disabled={
+                          selectedType === "DIVIDEND" || selectedType === "SELL"
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[#a8a8a8]">
+                        {selectedType === "DIVIDEND"
+                          ? "Dividend Per Share"
+                          : "Price"}
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        className="mt-1.5 font-mono"
+                        value={formData.price}
+                        onChange={(e) =>
+                          setFormData({ ...formData, price: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-[#a8a8a8]">
+                        {selectedType === "DIVIDEND"
+                          ? "Total Income"
+                          : "Fees (1.12%)"}
+                      </Label>
+                      {selectedType === "DIVIDEND" ? (
+                        <div className="flex h-10 w-full items-center rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-2 text-sm text-[#f5f5f5] font-mono mt-1.5">
+                          LKR{" "}
+                          {(
+                            (parseFloat(formData.quantity) || 0) *
+                            (parseFloat(formData.price) || 0)
+                          ).toFixed(2)}
+                        </div>
+                      ) : (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          className="mt-1.5 font-mono text-[#a8a8a8]"
+                          value={formData.fees}
+                          onChange={(e) =>
+                            setFormData({ ...formData, fees: e.target.value })
+                          }
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-[#a8a8a8]">Date</Label>
+                      <Input
+                        type="date"
+                        className="mt-1.5"
+                        value={formData.date}
+                        onChange={(e) =>
+                          setFormData({ ...formData, date: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Helpers & Validation */}
+                <div className="space-y-6">
+                  {/* Capital Allocation (BUY) */}
+                  {selectedType === "BUY" && (
+                    <div className="p-4 rounded-lg bg-[#262626] border border-[#333333] space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Calculator className="h-4 w-4 text-[#5eead4]" />
+                          <span className="text-sm font-medium text-[#f5f5f5]">
+                            Capital Allocation
+                          </span>
+                        </div>
+                        <span className="text-xs text-[#a8a8a8]">
+                          Capital:{" "}
+                          <span className="font-mono text-[#f5f5f5]">
+                            LKR {totalCapital.toLocaleString()}
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[#a8a8a8]">
+                            Allocate % of Total Capital
+                          </span>
+                          <span className="font-mono text-[#5eead4]">
+                            {allocationPercent}% (LKR{" "}
+                            {(
+                              totalCapital *
+                              (allocationPercent / 100)
+                            ).toLocaleString()}
+                            )
+                          </span>
+                        </div>
+                        <Slider
+                          value={[allocationPercent]}
+                          max={100}
+                          step={1}
+                          onValueChange={handleAllocationChange}
+                          className="py-1"
+                        />
+                        <div className="flex gap-2">
+                          {[5, 10, 20, 25, 50].map((pct) => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => handleAllocationChange([pct])}
+                              className="text-[10px] px-2 py-1 rounded bg-[#333333] hover:bg-[#404040] text-[#a8a8a8] transition-colors"
+                            >
+                              {pct}%
+                            </button>
+                          ))}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                    </div>
+                  )}
 
-            {/* Auto-filled Name (Only for BUY when using search) */}
-            {formData.name && selectedType === "BUY" && (
-              <div className="text-sm text-[#a8a8a8] px-1">{formData.name}</div>
-            )}
+                  {/* Sell Allocation (SELL) */}
+                  {selectedType === "SELL" && selectedHolding && (
+                    <div className="p-4 rounded-lg bg-[#262626] border border-[#333333] space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingDown className="h-4 w-4 text-[#f87171]" />
+                          <span className="text-sm font-medium text-[#f5f5f5]">
+                            Sell Quantity
+                          </span>
+                        </div>
+                        <span className="text-xs text-[#a8a8a8]">
+                          Available:{" "}
+                          <span className="font-mono text-[#f5f5f5]">
+                            {selectedHolding.quantity} Shares
+                          </span>
+                        </span>
+                      </div>
 
-            {/* Capital Allocation (Only for BUY) */}
-            {selectedType === "BUY" && (
-              <div className="p-4 rounded-lg bg-[#262626] border border-[#333333] space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calculator className="h-4 w-4 text-[#5eead4]" />
-                    <span className="text-sm font-medium text-[#f5f5f5]">
-                      Capital Allocation
-                    </span>
-                  </div>
-                  <span className="text-xs text-[#a8a8a8]">
-                    Capital:{" "}
-                    <span className="font-mono text-[#f5f5f5]">
-                      LKR {totalCapital.toLocaleString()}
-                    </span>
-                  </span>
-                </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[#a8a8a8]">
+                            Sell % of Holding
+                          </span>
+                          <span className="font-mono text-[#f87171]">
+                            {sellPercent}% (
+                            {Math.floor(
+                              selectedHolding.quantity * (sellPercent / 100),
+                            )}{" "}
+                            Shares)
+                          </span>
+                        </div>
+                        <Slider
+                          value={[sellPercent]}
+                          max={100}
+                          min={1}
+                          step={1}
+                          onValueChange={(value) => {
+                            const pct = value[0];
+                            setSellPercent(pct);
+                            const qty = Math.floor(
+                              selectedHolding.quantity * (pct / 100),
+                            );
+                            setFormData((prev) => ({
+                              ...prev,
+                              quantity: qty.toString(),
+                            }));
+                          }}
+                          className="py-1"
+                        />
+                        <div className="flex gap-2">
+                          {[25, 50, 75, 100].map((pct) => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => {
+                                setSellPercent(pct);
+                                const qty = Math.floor(
+                                  selectedHolding.quantity * (pct / 100),
+                                );
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  quantity: qty.toString(),
+                                }));
+                              }}
+                              className={`text-[10px] px-2 py-1 rounded transition-colors ${
+                                sellPercent === pct
+                                  ? "bg-[#f87171] text-white"
+                                  : "bg-[#333333] hover:bg-[#404040] text-[#a8a8a8]"
+                              }`}
+                            >
+                              {pct}%
+                            </button>
+                          ))}
+                        </div>
+                        <div className="pt-2 border-t border-[#333333] flex justify-between text-sm">
+                          <span className="text-[#a8a8a8]">
+                            Estimated Value:
+                          </span>
+                          <span className="font-mono text-[#f5f5f5]">
+                            LKR{" "}
+                            {(
+                              Math.floor(
+                                selectedHolding.quantity * (sellPercent / 100),
+                              ) * parseFloat(formData.price || "0")
+                            ).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#a8a8a8]">
-                      Allocate % of Total Capital
-                    </span>
-                    <span className="font-mono text-[#5eead4]">
-                      {allocationPercent}% (LKR{" "}
-                      {(
-                        totalCapital *
-                        (allocationPercent / 100)
-                      ).toLocaleString()}
-                      )
-                    </span>
-                  </div>
-                  <Slider
-                    value={[allocationPercent]}
-                    max={100}
-                    step={1}
-                    onValueChange={handleAllocationChange}
-                    className="py-1"
-                  />
-                  <div className="flex gap-2">
-                    {[5, 10, 20, 25, 50].map((pct) => (
-                      <button
-                        key={pct}
-                        type="button"
-                        onClick={() => handleAllocationChange([pct])}
-                        className="text-[10px] px-2 py-1 rounded bg-[#333333] hover:bg-[#404040] text-[#a8a8a8] transition-colors"
-                      >
-                        {pct}%
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+                  {/* Simulation / Compliance */}
+                  {selectedType !== "DIVIDEND" && (
+                    <div className="pt-2">
+                      {simulationResult ? (
+                        <div className="animate-in fade-in slide-in-from-top-2">
+                          <RuleComplianceCard
+                            isValid={simulationResult.isValid}
+                            violations={simulationResult.violations}
+                            newTotals={simulationResult.newTotals}
+                          />
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full border-dashed border-[#5eead4]/50 text-[#5eead4] hover:bg-[#5eead4]/10 disabled:opacity-50 disabled:cursor-not-allowed h-auto py-3"
+                          onClick={handleSimulate}
+                          disabled={
+                            simulating ||
+                            !formData.symbol ||
+                            !formData.quantity ||
+                            !formData.price
+                          }
+                        >
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center">
+                              {simulating ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              ) : (
+                                <ShieldCheck className="h-4 w-4 mr-2" />
+                              )}
+                              <span>Test Rule Compliance</span>
+                            </div>
+                            <span className="text-xs opacity-70 font-normal">
+                              Check against investment rules before adding
+                            </span>
+                          </div>
+                        </Button>
+                      )}
+                    </div>
+                  )}
 
-            {/* Sell Quantity Selector (Only for SELL) */}
-            {selectedType === "SELL" && selectedHolding && (
-              <div className="p-4 rounded-lg bg-[#262626] border border-[#333333] space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <TrendingDown className="h-4 w-4 text-[#f87171]" />
-                    <span className="text-sm font-medium text-[#f5f5f5]">
-                      Sell Quantity
-                    </span>
-                  </div>
-                  <span className="text-xs text-[#a8a8a8]">
-                    Available:{" "}
-                    <span className="font-mono text-[#f5f5f5]">
-                      {selectedHolding.quantity} Shares
-                    </span>
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#a8a8a8]">Sell % of Holding</span>
-                    <span className="font-mono text-[#f87171]">
-                      {sellPercent}% (
-                      {Math.floor(
-                        selectedHolding.quantity * (sellPercent / 100),
-                      )}{" "}
-                      Shares)
-                    </span>
-                  </div>
-                  <Slider
-                    value={[sellPercent]}
-                    max={100}
-                    min={1}
-                    step={1}
-                    onValueChange={(value) => {
-                      const pct = value[0];
-                      setSellPercent(pct);
-                      const qty = Math.floor(
-                        selectedHolding.quantity * (pct / 100),
-                      );
-                      setFormData((prev) => ({
-                        ...prev,
-                        quantity: qty.toString(),
-                      }));
-                    }}
-                    className="py-1"
-                  />
-                  <div className="flex gap-2">
-                    {[25, 50, 75, 100].map((pct) => (
-                      <button
-                        key={pct}
-                        type="button"
-                        onClick={() => {
-                          setSellPercent(pct);
-                          const qty = Math.floor(
-                            selectedHolding.quantity * (pct / 100),
-                          );
-                          setFormData((prev) => ({
-                            ...prev,
-                            quantity: qty.toString(),
-                          }));
-                        }}
-                        className={`text-[10px] px-2 py-1 rounded transition-colors ${
-                          sellPercent === pct
-                            ? "bg-[#f87171] text-white"
-                            : "bg-[#333333] hover:bg-[#404040] text-[#a8a8a8]"
-                        }`}
-                      >
-                        {pct}%
-                      </button>
-                    ))}
-                  </div>
-                  <div className="pt-2 border-t border-[#333333] flex justify-between text-sm">
-                    <span className="text-[#a8a8a8]">Estimated Value:</span>
-                    <span className="font-mono text-[#f5f5f5]">
-                      LKR{" "}
-                      {(
-                        Math.floor(
-                          selectedHolding.quantity * (sellPercent / 100),
-                        ) * parseFloat(formData.price || "0")
-                      ).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
+                  {/* Error Display */}
+                  {error && (
+                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                      {error}
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-[#a8a8a8]">Quantity</Label>
-                <Input
-                  type="number"
-                  className="mt-1.5 font-mono"
-                  value={formData.quantity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, quantity: e.target.value })
-                  }
-                  required
-                  disabled={
-                    selectedType === "DIVIDEND" || selectedType === "SELL"
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-[#a8a8a8]">
-                  {selectedType === "DIVIDEND" ? "Dividend Per Share" : "Price"}
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  className="mt-1.5 font-mono"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
-                  }
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-[#a8a8a8]">
-                  {selectedType === "DIVIDEND"
-                    ? "Total Income"
-                    : "Fees (1.12%)"}
-                </Label>
-                {selectedType === "DIVIDEND" ? (
-                  <div className="flex h-10 w-full items-center rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-2 text-sm text-[#f5f5f5] font-mono mt-1.5">
-                    LKR{" "}
-                    {(
-                      (parseFloat(formData.quantity) || 0) *
-                      (parseFloat(formData.price) || 0)
-                    ).toFixed(2)}
-                  </div>
-                ) : (
-                  <Input
-                    type="number"
-                    step="0.01"
-                    className="mt-1.5 font-mono text-[#a8a8a8]"
-                    value={formData.fees}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fees: e.target.value })
-                    }
-                  />
-                )}
-              </div>
-              <div>
-                <Label className="text-[#a8a8a8]">Date</Label>
-                <Input
-                  type="date"
-                  className="mt-1.5"
-                  value={formData.date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, date: e.target.value })
-                  }
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Simulation Results */}
-            {selectedType !== "DIVIDEND" && (
-              <div className="pt-2 pb-2">
-                {simulationResult ? (
-                  <div className="animate-in fade-in slide-in-from-top-2">
-                    <RuleComplianceCard
-                      isValid={simulationResult.isValid}
-                      violations={simulationResult.violations}
-                      newTotals={simulationResult.newTotals}
-                    />
-                  </div>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full border-dashed border-[#5eead4]/50 text-[#5eead4] hover:bg-[#5eead4]/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleSimulate}
-                    disabled={
-                      simulating ||
-                      !formData.symbol ||
-                      !formData.quantity ||
-                      !formData.price
-                    }
-                  >
-                    {simulating ? (
+              {/* Actions Footer */}
+              <div className="flex justify-end gap-2 pt-6 mt-6 border-t border-[#333333]">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={onClose}
+                  className="hover:bg-[#333333]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-0"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <ShieldCheck className="h-4 w-4 mr-2" />
-                    )}
-                    Test against Investment Rules
-                  </Button>
-                )}
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Transaction"
+                  )}
+                </Button>
               </div>
-            )}
-
-            {/* Error Display */}
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onClose}
-                className="hover:bg-[#333333]"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-0"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Adding...
-                  </>
-                ) : (
-                  "Add Transaction"
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </form>
+            </CardContent>
+          </form>
+        </div>
       </Card>
     </div>
   );

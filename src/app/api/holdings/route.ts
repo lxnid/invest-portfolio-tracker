@@ -12,6 +12,7 @@ export async function GET() {
         quantity: holdings.quantity,
         avgBuyPrice: holdings.avgBuyPrice,
         totalInvested: holdings.totalInvested,
+        status: holdings.status, // Added status field
         updatedAt: holdings.updatedAt,
         stock: {
           id: stocks.id,
@@ -28,7 +29,10 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching holdings:", error);
     return NextResponse.json(
-      { error: "Failed to fetch holdings" },
+      {
+        error: "Failed to fetch holdings",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }
@@ -67,6 +71,7 @@ export async function POST(request: Request) {
         quantity,
         avgBuyPrice: avgBuyPrice.toString(),
         totalInvested: totalInvested.toString(),
+        status: "active",
       })
       .returning();
 
@@ -74,7 +79,10 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error creating holding:", error);
     return NextResponse.json(
-      { error: "Failed to create holding" },
+      {
+        error: "Failed to create holding",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }

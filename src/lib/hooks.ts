@@ -16,6 +16,7 @@ export interface Holding {
   quantity: number;
   avgBuyPrice: string;
   totalInvested: string;
+  status: string;
   updatedAt: string;
   stock: Stock;
   currentPrice?: number;
@@ -32,7 +33,7 @@ export interface Transaction {
   fees: string;
   totalAmount: string;
   notes?: string;
-  executedAt: string;
+  date: string;
   createdAt: string;
   stock: Stock;
 }

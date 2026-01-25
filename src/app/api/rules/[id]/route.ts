@@ -24,12 +24,9 @@ export async function GET(
       name: rule.name,
       description: rule.description,
       ruleType: rule.ruleType,
-      threshold:
-        (rule.conditions as { threshold?: number })?.threshold?.toString() ||
-        "0",
+      threshold: rule.threshold,
       isActive: rule.isActive,
       createdAt: rule.createdAt,
-      updatedAt: rule.updatedAt,
     };
 
     return NextResponse.json({ data: transformed });
@@ -52,15 +49,12 @@ export async function PUT(
     const body = await request.json();
     const { name, description, ruleType, threshold, isActive } = body;
 
-    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (ruleType !== undefined) updateData.ruleType = ruleType;
     if (threshold !== undefined) {
-      updateData.conditions = {
-        type: ruleType,
-        threshold: parseFloat(threshold),
-      };
+      updateData.threshold = threshold;
     }
     if (isActive !== undefined) updateData.isActive = isActive;
 
@@ -79,12 +73,9 @@ export async function PUT(
       name: updated.name,
       description: updated.description,
       ruleType: updated.ruleType,
-      threshold:
-        (updated.conditions as { threshold?: number })?.threshold?.toString() ||
-        "0",
+      threshold: updated.threshold,
       isActive: updated.isActive,
       createdAt: updated.createdAt,
-      updatedAt: updated.updatedAt,
     };
 
     return NextResponse.json({ data: transformed });

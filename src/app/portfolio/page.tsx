@@ -31,7 +31,7 @@ import {
 import {
   useHoldings,
   useMarketData,
-  useCreateHolding,
+  useCreateTransaction,
   useDeleteHolding,
   useSettings,
   useUpdateSettings,
@@ -44,6 +44,7 @@ import {
 export default function PortfolioPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [viewMode, setViewMode] = useState<"active" | "inactive">("active");
 
   // Form State
   const [formData, setFormData] = useState({
@@ -51,7 +52,8 @@ export default function PortfolioPage() {
     name: "",
     sector: "",
     quantity: "",
-    avgBuyPrice: "",
+    buyPrice: "",
+    date: new Date().toISOString().split("T")[0],
   });
 
   // Autocomplete State
@@ -67,8 +69,8 @@ export default function PortfolioPage() {
   const { data: holdings, isLoading: holdingsLoading } = useHoldings();
   const { data: marketData } = useMarketData();
   const { data: settings, isLoading: settingsLoading } = useSettings();
-  const createHolding = useCreateHolding();
-  const deleteHolding = useDeleteHolding();
+  const createTransaction = useCreateTransaction();
+  const deleteHolding = useDeleteHolding(); // Kept for cleanup if needed, but UI uses transactions now
   const updateSettings = useUpdateSettings();
 
   // Effects
@@ -111,20 +113,31 @@ export default function PortfolioPage() {
   const filteredStocks = useMemo(() => {
     if (!formData.symbol) return [];
     const query = formData.symbol.toLowerCase();
+
     return availableStocks
       .filter(
         (s) =>
           s.symbol.toLowerCase().includes(query) ||
           s.name.toLowerCase().includes(query),
       )
+      .sort((a, b) => {
+        const aSym = a.symbol.toLowerCase();
+        const bSym = b.symbol.toLowerCase();
+        if (aSym.startsWith(query) && !bSym.startsWith(query)) return -1;
+        if (!aSym.startsWith(query) && bSym.startsWith(query)) return 1;
+        return 0;
+      })
       .slice(0, 5);
   }, [availableStocks, formData.symbol]);
 
   // Enrich holdings
   const enrichedHoldings = useMemo(() => {
     if (!holdings) return [];
-    return enrichHoldingsWithPrices(holdings, stockPrices);
-  }, [holdings, stockPrices]);
+    // Filter by status (default to active)
+    return enrichHoldingsWithPrices(holdings, stockPrices).filter(
+      (h) => (h.status || "active") === viewMode,
+    );
+  }, [holdings, stockPrices, viewMode]);
 
   const filteredHoldings = enrichedHoldings.filter(
     (h) =>
@@ -156,7 +169,7 @@ export default function PortfolioPage() {
       symbol: stock.symbol,
       name: stock.name,
       sector: stock.sector || "",
-      avgBuyPrice: stock.price.toString(),
+      buyPrice: stock.price.toString(),
     });
     setShowSuggestions(false);
   };
@@ -165,9 +178,7 @@ export default function PortfolioPage() {
     const percent = value[0];
     setAllocationPercent(percent);
 
-    // Calculate quantity based on total capital
-    // Quantity = (Total Capital * Percent) / Price
-    const price = parseFloat(formData.avgBuyPrice);
+    const price = parseFloat(formData.buyPrice);
     if (price > 0 && totalCapital > 0) {
       const amountToInvest = totalCapital * (percent / 100);
       const qty = Math.floor(amountToInvest / price);
@@ -178,12 +189,15 @@ export default function PortfolioPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createHolding.mutateAsync({
+      // Transaction-driven: Create a BUY transaction
+      await createTransaction.mutateAsync({
         symbol: formData.symbol.toUpperCase(),
         name: formData.name,
         sector: formData.sector || undefined,
+        type: "BUY",
         quantity: parseInt(formData.quantity),
-        avgBuyPrice: formData.avgBuyPrice,
+        price: formData.buyPrice,
+        executedAt: new Date(formData.date).toISOString(),
       });
       setShowAddModal(false);
       setFormData({
@@ -191,21 +205,12 @@ export default function PortfolioPage() {
         name: "",
         sector: "",
         quantity: "",
-        avgBuyPrice: "",
+        buyPrice: "",
+        date: new Date().toISOString().split("T")[0],
       });
       setAllocationPercent(0);
     } catch (error) {
-      console.error("Failed to create holding:", error);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this holding?")) {
-      try {
-        await deleteHolding.mutateAsync(id);
-      } catch (error) {
-        console.error("Failed to delete holding:", error);
-      }
+      console.error("Failed to create transaction:", error);
     }
   };
 
@@ -270,115 +275,140 @@ export default function PortfolioPage() {
             className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-0"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Stock
+            Buy Stock
           </Button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Total Value</p>
-            <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
-              {isLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                `LKR ${totals.totalValue.toLocaleString()}`
-              )}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Total Invested</p>
-            <div className="flex justify-between items-end mt-1">
-              <p className="text-2xl font-bold text-[#f5f5f5]">
+      {/* Summary Cards (Active Only) */}
+      {viewMode === "active" && (
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-2">
+          <Card>
+            <CardContent className="pt-5 pb-4">
+              <p className="text-sm text-[#8a8a8a]">Total Value</p>
+              <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
                 {isLoading ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
-                  `LKR ${totals.totalInvested.toLocaleString()}`
+                  `LKR ${totals.totalValue.toLocaleString()}`
                 )}
               </p>
-              <div className="text-right">
-                <p className="text-[10px] uppercase tracking-wider text-[#666666]">
-                  Available
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-5 pb-4">
+              <p className="text-sm text-[#8a8a8a]">Total Invested</p>
+              <div className="flex justify-between items-end mt-1">
+                <p className="text-2xl font-bold text-[#f5f5f5]">
+                  {isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    `LKR ${totals.totalInvested.toLocaleString()}`
+                  )}
                 </p>
-                <p className="text-xs font-mono text-[#5eead4]">
-                  {unallocatedCapital.toLocaleString()}
-                </p>
+                <div className="text-right">
+                  <p className="text-[10px] uppercase tracking-wider text-[#666666]">
+                    Available
+                  </p>
+                  <p className="text-xs font-mono text-[#5eead4]">
+                    {unallocatedCapital.toLocaleString()}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* ProgressBar */}
-            <div className="h-1 w-full bg-[#333333] mt-3 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#5eead4] rounded-full transition-all duration-500"
-                style={{
-                  width: `${Math.min(100, (totals.totalInvested / (totalCapital || 1)) * 100)}%`,
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+              {/* ProgressBar */}
+              <div className="h-1 w-full bg-[#333333] mt-3 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#5eead4] rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(100, (totals.totalInvested / (totalCapital || 1)) * 100)}%`,
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Total P/L</p>
-            {isLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin mt-1" />
-            ) : (
-              <>
-                <div className="flex items-center gap-2 mt-1">
+          <Card>
+            <CardContent className="pt-5 pb-4">
+              <p className="text-sm text-[#8a8a8a]">Total P/L</p>
+              {isLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin mt-1" />
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p
+                      className={`text-2xl font-bold ${
+                        totals.profitLoss >= 0
+                          ? "text-[#4ade80]"
+                          : "text-[#f87171]"
+                      }`}
+                    >
+                      {totals.profitLoss >= 0 ? "+" : ""}LKR{" "}
+                      {totals.profitLoss.toLocaleString()}
+                    </p>
+                    {totals.profitLoss >= 0 ? (
+                      <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+                    ) : (
+                      <TrendingDown className="h-5 w-5 text-[#f87171]" />
+                    )}
+                  </div>
                   <p
-                    className={`text-2xl font-bold ${
+                    className={`text-sm mt-0.5 ${
                       totals.profitLoss >= 0
                         ? "text-[#4ade80]"
                         : "text-[#f87171]"
                     }`}
                   >
-                    {totals.profitLoss >= 0 ? "+" : ""}LKR{" "}
-                    {totals.profitLoss.toLocaleString()}
+                    {totals.profitLossPercent >= 0 ? "+" : ""}
+                    {totals.profitLossPercent.toFixed(2)}%
                   </p>
-                  {totals.profitLoss >= 0 ? (
-                    <TrendingUp className="h-5 w-5 text-[#4ade80]" />
-                  ) : (
-                    <TrendingDown className="h-5 w-5 text-[#f87171]" />
-                  )}
-                </div>
-                <p
-                  className={`text-sm mt-0.5 ${
-                    totals.profitLoss >= 0 ? "text-[#4ade80]" : "text-[#f87171]"
-                  }`}
-                >
-                  {totals.profitLossPercent >= 0 ? "+" : ""}
-                  {totals.profitLossPercent.toFixed(2)}%
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Holdings</p>
-            <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
-              {isLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                `${totals.holdingsCount} stocks`
+                </>
               )}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-5 pb-4">
+              <p className="text-sm text-[#8a8a8a]">Holdings</p>
+              <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                {isLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  `${totals.holdingsCount} stocks`
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Holdings Table */}
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle>Holdings</CardTitle>
+            <div className="flex items-center gap-4">
+              <CardTitle>Holdings</CardTitle>
+              <div className="flex gap-1 bg-[#1e1e1e] p-1 rounded-lg border border-[#333333]">
+                <Button
+                  variant={viewMode === "active" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setViewMode("active")}
+                >
+                  Active
+                </Button>
+                <Button
+                  variant={viewMode === "inactive" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setViewMode("inactive")}
+                >
+                  History
+                </Button>
+              </div>
+            </div>
+
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666666]" />
               <Input
@@ -406,7 +436,7 @@ export default function PortfolioPage() {
                   <TableHead className="text-right">Current</TableHead>
                   <TableHead className="text-right">Value</TableHead>
                   <TableHead className="text-right">P/L</TableHead>
-                  <TableHead className="text-right w-24">Actions</TableHead>
+                  <TableHead className="text-right w-24"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -414,6 +444,14 @@ export default function PortfolioPage() {
                   <TableRow key={holding.id}>
                     <TableCell className="font-semibold">
                       {holding.stock.symbol}
+                      {holding.status === "inactive" && (
+                        <Badge
+                          variant="outline"
+                          className="ml-2 text-[10px] h-5"
+                        >
+                          Sold
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-[#a8a8a8]">
                       {holding.stock.name}
@@ -432,44 +470,32 @@ export default function PortfolioPage() {
                         parseFloat(holding.totalInvested).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <span
-                          className={`font-mono ${
-                            (holding.profitLoss ?? 0) >= 0
-                              ? "text-[#4ade80]"
-                              : "text-[#f87171]"
-                          }`}
-                        >
-                          {(holding.profitLoss ?? 0) >= 0 ? "+" : ""}
-                          {(holding.profitLoss ?? 0).toLocaleString()}
-                        </span>
-                        <Badge
-                          variant={
-                            (holding.profitLoss ?? 0) >= 0
-                              ? "success"
-                              : "destructive"
-                          }
-                        >
-                          {(holding.profitLossPercent ?? 0) >= 0 ? "+" : ""}
-                          {(holding.profitLossPercent ?? 0).toFixed(1)}%
-                        </Badge>
-                      </div>
+                      {viewMode === "active" && (
+                        <div className="flex items-center justify-end gap-2">
+                          <span
+                            className={`font-mono ${
+                              (holding.profitLoss ?? 0) >= 0
+                                ? "text-[#4ade80]"
+                                : "text-[#f87171]"
+                            }`}
+                          >
+                            {(holding.profitLoss ?? 0) >= 0 ? "+" : ""}
+                            {(holding.profitLoss ?? 0).toLocaleString()}
+                          </span>
+                          <Badge
+                            variant={
+                              (holding.profitLossPercent ?? 0) >= 0
+                                ? "success"
+                                : "destructive"
+                            }
+                          >
+                            {(holding.profitLossPercent ?? 0).toFixed(1)}%
+                          </Badge>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-[#f87171] hover:text-[#fca5a5]"
-                          onClick={() => handleDelete(holding.id)}
-                          disabled={deleteHolding.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      {/* Removed direct delete/edit to enforce transaction flow, or keep as correction tool? */}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -479,7 +505,9 @@ export default function PortfolioPage() {
 
           {!isLoading && filteredHoldings.length === 0 && (
             <div className="text-center py-8 text-[#8a8a8a]">
-              No holdings found. Add your first stock to get started.
+              {viewMode === "active"
+                ? "No active holdings found."
+                : "No history found."}
             </div>
           )}
         </CardContent>
@@ -490,7 +518,7 @@ export default function PortfolioPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <Card className="w-full max-w-lg mx-4 border-[#333333] shadow-2xl bg-[#1e1e1e]">
             <CardHeader className="flex flex-row items-center justify-between border-b border-[#2f2f2f] pb-4">
-              <CardTitle>Add Stock</CardTitle>
+              <CardTitle>Buy Stock</CardTitle>
               <Button
                 variant="ghost"
                 size="icon"
@@ -568,14 +596,15 @@ export default function PortfolioPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-[#a8a8a8]">Sector</Label>
+                    <Label className="text-[#a8a8a8]">Transaction Date</Label>
                     <Input
-                      placeholder="Optional"
+                      type="date"
                       className="mt-1.5"
-                      value={formData.sector}
+                      value={formData.date}
                       onChange={(e) =>
-                        setFormData({ ...formData, sector: e.target.value })
+                        setFormData({ ...formData, date: e.target.value })
                       }
+                      required
                     />
                   </div>
                 </div>
@@ -603,7 +632,12 @@ export default function PortfolioPage() {
                         Allocate % of Total Capital
                       </span>
                       <span className="font-mono text-[#5eead4]">
-                        {allocationPercent}%
+                        {allocationPercent}% (LKR{" "}
+                        {(
+                          totalCapital *
+                          (allocationPercent / 100)
+                        ).toLocaleString()}
+                        )
                       </span>
                     </div>
                     <Slider
@@ -642,16 +676,16 @@ export default function PortfolioPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-[#a8a8a8]">Avg. Buy Price</Label>
+                    <Label className="text-[#a8a8a8]">Buy Price</Label>
                     <Input
                       type="number"
                       step="0.01"
                       className="mt-1.5 font-mono text-lg"
-                      value={formData.avgBuyPrice}
+                      value={formData.buyPrice}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          avgBuyPrice: e.target.value,
+                          buyPrice: e.target.value,
                         })
                       }
                       required
@@ -670,15 +704,15 @@ export default function PortfolioPage() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createHolding.isPending}
+                    disabled={createTransaction.isPending}
                     className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-0"
                   >
-                    {createHolding.isPending ? (
+                    {createTransaction.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : (
                       <Plus className="mr-2 h-4 w-4" />
                     )}
-                    Add Validated Stock
+                    Confirm Buy
                   </Button>
                 </div>
               </CardContent>

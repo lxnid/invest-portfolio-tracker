@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { transactions, stocks, holdings } from "@/db/schema";
+import { transactions, stocks } from "@/db/schema";
+import { PortfolioService } from "@/lib/portfolio-service";
 import { eq, desc } from "drizzle-orm";
 
 // GET all transactions
@@ -17,9 +18,8 @@ export async function GET(request: Request) {
         quantity: transactions.quantity,
         price: transactions.price,
         fees: transactions.fees,
-        totalAmount: transactions.totalAmount,
+        date: transactions.date,
         notes: transactions.notes,
-        executedAt: transactions.executedAt,
         createdAt: transactions.createdAt,
         stock: {
           id: stocks.id,
@@ -29,19 +29,39 @@ export async function GET(request: Request) {
       })
       .from(transactions)
       .innerJoin(stocks, eq(transactions.stockId, stocks.id))
-      .orderBy(desc(transactions.executedAt))
+      .orderBy(desc(transactions.date))
       .limit(limit);
 
     const data = await query;
 
+    // Compute totalAmount
+    const dataWithTotal = data.map((t) => {
+      const gross = Number(t.quantity) * Number(t.price);
+      const fees = Number(t.fees || 0);
+      let totalAmount = gross;
+      if (t.type === "BUY") {
+        totalAmount = gross + fees;
+      } else if (t.type === "SELL") {
+        totalAmount = gross - fees; // Net proceeds
+      } else {
+        totalAmount = gross - fees; // Net dividend
+      }
+      return { ...t, totalAmount: totalAmount.toString() };
+    });
+
     // Filter by type if specified
-    const filteredData = type ? data.filter((t) => t.type === type) : data;
+    const filteredData = type
+      ? dataWithTotal.filter((t) => t.type === type)
+      : dataWithTotal;
 
     return NextResponse.json({ data: filteredData });
   } catch (error) {
     console.error("Error fetching transactions:", error);
     return NextResponse.json(
-      { error: "Failed to fetch transactions" },
+      {
+        error: "Failed to fetch transactions",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }
@@ -60,7 +80,7 @@ export async function POST(request: Request) {
       price,
       fees,
       notes,
-      executedAt,
+      executedAt, // Frontend sends executedAt, we map to date
     } = body;
 
     // Find or create stock
@@ -77,90 +97,28 @@ export async function POST(request: Request) {
       stock = newStock;
     }
 
-    // Calculate total amount
-    const feesAmount = parseFloat(fees || "0");
-    let totalAmount: number;
-    if (type === "BUY") {
-      totalAmount = quantity * parseFloat(price) + feesAmount;
-    } else if (type === "SELL") {
-      totalAmount = quantity * parseFloat(price) - feesAmount;
-    } else {
-      // DIVIDEND
-      totalAmount = quantity * parseFloat(price);
-    }
+    // Use PortfolioService to handle global sync logic
+    const newTransaction = await PortfolioService.processTransaction({
+      stockId: stock.id,
+      type: type as "BUY" | "SELL" | "DIVIDEND",
+      quantity,
+      price: price.toString(),
+      fees: fees ? fees.toString() : "0",
+      date: executedAt ? new Date(executedAt) : new Date(),
+      notes,
+    });
 
-    // Create transaction
-    const [newTransaction] = await db
-      .insert(transactions)
-      .values({
-        stockId: stock.id,
-        type,
-        quantity,
-        price: price.toString(),
-        fees: feesAmount.toString(),
-        totalAmount: totalAmount.toString(),
-        notes,
-        executedAt: new Date(executedAt),
-      })
-      .returning();
-
-    // Update holdings based on transaction type
-    const [existingHolding] = await db
-      .select()
-      .from(holdings)
-      .where(eq(holdings.stockId, stock.id));
-
-    if (type === "BUY") {
-      if (existingHolding) {
-        // Update existing holding
-        const newQuantity = existingHolding.quantity + quantity;
-        const oldTotal = parseFloat(existingHolding.totalInvested);
-        const newTotal = oldTotal + quantity * parseFloat(price);
-        const newAvgPrice = newTotal / newQuantity;
-
-        await db
-          .update(holdings)
-          .set({
-            quantity: newQuantity,
-            avgBuyPrice: newAvgPrice.toFixed(2),
-            totalInvested: newTotal.toFixed(2),
-            updatedAt: new Date(),
-          })
-          .where(eq(holdings.id, existingHolding.id));
-      } else {
-        // Create new holding
-        const totalInvested = quantity * parseFloat(price);
-        await db.insert(holdings).values({
-          stockId: stock.id,
-          quantity,
-          avgBuyPrice: price.toString(),
-          totalInvested: totalInvested.toString(),
-        });
-      }
-    } else if (type === "SELL" && existingHolding) {
-      const newQuantity = existingHolding.quantity - quantity;
-      if (newQuantity <= 0) {
-        // Remove holding completely
-        await db.delete(holdings).where(eq(holdings.id, existingHolding.id));
-      } else {
-        // Reduce quantity, keep avg price
-        const newTotal = newQuantity * parseFloat(existingHolding.avgBuyPrice);
-        await db
-          .update(holdings)
-          .set({
-            quantity: newQuantity,
-            totalInvested: newTotal.toFixed(2),
-            updatedAt: new Date(),
-          })
-          .where(eq(holdings.id, existingHolding.id));
-      }
-    }
-
-    return NextResponse.json({ data: newTransaction }, { status: 201 });
+    return NextResponse.json({ data: newTransaction });
   } catch (error) {
     console.error("Error creating transaction:", error);
     return NextResponse.json(
-      { error: "Failed to create transaction" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create transaction",
+        details: error instanceof Error ? error.stack : JSON.stringify(error),
+      },
       { status: 500 },
     );
   }

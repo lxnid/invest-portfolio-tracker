@@ -1,25 +1,24 @@
+import { relations } from "drizzle-orm";
 import {
   pgTable,
   serial,
   varchar,
-  text,
-  integer,
   decimal,
-  boolean,
   timestamp,
-  jsonb,
+  integer,
+  boolean,
+  text,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
 
 // ============================================================================
-// STOCKS
+// STOCKS - Master list of stocks
 // ============================================================================
 export const stocks = pgTable("stocks", {
   id: serial("id").primaryKey(),
-  symbol: varchar("symbol", { length: 20 }).unique().notNull(), // e.g., "LOLC.N0000"
+  symbol: varchar("symbol", { length: 20 }).unique().notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   sector: varchar("sector", { length: 100 }),
-  logoPath: varchar("logo_path", { length: 500 }),
+  logoPath: varchar("logo_path", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -43,6 +42,7 @@ export const holdings = pgTable("holdings", {
     precision: 15,
     scale: 2,
   }).notNull(),
+  status: varchar("status", { length: 20 }).default("active").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -65,6 +65,7 @@ export const transactions = pgTable("transactions", {
   type: varchar("type", { length: 10 }).notNull(), // BUY, SELL, DIVIDEND
   quantity: integer("quantity").notNull(),
   price: decimal("price", { precision: 15, scale: 2 }).notNull(),
+  fees: decimal("fees", { precision: 15, scale: 2 }).default("0").notNull(),
   date: timestamp("date").defaultNow().notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -79,37 +80,10 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
 }));
 
 // ============================================================================
-// TRADING RULES - User defined rules for the engine
-// ============================================================================
-export type RuleType =
-  | "POSITION_SIZE"
-  | "STOP_LOSS"
-  | "TAKE_PROFIT"
-  | "SECTOR_LIMIT"
-  | "TRADE_FREQUENCY";
-
-export interface RuleCondition {
-  threshold: number; // Percentage or Count
-  sector?: string;
-  customExpression?: string;
-}
-
-export const tradingRules = pgTable("trading_rules", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
-  description: text("description"),
-  ruleType: varchar("rule_type", { length: 50 }).$type<RuleType>().notNull(),
-  conditions: jsonb("conditions").$type<RuleCondition>().notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// ============================================================================
-// SETTINGS - User global settings
+// SETTINGS - User Preferences
 // ============================================================================
 export const settings = pgTable("settings", {
-  id: serial("id").primaryKey(), // Single row expected
+  id: serial("id").primaryKey(),
   capital: decimal("capital", { precision: 15, scale: 2 })
     .default("0")
     .notNull(),
@@ -117,8 +91,19 @@ export const settings = pgTable("settings", {
 });
 
 // ============================================================================
-// TYPE EXPORTS
+// TRADING RULES
 // ============================================================================
+export const tradingRules = pgTable("trading_rules", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  ruleType: varchar("rule_type", { length: 50 }).notNull(), // STOP_LOSS, TAKE_PROFIT, etc.
+  threshold: decimal("threshold", { precision: 10, scale: 2 }).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Types based on schema
 export type Stock = typeof stocks.$inferSelect;
 export type NewStock = typeof stocks.$inferInsert;
 
@@ -132,4 +117,3 @@ export type TradingRule = typeof tradingRules.$inferSelect;
 export type NewTradingRule = typeof tradingRules.$inferInsert;
 
 export type Settings = typeof settings.$inferSelect;
-export type NewSettings = typeof settings.$inferInsert;

@@ -13,12 +13,9 @@ export async function GET() {
       name: rule.name,
       description: rule.description,
       ruleType: rule.ruleType,
-      threshold:
-        (rule.conditions as { threshold?: number })?.threshold?.toString() ||
-        "0",
+      threshold: rule.threshold,
       isActive: rule.isActive,
       createdAt: rule.createdAt,
-      updatedAt: rule.updatedAt,
     }));
 
     return NextResponse.json({ data: transformedRules });
@@ -38,18 +35,13 @@ export async function POST(request: Request) {
     const { name, description, ruleType, threshold, isActive } = body;
 
     // Store threshold in conditions JSONB
-    const conditions = {
-      type: ruleType,
-      threshold: parseFloat(threshold),
-    };
-
     const [newRule] = await db
       .insert(tradingRules)
       .values({
         name,
         description,
         ruleType,
-        conditions,
+        threshold: threshold.toString(),
         isActive: isActive ?? true,
       })
       .returning();
@@ -63,7 +55,6 @@ export async function POST(request: Request) {
       threshold: threshold.toString(),
       isActive: newRule.isActive,
       createdAt: newRule.createdAt,
-      updatedAt: newRule.updatedAt,
     };
 
     return NextResponse.json({ data: transformed }, { status: 201 });

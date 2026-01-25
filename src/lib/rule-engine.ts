@@ -177,7 +177,7 @@ export function evaluateRules(
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
         const recentTrades = transactions.filter(
-          (t) => new Date(t.executedAt) >= oneWeekAgo && t.type !== "DIVIDEND",
+          (t) => new Date(t.date) >= oneWeekAgo && t.type !== "DIVIDEND",
         );
 
         if (recentTrades.length > threshold) {

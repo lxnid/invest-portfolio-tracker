@@ -115,7 +115,7 @@ export default function RulesPage() {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     return transactions.filter(
-      (t) => new Date(t.executedAt) >= oneWeekAgo && t.type !== "DIVIDEND",
+      (t) => new Date(t.date) >= oneWeekAgo && t.type !== "DIVIDEND",
     ).length;
   }, [transactions]);
 

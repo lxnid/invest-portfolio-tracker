@@ -12,7 +12,11 @@ if (!ADMIN_PASSWORD) {
 export async function POST(request: Request) {
   try {
     // 1. Rate Limiting
-    const ip = request.headers.get("x-forwarded-for") || "unknown";
+    let ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim();
+    if (!ip) {
+      console.warn("Missing IP in login request");
+      ip = "unknown-" + crypto.randomUUID(); // Fail open: don't block all unknown IPs together
+    }
     const limitResult = await RateLimiter.check(ip, 5, 60 * 15); // 5 attempts per 15 mins
 
     if (!limitResult.success) {

@@ -45,6 +45,10 @@ export async function GET() {
   }
 }
 
+import { PortfolioService } from "@/lib/portfolio-service";
+
+// ... (GET handler remains same)
+
 // POST - Add new holding
 export async function POST(request: Request) {
   try {
@@ -53,17 +57,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check demo limits
+    const { checkDemoHoldingsLimit } = await import("@/lib/demo-limits");
+    const limit = await checkDemoHoldingsLimit(session.userId);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: `Demo limit reached: Max ${limit.max} holdings allowed.` },
+        { status: 403 },
+      );
+    }
+
     const body = await request.json();
 
     // Zod Validation
     const schema = z.object({
       symbol: z.string().min(1),
-      name: z.string(),
+      name: z.string().optional(), // PortfolioService will handle stock creation if needed, but usually we just need symbol
       sector: z.string().optional(),
-      quantity: z.coerce.number().positive(), // Allow numeric strings for consistency
-      avgBuyPrice: z
-        .union([z.string(), z.number()])
+      quantity: z.coerce.number().positive(), // Allow numeric strings
+      avgBuyPrice: z.coerce
+        .number()
+        .positive()
         .transform((val) => String(val)),
+      date: z.string().optional(), // Allow optional date
     });
 
     const parsed = schema.safeParse(body);
@@ -74,40 +90,49 @@ export async function POST(request: Request) {
       );
     }
 
-    const { symbol, name, sector, quantity, avgBuyPrice } = parsed.data;
+    const { symbol, quantity, avgBuyPrice, date } = parsed.data;
 
-    // First, create or find the stock
-    let [stock] = await db
+    // Use PortfolioService to create the "Buy" transaction which will update holdings
+    // This ensures consistency between Transactions and Holdings
+
+    // First we might need the stockId. PortfolioService expects stockId.
+    // So we still need to find/create the stock here to get the ID.
+    let stockId: number;
+
+    // Quick check/create stock
+    const [existingStock] = await db
       .select()
       .from(stocks)
       .where(eq(stocks.symbol, symbol));
 
-    if (!stock) {
+    if (existingStock) {
+      stockId = existingStock.id;
+    } else {
       const [newStock] = await db
         .insert(stocks)
         .values({
           symbol,
-          name,
-          sector,
+          name: parsed.data.name || symbol, // Fallback name
+          sector: parsed.data.sector,
         })
         .returning();
-      stock = newStock;
+      stockId = newStock.id;
     }
 
-    // Create the holding
-    const totalInvested = quantity * parseFloat(avgBuyPrice);
-    const [newHolding] = await db
-      .insert(holdings)
-      .values({
-        stockId: stock.id,
-        quantity,
-        avgBuyPrice: avgBuyPrice.toString(),
-        totalInvested: totalInvested.toString(),
-        status: "active",
-      })
-      .returning();
+    const result = await PortfolioService.processTransaction(session.userId, {
+      stockId,
+      type: "BUY",
+      quantity,
+      price: avgBuyPrice,
+      fees: "0",
+      date: date ? new Date(date) : new Date(),
+      notes: "Manual holding addition",
+    });
 
-    return NextResponse.json({ data: newHolding }, { status: 201 });
+    return NextResponse.json(
+      { data: result, message: "Holding added via transaction" },
+      { status: 201 },
+    );
   } catch (error) {
     console.error("Error creating holding:", error);
     return NextResponse.json(

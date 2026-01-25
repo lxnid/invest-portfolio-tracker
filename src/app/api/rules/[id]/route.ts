@@ -45,6 +45,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { name, description, ruleType, threshold, isActive } = body;
@@ -61,7 +66,12 @@ export async function PUT(
     const [updated] = await db
       .update(tradingRules)
       .set(updateData)
-      .where(eq(tradingRules.id, parseInt(id)))
+      .where(
+        and(
+          eq(tradingRules.id, parseInt(id)),
+          eq(tradingRules.userId, session.userId),
+        ),
+      )
       .returning();
 
     if (!updated) {
@@ -94,10 +104,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
     const [deleted] = await db
       .delete(tradingRules)
-      .where(eq(tradingRules.id, parseInt(id)))
+      .where(
+        and(
+          eq(tradingRules.id, parseInt(id)),
+          eq(tradingRules.userId, session.userId),
+        ),
+      )
       .returning();
 
     if (!deleted) {

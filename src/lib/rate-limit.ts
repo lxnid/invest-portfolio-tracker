@@ -35,33 +35,33 @@ export class RateLimiter {
       })
       .onConflictDoNothing();
 
-    // 2. Fetch current state (guaranteed to exist now)
-    const [record] = await db
-      .select()
-      .from(rateLimits)
-      .where(eq(rateLimits.key, key));
-
-    // record cannot be undefined here unless deleted externally
-
-    if (record.expiresAt < now) {
-      // Expired, reset
-      await db
-        .update(rateLimits)
-        .set({ count: 1, expiresAt })
-        .where(eq(rateLimits.key, key));
-      return { success: true, remaining: limit - 1 };
-    }
-
-    if (record.count >= limit) {
-      return { success: false, remaining: 0 };
-    }
-
-    // Atomic increment and return new value to verify limit wasn't exceeded during race
+    // 2. Atomic Update (Reset or Increment)
+    // This handles the race condition where multiple requests see "expired" state simultaneously
     const [updated] = await db
       .update(rateLimits)
-      .set({ count: sql`${rateLimits.count} + 1` })
+      .set({
+        count: sql`
+          CASE 
+            WHEN ${rateLimits.expiresAt} < ${now} THEN 1 
+            ELSE ${rateLimits.count} + 1 
+          END
+        `,
+        expiresAt: sql`
+          CASE 
+            WHEN ${rateLimits.expiresAt} < ${now} THEN ${expiresAt} 
+            ELSE ${rateLimits.expiresAt} 
+          END
+        `,
+      })
       .where(eq(rateLimits.key, key))
-      .returning({ count: rateLimits.count });
+      .returning();
+
+    // If undefined, it means the row didn't exist despite the insert above (rare edge case with strict isolation?)
+    // But onConflictDoNothing should ensure it's there.
+    if (!updated) {
+      // Fallback or error? Should theoretically not happen if insert worked.
+      return { success: false, remaining: 0 };
+    }
 
     if (updated.count > limit) {
       return { success: false, remaining: 0 };

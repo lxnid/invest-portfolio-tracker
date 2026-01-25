@@ -3,7 +3,8 @@ import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
 // Configure Neon for Cloudflare Workers
-// Use fetch mode for better compatibility
+// Use fetch mode for better compatibility in edge environments
+// This is critical for preventing "Failed query" errors in Cloudflare Workers
 neonConfig.fetchConnectionCache = true;
 
 // Lazy initialization for Cloudflare Workers compatibility
@@ -28,7 +29,7 @@ export const db = new Proxy({} as ReturnType<typeof drizzle>, {
   get(_, prop) {
     const database = getDb();
     const value = (database as any)[prop];
-    // Bind methods to the database instance
+    // Bind methods to the database instance to preserve context
     if (typeof value === "function") {
       return value.bind(database);
     }

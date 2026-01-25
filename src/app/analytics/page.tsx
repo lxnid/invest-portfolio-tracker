@@ -22,27 +22,11 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useHoldings, useMarketData } from "@/lib/hooks";
+import { useHoldings, useMarketData, usePortfolioHistory } from "@/lib/hooks";
 import {
   enrichHoldingsWithPrices,
   calculatePortfolioTotals,
 } from "@/lib/rule-engine";
-
-// Generate mock historical data based on current portfolio value
-function generateHistoricalData(currentValue: number) {
-  const months = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan"];
-  const data = [];
-  let value = currentValue * 0.75; // Start at 75% of current
-
-  for (let i = 0; i < months.length; i++) {
-    const variance = (Math.random() - 0.4) * 0.1; // Slight upward bias
-    value = value * (1 + variance);
-    if (i === months.length - 1) value = currentValue; // End at current value
-    data.push({ month: months[i], value: Math.round(value) });
-  }
-
-  return data;
-}
 
 const SECTOR_COLORS = [
   "#5eead4",
@@ -56,6 +40,8 @@ const SECTOR_COLORS = [
 export default function AnalyticsPage() {
   const { data: holdings, isLoading: holdingsLoading } = useHoldings();
   const { data: marketData, isLoading: marketLoading } = useMarketData();
+  const { data: historyData, isLoading: historyLoading } =
+    usePortfolioHistory();
 
   // Build price map and enrich holdings
   const enrichedHoldings = useMemo(() => {
@@ -107,17 +93,12 @@ export default function AnalyticsPage() {
     };
   }, [enrichedHoldings]);
 
-  // Generate historical data based on current portfolio
-  const performanceData = useMemo(
-    () => generateHistoricalData(totals.totalValue || 1000000),
-    [totals.totalValue],
-  );
-
-  // ASPI comparison (mock: assume we started tracking when ASPI was 8% lower)
+  // ASPI comparison
   const aspiChange = marketData?.aspi?.percentChange || 0;
-  const outperformance = totals.profitLossPercent - aspiChange * 10; // Rough approximation
+  // Simple subtraction: Portfolio P/L% - ASPI % change
+  const outperformance = (totals.profitLossPercent || 0) - aspiChange;
 
-  const isLoading = holdingsLoading || marketLoading;
+  const isLoading = holdingsLoading || marketLoading || historyLoading;
 
   return (
     <div className="space-y-6">
@@ -218,12 +199,12 @@ export default function AnalyticsPage() {
 
       {/* Charts Row */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Portfolio Value Over Time */}
+        {/* Invested Capital Over Time */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-[#60a5fa]" />
-              Portfolio Value Over Time
+              Invested Capital History
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -232,9 +213,13 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-8 w-8 animate-spin text-[#5eead4]" />
                 </div>
+              ) : !historyData || historyData.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-[#8a8a8a]">
+                  No transaction history available
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={performanceData}>
+                  <LineChart data={historyData}>
                     <XAxis
                       dataKey="month"
                       stroke="#666666"

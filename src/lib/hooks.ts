@@ -200,6 +200,19 @@ export function useSettings() {
   });
 }
 
+export function usePortfolioHistory() {
+  return useQuery<{ date: string; month: string; value: number }[]>({
+    queryKey: ["portfolioHistory"],
+    queryFn: async () => {
+      const res = await fetch("/api/analytics/history");
+      if (!res.ok) throw new Error("Failed to fetch history");
+      const json = await res.json();
+      return json.data || [];
+    },
+    staleTime: 60000,
+  });
+}
+
 export function useUpdateSettings() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -217,6 +230,37 @@ export function useUpdateSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
+    },
+  });
+}
+
+export function useUpdateStock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      symbol,
+      sector,
+    }: {
+      symbol: string;
+      sector: string;
+    }) => {
+      const res = await fetch(`/api/stocks/${symbol}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sector }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to update stock");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["stockDetails", variables.symbol],
+      });
+      queryClient.invalidateQueries({ queryKey: ["marketData"] });
+      queryClient.invalidateQueries({ queryKey: ["holdings"] });
     },
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, memo } from "react";
+import { useState, useEffect, use, memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -12,10 +12,14 @@ import {
   Briefcase,
   History,
   AlertCircle,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -24,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useStockDetails } from "@/lib/hooks";
+import { useStockDetails, useUpdateStock } from "@/lib/hooks";
 import { formatCurrency, formatPercentage } from "@/lib/cse-api";
 
 // Helper components
@@ -74,6 +78,25 @@ export default function StockDetailPage({
   const router = useRouter();
 
   const { data: stock, isLoading, error } = useStockDetails(symbol);
+  const updateStock = useUpdateStock();
+
+  const [isEditingSector, setIsEditingSector] = useState(false);
+  const [sectorInput, setSectorInput] = useState("");
+
+  useEffect(() => {
+    if (stock?.sector) {
+      setSectorInput(stock.sector);
+    }
+  }, [stock]);
+
+  const handleSaveSector = async () => {
+    try {
+      await updateStock.mutateAsync({ symbol, sector: sectorInput });
+      setIsEditingSector(false);
+    } catch (err) {
+      console.error("Failed to update sector", err);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -136,12 +159,51 @@ export default function StockDetailPage({
               <h1 className="text-4xl font-black text-[#f5f5f5] tracking-tight">
                 {stock.symbol}
               </h1>
-              <Badge
-                variant="outline"
-                className="border-[#333333] hidden md:inline-flex"
-              >
-                {stock.sector || "Unknown Sector"}
-              </Badge>
+              {isEditingSector ? (
+                <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2">
+                  <Input
+                    value={sectorInput}
+                    onChange={(e) => setSectorInput(e.target.value)}
+                    className="h-7 w-32 py-0 text-xs bg-[#262626] border-[#333333]"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleSaveSector}
+                    disabled={updateStock.isPending}
+                    className="p-1 text-[#4ade80] hover:bg-[#333333] rounded"
+                  >
+                    {updateStock.isPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Check className="h-3 w-3" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingSector(false);
+                      setSectorInput(stock.sector || "");
+                    }}
+                    className="p-1 text-[#f87171] hover:bg-[#333333] rounded"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="group flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="border-[#333333] hidden md:inline-flex"
+                  >
+                    {stock.sector || "Unknown Sector"}
+                  </Badge>
+                  <button
+                    onClick={() => setIsEditingSector(true)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-[#666666] hover:text-[#5eead4] transition-all"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
             </div>
             <p className="text-[#a8a8a8] mt-1 text-lg">{stock.name}</p>
           </div>

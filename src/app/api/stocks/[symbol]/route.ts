@@ -1,154 +1,173 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { holdings, stocks, transactions } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import {
+  stocks,
+  holdings,
+  transactions as transactionsTable,
+} from "@/db/schema";
+import { eq, and, asc, desc } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 import { getStockPrice, getCompanyInfo, getMarketStatus } from "@/lib/cse-api";
 
-export const dynamic = "force-dynamic";
+interface RouteParams {
+  params: Promise<{ symbol: string }>;
+}
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ symbol: string }> },
-) {
+// GET stock details, user position, and history
+export async function GET(request: Request, { params }: RouteParams) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { symbol } = await params;
+
   try {
-    const { symbol } = await params;
-    const upperSymbol = symbol.toUpperCase();
+    // 1. Get stock from database (metadata + user customizations like sector)
+    const [dbStock] = await db
+      .select()
+      .from(stocks)
+      .where(eq(stocks.symbol, symbol))
+      .limit(1);
 
-    // 1. Fetch Data in Parallel
-    const [dbStockRes, csePriceRes, cseInfoRes, marketStatusRes] =
-      await Promise.all([
-        db.select().from(stocks).where(eq(stocks.symbol, upperSymbol)),
-        getStockPrice(upperSymbol),
-        getCompanyInfo(upperSymbol),
-        getMarketStatus(),
-      ]);
-
-    const dbStock = dbStockRes[0];
-    const csePrice = csePriceRes.data?.reqDetailTrades?.[0];
-    const cseInfo = cseInfoRes.data;
-
-    if (!dbStock && !csePrice) {
+    if (!dbStock) {
       return NextResponse.json({ error: "Stock not found" }, { status: 404 });
     }
 
-    // 2. Fetch Holdings & Transactions if stock exists in DB
-    let holding = null;
-    let stockTransactions: any[] = [];
+    // 2. Fetch external market data
+    const [priceRes, infoRes, statusRes] = await Promise.all([
+      getStockPrice(symbol),
+      getCompanyInfo(symbol),
+      getMarketStatus(),
+    ]);
 
-    if (dbStock) {
-      const [holdingRes, txRes] = await Promise.all([
-        db.select().from(holdings).where(eq(holdings.stockId, dbStock.id)),
-        db
-          .select()
-          .from(transactions)
-          .where(eq(transactions.stockId, dbStock.id))
-          .orderBy(desc(transactions.date)),
-      ]);
+    const externalPrice = priceRes.data?.reqDetailTrades?.[0];
+    const externalInfo = infoRes.data?.reqSymbolInfo;
+    const marketIsOpen = statusRes.data?.status?.toLowerCase() === "open";
 
-      holding = holdingRes[0] || null;
-      stockTransactions = txRes;
+    const marketData = {
+      price: externalPrice?.price || externalInfo?.lastTradedPrice || 0,
+      change: externalPrice?.change || externalInfo?.change || 0,
+      percentChange:
+        externalPrice?.changePercentage || externalInfo?.changePercentage || 0,
+      volume: externalPrice?.qty || externalInfo?.tdyShareVolume || 0,
+      trades: externalPrice?.trades || externalInfo?.tdyTradeVolume || 0,
+      isOpen: marketIsOpen,
+    };
+
+    // 3. Get user position (holdings)
+    const [userHolding] = await db
+      .select()
+      .from(holdings)
+      .where(
+        and(
+          eq(holdings.stockId, dbStock.id),
+          eq(holdings.userId, session.userId),
+        ),
+      )
+      .limit(1);
+
+    let position = null;
+    if (userHolding) {
+      const currentValue = userHolding.quantity * marketData.price;
+      const totalInvested = parseFloat(userHolding.totalInvested);
+      const unrealizedPL = currentValue - totalInvested;
+      const unrealizedPLPercent =
+        totalInvested > 0 ? (unrealizedPL / totalInvested) * 100 : 0;
+
+      position = {
+        ...userHolding,
+        currentValue,
+        unrealizedPL,
+        unrealizedPLPercent,
+      };
     }
 
-    // 3. Calculate Performance Metrics
-    let realizedPL = 0;
-    let totalDividends = 0;
-    let buyCount = 0;
-    let sellCount = 0;
+    // 4. Get transaction history
+    const history = await db
+      .select()
+      .from(transactionsTable)
+      .where(
+        and(
+          eq(transactionsTable.stockId, dbStock.id),
+          eq(transactionsTable.userId, session.userId),
+        ),
+      )
+      .orderBy(desc(transactionsTable.date));
 
-    stockTransactions.forEach((tx) => {
-      const totalAmt =
-        parseFloat(tx.quantity.toString()) * parseFloat(tx.price.toString());
+    const totalDividends = history
+      .filter((tx) => tx.type === "DIVIDEND")
+      .reduce((sum, tx) => sum + parseFloat(tx.price) * tx.quantity, 0);
 
-      if (tx.type === "SELL") {
-        sellCount++;
-        // Rough realized P/L approx logic:
-        // Realized = (Sell Price - Avg Buy Price at that time) * Qty
-        // But for simple aggregation without reconstructing history state:
-        // We can't perfectly calc realized P/L without FIFO/LIFO logic replay.
-        // For now, let's just sum partials if we stored them, OR
-        // We will just return the transaction history and let UI or a helper compute complex stats.
-        // However, we can sum dividends easily.
-      } else if (tx.type === "BUY") {
-        buyCount++;
-      } else if (tx.type === "DIVIDEND") {
-        totalDividends += totalAmt;
-      }
-    });
+    const buyCount = history.filter((tx) => tx.type === "BUY").length;
+    const sellCount = history.filter((tx) => tx.type === "SELL").length;
 
-    // 4. Construct Response
     return NextResponse.json({
       data: {
-        symbol: upperSymbol,
-        name: cseInfo?.reqSymbolInfo?.name || dbStock?.name || csePrice?.name,
-        sector: cseInfo?.reqSymbolInfo?.sector || dbStock?.sector,
-        logoPath: cseInfo?.reqLogo?.path
-          ? `https://www.cse.lk/${cseInfo.reqLogo.path}`
-          : null,
-
-        marketData: {
-          price:
-            csePrice?.price || cseInfo?.reqSymbolInfo?.lastTradedPrice || 0,
-          change: csePrice?.change || cseInfo?.reqSymbolInfo?.change || 0,
-          percentChange:
-            csePrice?.changePercentage ||
-            cseInfo?.reqSymbolInfo?.changePercentage ||
-            0,
-          volume: csePrice?.qty || cseInfo?.reqSymbolInfo?.tdyShareVolume || 0,
-          trades:
-            csePrice?.trades || cseInfo?.reqSymbolInfo?.tdyTradeVolume || 0,
-          isOpen: marketStatusRes.data?.status === "Open",
-        },
-
-        position: holding
-          ? {
-              quantity: holding.quantity,
-              avgBuyPrice: holding.avgBuyPrice,
-              initialBuyPrice: holding.initialBuyPrice,
-              lastBuyPrice: holding.lastBuyPrice,
-              totalInvested: holding.totalInvested,
-              currentValue:
-                holding.quantity *
-                (csePrice?.price ||
-                  cseInfo?.reqSymbolInfo?.lastTradedPrice ||
-                  0),
-              unrealizedPL:
-                holding.quantity *
-                  (csePrice?.price ||
-                    cseInfo?.reqSymbolInfo?.lastTradedPrice ||
-                    0) -
-                parseFloat(holding.totalInvested),
-              unrealizedPLPercent:
-                parseFloat(holding.totalInvested) > 0
-                  ? ((holding.quantity *
-                      (csePrice?.price ||
-                        cseInfo?.reqSymbolInfo?.lastTradedPrice ||
-                        0) -
-                      parseFloat(holding.totalInvested)) /
-                      parseFloat(holding.totalInvested)) *
-                    100
-                  : 0,
-            }
-          : null,
-
+        symbol: dbStock.symbol,
+        name: dbStock.name,
+        sector: dbStock.sector,
+        logoPath: dbStock.logoPath,
+        marketData,
+        position,
         performance: {
           totalDividends,
           buyCount,
           sellCount,
-          // Realized P/L would need a dedicated service to calculate accurately
         },
-
-        transactions: stockTransactions.map((tx) => ({
+        transactions: history.map((tx) => ({
           ...tx,
-          totalAmount: (
-            parseFloat(tx.quantity.toString()) * parseFloat(tx.price.toString())
-          ).toString(), // Simple gross amount
+          totalAmount: (parseFloat(tx.price) * tx.quantity).toString(),
         })),
       },
     });
   } catch (error) {
-    console.error("Error serving stock detail:", error);
+    console.error("Error in stock details API:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch stock details" },
+      { status: 500 },
+    );
+  }
+}
+
+// PATCH to update stock sector
+export async function PATCH(request: Request, { params }: RouteParams) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { symbol } = await params;
+
+  try {
+    const body = await request.json();
+    const { sector } = body;
+
+    if (sector === undefined) {
+      return NextResponse.json(
+        { error: "Sector is required" },
+        { status: 400 },
+      );
+    }
+
+    const result = await db
+      .update(stocks)
+      .set({
+        sector: sector || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(stocks.symbol, symbol))
+      .returning();
+
+    if (result.length === 0) {
+      return NextResponse.json({ error: "Stock not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, data: result[0] });
+  } catch (error) {
+    console.error("Failed to update stock", error);
+    return NextResponse.json(
+      { error: "Failed to update stock" },
       { status: 500 },
     );
   }

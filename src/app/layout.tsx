@@ -41,10 +41,12 @@ export default function RootLayout({
       >
         <Providers>
           <DemoBanner />
-          <div className="flex min-h-screen flex-col md:flex-row">
+          <div className="flex min-h-screen flex-col lg:flex-row">
             <Sidebar />
             <MobileSidebar />
-            <main className="flex-1 p-4 md:ml-64 md:p-8">{children}</main>
+            <main className="flex-1 p-4 md:px-16 lg:ml-64 lg:p-8 lg:px-8">
+              {children}
+            </main>
           </div>
         </Providers>
       </body>

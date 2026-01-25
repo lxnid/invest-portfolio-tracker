@@ -59,7 +59,7 @@ export function MobileSidebar() {
   return (
     <>
       {/* Mobile Top Bar Trigger */}
-      <div className="md:hidden sticky top-0 z-[60] flex items-center justify-between border-b border-[#2f2f2f] bg-[#1e1e1e] p-4">
+      <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between border-b border-[#2f2f2f] bg-[#1e1e1e] p-4 md:px-16">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-teal-400 to-cyan-400">
             <TrendingUp className="h-5 w-5 text-[#1e1e1e]" />
@@ -85,7 +85,7 @@ export function MobileSidebar() {
       {/* Sidebar Panel */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-xs transform border-r border-[#2f2f2f] bg-[#1e1e1e] transition-transform duration-300 ease-in-out md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-xs transform border-r border-[#2f2f2f] bg-[#1e1e1e] transition-transform duration-300 ease-in-out lg:hidden",
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

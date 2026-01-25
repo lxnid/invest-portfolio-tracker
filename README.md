@@ -1,221 +1,130 @@
-# CSE Portfolio Tracker
+# Invest Portfolio Tracker
 
-A personal stock portfolio tracker for the **Colombo Stock Exchange (CSE)** with real-time market data integration, transaction management, analytics, and psychological trading rule enforcement.
+A comprehensive stock portfolio tracking application designed for the Colombo Stock Exchange (CSE). This application allows investors to track their holdings, monitor market performance in real-time, and analyze their investment portfolio with advanced features like compliance rules and historical analytics.
 
-![Application Demo](./demo.webp)
+## 🚀 Features
 
-## Features
+- **Real-time Market Data**: Live integration with CSE API to fetch ASPI, S&P SL20 indices, and individual stock prices.
+- **Portfolio Management**: Track multiple stock holdings with automatic calculation of average buy price, total invested, and current value.
+- **Transaction History**: Record all Buy, Sell, and Dividend transactions with detailed fee tracking.
+- **Advanced Analytics**: Visual analytics for portfolio performance, sector allocation, and historical trends.
+- **Trading Rules Engine**: Set and monitor innovative trading rules like Stop-Loss and Take-Profit thresholds active on your portfolio.
+- **Demo & Simulation**: Built-in demo mode and stock price simulation tools for testing strategies.
+- **Responsive Design**: Modern, mobile-first UI built with Tailwind CSS and Shadcn UI.
 
-### 📊 Portfolio Management
+## 🛠️ Tech Stack
 
-- Track your CSE stock holdings with live price updates
-- View current portfolio value, total P/L, and individual stock performance
-- Add, edit, and remove stocks from your portfolio
-- Automatic average buy price calculation
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/) (via [Neon Serverless](https://neon.tech/))
+- **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **UI Components**: [Shadcn UI](https://ui.shadcn.com/) & [Radix UI](https://www.radix-ui.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Deployment**: Configured for Cloudflare via OpenNext
 
-### 💸 Transaction History
+## 📦 Prerequisites
 
-- Log BUY, SELL, and DIVIDEND transactions
-- Automatic holdings update on transaction entry
-- Filter and search transaction history
-- Export transaction data
+- Node.js (v18 or higher)
+- npm or pnpm
+- A PostgreSQL database (Neon recommended)
 
-### 🛡️ Trading Rules Engine
+## ⚡ Getting Started
 
-- Set personal discipline rules to avoid psychological trading traps
-- Position size limits (max % per stock)
-- Stop-loss alerts
-- Take-profit reminders
-- Sector allocation limits
-- Trade frequency controls
-- Real-time violation warnings
-
-### 📈 Analytics & Insights
-
-- Portfolio performance over time
-- Sector allocation breakdown
-- Benchmark comparison against ASI (All Share Price Index)
-- Top performers and underperformers
-- Monthly and YTD returns
-
-### 🌐 CSE Market Integration
-
-- Real-time stock prices from CSE API
-- Market status (Open/Closed)
-- ASI and S&P SL20 indices
-- Company information and logos
-
-## Tech Stack
-
-- **Frontend:** Next.js 15 (App Router), React 19, Tailwind CSS
-- **Backend:** Next.js API Routes
-- **Database:** PostgreSQL with Drizzle ORM
-- **Data Fetching:** TanStack Query (React Query)
-- **Charts:** Recharts
-- **Containerization:** Docker & Docker Compose
-- **CSE Data:** [CSE API](https://www.cse.lk/api/)
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- Docker & Docker Compose (recommended)
-- PostgreSQL (if not using Docker)
-
-### Quick Start with Docker
+### 1. Clone the repository
 
 ```bash
-# Clone the repository
-cd /Users/lxnid/Documents/invest-portfolio-tracker
-
-# Start the application with Docker Compose
-docker compose up
-
-# Access the application
-open http://localhost:3000
+git clone https://github.com/yourusername/invest-portfolio-tracker.git
+cd invest-portfolio-tracker
 ```
 
-### Development Setup (without Docker)
+### 2. Install dependencies
 
 ```bash
-# Install dependencies
 npm install
+```
 
-# Setup environment variables
-cp .env.example .env.local
-# Edit .env.local with your PostgreSQL connection string
+### 3. Environment Setup
 
-# Push database schema
+Create a `.env.local` file in the root directory and add your database connection string:
+
+```env
+DATABASE_URL="postgresql://user:password@endpoint.neon.tech/neondb?sslmode=require"
+```
+
+### 4. Database Setup
+
+Push the schema to your database:
+
+```bash
 npm run db:push
+```
 
-# Start development server
+### 5. Run the development server
+
+```bash
 npm run dev
 ```
 
-## Available Scripts
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-| Command               | Description                             |
-| --------------------- | --------------------------------------- |
-| `npm run dev`         | Start development server with Turbopack |
-| `npm run build`       | Build for production                    |
-| `npm run start`       | Start production server                 |
-| `npm run db:generate` | Generate Drizzle migrations             |
-| `npm run db:push`     | Push schema to database                 |
-| `npm run db:studio`   | Open Drizzle Studio (database GUI)      |
+## 📜 Scripts
 
-## Project Structure
+- `npm run dev`: Starts the development server using Turbopack.
+- `npm run build`: Builds the application for production.
+- `npm run start`: Starts the production server.
+- `npm run lint`: Runs ESLint.
+- `npm run db:generate`: Generates Drizzle migrations based on schema changes.
+- `npm run db:push`: Pushes schema changes directly to the database.
+- `npm run db:studio`: Opens Drizzle Studio to inspect the database.
+
+## 📂 Project Structure
 
 ```
-invest-portfolio-tracker/
-├── src/
-│   ├── app/
-│   │   ├── api/              # API routes
-│   │   │   ├── holdings/     # Portfolio CRUD
-│   │   │   ├── transactions/ # Transaction management
-│   │   │   ├── rules/        # Trading rules
-│   │   │   └── cse/          # CSE market data proxy
-│   │   ├── portfolio/        # Portfolio page
-│   │   ├── transactions/     # Transactions page
-│   │   ├── rules/            # Trading rules page
-│   │   ├── analytics/        # Analytics page
-│   │   └── page.tsx          # Dashboard
-│   ├── components/
-│   │   ├── ui/               # Reusable UI components
-│   │   └── layout/           # Layout components
-│   ├── db/
-│   │   ├── schema.ts         # Database schema
-│   │   └── index.ts          # Database client
-│   └── lib/
-│       ├── cse-api.ts        # CSE API integration
-│       └── utils.ts          # Utility functions
-├── docker-compose.yml        # Docker Compose configuration
-├── Dockerfile                # Production Docker image
-└── drizzle.config.ts         # Drizzle ORM configuration
+├── src
+│   ├── app             # Next.js App Router pages and API routes
+│   │   ├── api         # Backend API endpoints (CSE, Auth, Portfolio)
+│   │   └── ...         # Frontend pages (Dashboard, Transactions, etc.)
+│   ├── components      # Reusable React components
+│   │   ├── ui          # Shadcn UI primitives
+│   │   └── layout      # Layout components like Sidebar
+│   ├── db              # Database configuration and schema
+│   │   ├── schema.ts   # Drizzle ORM schema definitions
+│   │   └── migrations  # SQL migration files
+│   └── lib             # Core logic and utilities
+│       ├── cse-api.ts  # CSE API integration
+│       ├── rule-engine # Trading compliance logic
+│       └── ...
+└── ...
 ```
 
-## Database Schema
+## 🏗️ Architecture Highlights
 
-The application uses a single-portfolio design optimized for personal use:
+### Data Model
 
-- **stocks** - CSE stock information (symbol, name, sector)
-- **holdings** - Current portfolio positions
-- **transactions** - Complete trade history (BUY/SELL/DIVIDEND)
-- **trading_rules** - Personal discipline rules with flexible JSON conditions
+The application uses a relational schema with the following key entities:
 
-## API Endpoints
+- **Stocks**: Global master list of CSE stocks.
+- **Holdings**: User-specific current positions.
+- **Transactions**: Ledger of all buy/sell/dividend events.
+- **Trading Rules**: User-defined compliance parameters.
 
-| Endpoint                  | Method           | Description                             |
-| ------------------------- | ---------------- | --------------------------------------- |
-| `/api/holdings`           | GET              | Get all holdings                        |
-| `/api/holdings`           | POST             | Add new holding                         |
-| `/api/holdings/[id]`      | GET, PUT, DELETE | Manage single holding                   |
-| `/api/transactions`       | GET              | Get transaction history                 |
-| `/api/transactions`       | POST             | Add transaction (auto-updates holdings) |
-| `/api/rules`              | GET, POST        | Manage trading rules                    |
-| `/api/cse/market`         | GET              | Get market status, ASI, stock prices    |
-| `/api/cse/stock/[symbol]` | GET              | Get individual stock data               |
+### External Integration
 
-## Deployment
+The `src/lib/cse-api.ts` module handles all communications with the Colombo Stock Exchange API, providing a typed interface for market data retrieval.
 
-### Production Build
+## 🌍 Deployment Strategy
 
-```bash
-# Build Docker image
-docker build -t cse-portfolio-tracker .
+This project leverages a modern, edge-first deployment strategy using **Cloudflare Pages** combined with the `opennextjs-cloudflare` adapter.
 
-# Run production container
-docker run -p 3000:3000 \
-  -e DATABASE_URL="postgresql://..." \
-  cse-portfolio-tracker
-```
+- **Edge Computing**: Unlike traditional server-based deployments, this app runs on Cloudflare's global edge network. This ensures minimum latency by serving the application logic from the data center closest to the user.
+- **OpenNext**: Bridges the gap between Next.js App Router features and the Cloudflare Workers runtime, allowing us to use modern Next.js 15+ features (like Server Actions and Streaming) in a serverless edge environment.
+- **CI/CD Pipeline**: The build command `npm run build:pages` transforms the standard Next.js build into a worker-compatible artifact.
 
-### Subdomain Setup (dinilr.com)
+## 🔌 Database Architecture (Neon)
 
-1. **DNS Configuration:**
-   - Create A record: `portfolio.dinilr.com` → `<your-server-ip>`
-   - Or CNAME if using a proxy/CDN
+The persistence layer is built on **Neon**, a modern serverless PostgreSQL platform that aligns perfectly with the project's cloud-native architecture.
 
-2. **Reverse Proxy (Nginx):**
-
-   ```nginx
-   server {
-       listen 80;
-       server_name portfolio.dinilr.com;
-
-       location / {
-           proxy_pass http://localhost:3000;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-       }
-   }
-   ```
-
-3. **SSL with Let's Encrypt:**
-   ```bash
-   certbot --nginx -d portfolio.dinilr.com
-   ```
-
-## Environment Variables
-
-```env
-# Database
-DATABASE_URL=postgresql://user:password@host:5432/database
-
-# Next.js
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-## Contributing
-
-This is a personal project, but suggestions and feedback are welcome!
-
-## License
-
-MIT
-
-## Acknowledgments
-
-- [CSE API](https://gh0sth4cker.github.io/Colombo-Stock-Exchange-CSE-API-Documentation/) for providing market data
-- Built with [Next.js](https://nextjs.org/)
-- UI components inspired by [shadcn/ui](https://ui.shadcn.com/)
+- **Serverless PostgreSQL**: Neon separates storage from compute. This allows the database to scale to zero when unused (saving costs) and instantly provision compute resources during traffic spikes.
+- **Connection Management**: Since the application runs in a serverless environment (Cloudflare Workers), maintaining persistent database connections is impossible. We use the `@neondatabase/serverless` driver over HTTP/WebSockets to manage ephemeral connections efficiently.
+- **Type Safety**: Integration with **Drizzle ORM** provides end-to-end type safety. The database schema is defined in TypeScript (`src/db/schema.ts`), ensuring that any changes to the data model are instantly reflected in the application code, eliminating a common class of runtime errors.

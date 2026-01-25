@@ -11,6 +11,8 @@ export async function GET() {
         id: holdings.id,
         quantity: holdings.quantity,
         avgBuyPrice: holdings.avgBuyPrice,
+        initialBuyPrice: holdings.initialBuyPrice,
+        lastBuyPrice: holdings.lastBuyPrice,
         totalInvested: holdings.totalInvested,
         status: holdings.status, // Added status field
         updatedAt: holdings.updatedAt,

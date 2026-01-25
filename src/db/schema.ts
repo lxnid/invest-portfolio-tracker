@@ -38,6 +38,8 @@ export const holdings = pgTable("holdings", {
     .notNull(),
   quantity: integer("quantity").notNull(),
   avgBuyPrice: decimal("avg_buy_price", { precision: 15, scale: 2 }).notNull(),
+  initialBuyPrice: decimal("initial_buy_price", { precision: 15, scale: 2 }),
+  lastBuyPrice: decimal("last_buy_price", { precision: 15, scale: 2 }),
   totalInvested: decimal("total_invested", {
     precision: 15,
     scale: 2,

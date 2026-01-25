@@ -433,6 +433,8 @@ export default function PortfolioPage() {
                   <TableHead>Company</TableHead>
                   <TableHead className="text-right">Qty</TableHead>
                   <TableHead className="text-right">Avg. Price</TableHead>
+                  <TableHead className="text-right">Init. Price</TableHead>
+                  <TableHead className="text-right">Last Price</TableHead>
                   <TableHead className="text-right">Current</TableHead>
                   <TableHead className="text-right">Value</TableHead>
                   <TableHead className="text-right">P/L</TableHead>
@@ -461,6 +463,16 @@ export default function PortfolioPage() {
                     </TableCell>
                     <TableCell className="text-right font-mono">
                       {parseFloat(holding.avgBuyPrice).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-[#a8a8a8]">
+                      {holding.initialBuyPrice
+                        ? parseFloat(holding.initialBuyPrice).toFixed(2)
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-[#a8a8a8]">
+                      {holding.lastBuyPrice
+                        ? parseFloat(holding.lastBuyPrice).toFixed(2)
+                        : "-"}
                     </TableCell>
                     <TableCell className="text-right font-mono">
                       {holding.currentPrice?.toFixed(2) ?? "-"}

@@ -33,8 +33,20 @@ export async function GET() {
     return NextResponse.json({
       data: {
         marketStatus: marketStatus.data,
-        aspi: aspi.data,
-        sp20: sp20.data,
+        aspi: aspi.data
+          ? {
+              index: aspi.data.value,
+              change: aspi.data.change,
+              percentChange: aspi.data.changePercentage || 0,
+            }
+          : null,
+        sp20: sp20.data
+          ? {
+              index: sp20.data.value,
+              change: sp20.data.change,
+              percentChange: sp20.data.changePercentage || 0,
+            }
+          : null,
         allStocks: Array.from(stockMap.values()),
       },
       errors: {

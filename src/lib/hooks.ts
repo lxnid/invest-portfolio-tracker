@@ -15,6 +15,8 @@ export interface Holding {
   id: number;
   quantity: number;
   avgBuyPrice: string;
+  initialBuyPrice?: string;
+  lastBuyPrice?: string;
   totalInvested: string;
   status: string;
   updatedAt: string;

@@ -42,6 +42,8 @@ export class PortfolioService {
             stockId: txData.stockId,
             quantity: txData.quantity,
             avgBuyPrice: avgBuyPrice.toFixed(2),
+            initialBuyPrice: parseFloat(txData.price).toFixed(2),
+            lastBuyPrice: parseFloat(txData.price).toFixed(2),
             totalInvested: totalInvested.toFixed(2),
             status: "active",
           });
@@ -60,15 +62,23 @@ export class PortfolioService {
           const newTotalInvested = currentTotalInvested + addedCost;
           const newAvg = newTotalInvested / newQty;
 
+          const updateData: any = {
+            quantity: newQty,
+            avgBuyPrice: newAvg.toFixed(2),
+            lastBuyPrice: buyPrice.toFixed(2),
+            totalInvested: newTotalInvested.toFixed(2),
+            status: "active", // Reactivate if it was inactive
+            updatedAt: new Date(),
+          };
+
+          // If restarting a position (quantity was 0), treat as new entry point
+          if (oldQty === 0) {
+            updateData.initialBuyPrice = buyPrice.toFixed(2);
+          }
+
           await tx
             .update(holdings)
-            .set({
-              quantity: newQty,
-              avgBuyPrice: newAvg.toFixed(2),
-              totalInvested: newTotalInvested.toFixed(2),
-              status: "active", // Reactivate if it was inactive
-              updatedAt: new Date(),
-            })
+            .set(updateData)
             .where(eq(holdings.id, currentHolding.id));
         }
       } else if (txData.type === "SELL") {

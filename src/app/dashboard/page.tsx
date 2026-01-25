@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -293,47 +294,61 @@ export default function DashboardPage() {
           Quick Actions
         </h2>
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#4ade80]/10">
-                  <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+          <Link href="/transactions">
+            <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors h-full">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-[#4ade80]/10">
+                    <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-[#f5f5f5]">
+                      Add Transaction
+                    </p>
+                    <p className="text-sm text-[#8a8a8a]">Record a new trade</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-[#f5f5f5]">Add Transaction</p>
-                  <p className="text-sm text-[#8a8a8a]">Record a new trade</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#5eead4]/10">
-                  <Briefcase className="h-5 w-5 text-[#5eead4]" />
+          <Link href="/portfolio">
+            <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors h-full">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-[#5eead4]/10">
+                    <Briefcase className="h-5 w-5 text-[#5eead4]" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-[#f5f5f5]">
+                      Manage Portfolio
+                    </p>
+                    <p className="text-sm text-[#8a8a8a]">
+                      View & edit holdings
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-[#f5f5f5]">Manage Portfolio</p>
-                  <p className="text-sm text-[#8a8a8a]">View & edit holdings</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#fbbf24]/10">
-                  <BarChart3 className="h-5 w-5 text-[#fbbf24]" />
+          <Link href="/analytics">
+            <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors h-full">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-[#fbbf24]/10">
+                    <BarChart3 className="h-5 w-5 text-[#fbbf24]" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-[#f5f5f5]">View Analytics</p>
+                    <p className="text-sm text-[#8a8a8a]">
+                      Performance insights
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-[#f5f5f5]">View Analytics</p>
-                  <p className="text-sm text-[#8a8a8a]">Performance insights</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
     </div>

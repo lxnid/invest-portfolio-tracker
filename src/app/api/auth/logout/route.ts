@@ -12,7 +12,21 @@ export async function POST() {
   }
 
   await deleteSession();
-  return NextResponse.json({ success: true });
+  // Create success response
+  const response = NextResponse.json({ success: true });
+
+  // Explicitly clear the cookie on the response object to guarantee deletion
+  response.cookies.set({
+    name: "session",
+    value: "",
+    httpOnly: true,
+    secure: true,
+    expires: new Date(0),
+    path: "/",
+    sameSite: "lax",
+  });
+
+  return response;
 }
 
 export async function GET() {

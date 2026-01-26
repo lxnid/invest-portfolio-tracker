@@ -43,34 +43,34 @@ function StatCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-[#8a8a8a]">
+        <CardTitle className="text-sm font-medium text-zinc-500">
           {title}
         </CardTitle>
-        <div className="p-2 rounded-lg bg-[#333333]">
-          <Icon className="h-4 w-4 text-[#a8a8a8]" />
+        <div className="p-2 rounded-lg bg-zinc-800">
+          <Icon className="h-4 w-4 text-zinc-400" />
         </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="flex items-center gap-2">
-            <Loader2 className="h-5 w-5 animate-spin text-[#5eead4]" />
-            <span className="text-[#8a8a8a]">Loading...</span>
+            <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+            <span className="text-zinc-500">Loading...</span>
           </div>
         ) : (
           <>
-            <div className="text-2xl font-bold text-[#f5f5f5]">
+            <div className="text-2xl font-bold text-zinc-50">
               {prefix}
               {value}
             </div>
             {change !== undefined && (
               <p className="text-xs mt-1 flex items-center gap-1">
                 {isPositive ? (
-                  <TrendingUp className="h-3 w-3 text-[#4ade80]" />
+                  <TrendingUp className="h-3 w-3 text-emerald-500" />
                 ) : (
-                  <TrendingDown className="h-3 w-3 text-[#f87171]" />
+                  <TrendingDown className="h-3 w-3 text-red-500" />
                 )}
                 <span
-                  className={isPositive ? "text-[#4ade80]" : "text-[#f87171]"}
+                  className={isPositive ? "text-emerald-500" : "text-red-500"}
                 >
                   {isPositive ? "+" : ""}
                   {change.toLocaleString()} ({changePercent?.toFixed(2)}%)
@@ -137,8 +137,8 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#f5f5f5]">Dashboard</h1>
-          <p className="text-[#8a8a8a] mt-1">
+          <h1 className="text-3xl font-bold text-zinc-50">Dashboard</h1>
+          <p className="text-zinc-500 mt-1">
             Your portfolio overview and market summary
           </p>
           <LastUpdated timestamp={dataUpdatedAt} className="mt-1" />
@@ -146,10 +146,10 @@ export default function DashboardPage() {
         <Badge variant="outline" className="gap-2">
           <span className="relative flex h-2 w-2">
             <span
-              className={`absolute inline-flex h-full w-full animate-ping rounded-full ${marketOpen ? "bg-[#4ade80]" : "bg-[#f87171]"} opacity-75`}
+              className={`absolute inline-flex h-full w-full animate-ping rounded-full ${marketOpen ? "bg-emerald-500" : "bg-red-500"} opacity-75`}
             ></span>
             <span
-              className={`relative inline-flex h-2 w-2 rounded-full ${marketOpen ? "bg-[#4ade80]" : "bg-[#f87171]"}`}
+              className={`relative inline-flex h-2 w-2 rounded-full ${marketOpen ? "bg-emerald-500" : "bg-red-500"}`}
             ></span>
           </span>
           {marketOpen ? "Market Open" : "Market Closed"}
@@ -158,7 +158,7 @@ export default function DashboardPage() {
 
       {/* Portfolio Stats */}
       <div>
-        <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">
+        <h2 className="text-lg font-semibold text-zinc-50 mb-4">
           Portfolio Overview
         </h2>
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
@@ -198,7 +198,7 @@ export default function DashboardPage() {
 
       {/* Market Overview */}
       <div>
-        <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">
+        <h2 className="text-lg font-semibold text-zinc-50 mb-4">
           Market Overview
         </h2>
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -214,71 +214,71 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-[#8a8a8a]">
+              <CardTitle className="text-sm font-medium text-zinc-500">
                 Today&apos;s Top Gainer
               </CardTitle>
             </CardHeader>
             <CardContent>
               {marketLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[#5eead4]" />
+                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
               ) : topGainer ? (
                 <div className="flex items-center justify-between">
                   <div>
                     <Link
                       href={`/portfolio/${topGainer.symbol}`}
-                      className="block hover:text-[#5eead4] hover:underline transition-colors"
+                      className="block hover:text-blue-500 hover:underline transition-colors"
                     >
-                      <p className="text-lg font-semibold text-[#f5f5f5]">
+                      <p className="text-lg font-semibold text-zinc-50">
                         {topGainer.symbol}
                       </p>
                     </Link>
-                    <p className="text-sm text-[#8a8a8a]">{topGainer.name}</p>
+                    <p className="text-sm text-zinc-500">{topGainer.name}</p>
                   </div>
                   <Badge variant="success">
                     +{(topGainer.percentChange ?? 0).toFixed(2)}%
                   </Badge>
                 </div>
               ) : (
-                <span className="text-[#8a8a8a]">No data</span>
+                <span className="text-zinc-500">No data</span>
               )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-[#8a8a8a]">
+              <CardTitle className="text-sm font-medium text-zinc-500">
                 Today&apos;s Top Loser
               </CardTitle>
             </CardHeader>
             <CardContent>
               {marketLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[#5eead4]" />
+                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
               ) : topLoser ? (
                 <div className="flex items-center justify-between">
                   <div>
                     <Link
                       href={`/portfolio/${topLoser.symbol}`}
-                      className="block hover:text-[#f87171] hover:underline transition-colors"
+                      className="block hover:text-red-500 hover:underline transition-colors"
                     >
-                      <p className="text-lg font-semibold text-[#f5f5f5]">
+                      <p className="text-lg font-semibold text-zinc-50">
                         {topLoser.symbol}
                       </p>
                     </Link>
-                    <p className="text-sm text-[#8a8a8a]">{topLoser.name}</p>
+                    <p className="text-sm text-zinc-500">{topLoser.name}</p>
                   </div>
                   <Badge variant="destructive">
                     {(topLoser.percentChange ?? 0).toFixed(2)}%
                   </Badge>
                 </div>
               ) : (
-                <span className="text-[#8a8a8a]">No data</span>
+                <span className="text-zinc-500">No data</span>
               )}
             </CardContent>
           </Card>
 
-          <Card className="border-[#5eead4]/20 col-span-1 md:col-span-2 lg:col-span-3 h-[500px]">
+          <Card className="border-blue-500/20 col-span-1 md:col-span-2 lg:col-span-3 h-[500px]">
             <CardHeader className="pb-0">
-              <CardTitle className="text-sm font-medium text-[#8a8a8a]">
+              <CardTitle className="text-sm font-medium text-zinc-500">
                 All Share Price Index (ASPI)
               </CardTitle>
             </CardHeader>
@@ -291,22 +291,20 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg font-semibold text-[#f5f5f5] mb-4">
+        <h2 className="text-lg font-semibold text-zinc-50 mb-4">
           Quick Actions
         </h2>
         <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
           <Link href="/transactions">
-            <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors h-full">
+            <Card className="cursor-pointer hover:border-blue-500/50 transition-colors h-full">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[#4ade80]/10">
-                    <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+                  <div className="p-2 rounded-lg bg-emerald-500/10">
+                    <TrendingUp className="h-5 w-5 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="font-medium text-[#f5f5f5]">
-                      Add Transaction
-                    </p>
-                    <p className="text-sm text-[#8a8a8a]">Record a new trade</p>
+                    <p className="font-medium text-zinc-50">Add Transaction</p>
+                    <p className="text-sm text-zinc-500">Record a new trade</p>
                   </div>
                 </div>
               </CardContent>
@@ -314,17 +312,15 @@ export default function DashboardPage() {
           </Link>
 
           <Link href="/portfolio">
-            <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors h-full">
+            <Card className="cursor-pointer hover:border-blue-500/50 transition-colors h-full">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[#5eead4]/10">
-                    <Briefcase className="h-5 w-5 text-[#5eead4]" />
+                  <div className="p-2 rounded-lg bg-blue-500/10">
+                    <Briefcase className="h-5 w-5 text-blue-500" />
                   </div>
                   <div>
-                    <p className="font-medium text-[#f5f5f5]">
-                      Manage Portfolio
-                    </p>
-                    <p className="text-sm text-[#8a8a8a]">
+                    <p className="font-medium text-zinc-50">Manage Portfolio</p>
+                    <p className="text-sm text-zinc-500">
                       View & edit holdings
                     </p>
                   </div>
@@ -334,15 +330,15 @@ export default function DashboardPage() {
           </Link>
 
           <Link href="/analytics">
-            <Card className="cursor-pointer hover:border-[#5eead4]/50 transition-colors h-full">
+            <Card className="cursor-pointer hover:border-blue-500/50 transition-colors h-full">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[#fbbf24]/10">
-                    <BarChart3 className="h-5 w-5 text-[#fbbf24]" />
+                  <div className="p-2 rounded-lg bg-amber-500/10">
+                    <BarChart3 className="h-5 w-5 text-amber-500" />
                   </div>
                   <div>
-                    <p className="font-medium text-[#f5f5f5]">View Analytics</p>
-                    <p className="text-sm text-[#8a8a8a]">
+                    <p className="font-medium text-zinc-50">View Analytics</p>
+                    <p className="text-sm text-zinc-500">
                       Performance insights
                     </p>
                   </div>

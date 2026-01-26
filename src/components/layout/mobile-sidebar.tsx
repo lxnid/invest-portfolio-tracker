@@ -66,16 +66,16 @@ export function MobileSidebar() {
   return (
     <>
       {/* Mobile Top Bar Trigger */}
-      <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between border-b border-[#2f2f2f] bg-[#1e1e1e] p-4 md:px-16">
+      <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between border-b border-zinc-800 bg-zinc-950 p-4 md:px-16">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-teal-400 to-cyan-400">
-            <TrendingUp className="h-5 w-5 text-[#1e1e1e]" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+            <TrendingUp className="h-5 w-5" />
           </div>
-          <span className="text-lg font-bold text-[#f5f5f5]">CSE Tracker</span>
+          <span className="text-lg font-bold text-zinc-50">CSE Tracker</span>
         </Link>
         <button
           onClick={() => setIsOpen(true)}
-          className="p-2 text-[#a8a8a8] hover:text-[#f5f5f5]"
+          className="p-2 text-zinc-400 hover:text-zinc-50"
         >
           <Menu className="h-6 w-6" />
         </button>
@@ -92,24 +92,22 @@ export function MobileSidebar() {
       {/* Sidebar Panel */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-xs transform border-r border-[#2f2f2f] bg-[#1e1e1e] transition-transform duration-300 ease-in-out lg:hidden flex flex-col",
+          "fixed inset-y-0 left-0 z-50 w-[85vw] max-w-xs transform border-r border-zinc-800 bg-zinc-950 transition-transform duration-300 ease-in-out lg:hidden flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b border-[#2f2f2f] px-6 shrink-0">
+        <div className="flex h-16 items-center justify-between border-b border-zinc-800 px-6 shrink-0">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-teal-400 to-cyan-400">
-              <TrendingUp className="h-5 w-5 text-[#1e1e1e]" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+              <TrendingUp className="h-5 w-5" />
             </div>
-            <span className="text-lg font-bold text-[#f5f5f5]">
-              CSE Tracker
-            </span>
+            <span className="text-lg font-bold text-zinc-50">CSE Tracker</span>
           </Link>
           <button
             onClick={() => setIsOpen(false)}
             className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
           >
-            <X className="h-4 w-4 text-[#f5f5f5]" />
+            <X className="h-4 w-4 text-zinc-50" />
           </button>
         </div>
 
@@ -125,8 +123,8 @@ export function MobileSidebar() {
                 className={cn(
                   "flex items-center gap-4 rounded-lg px-4 py-3.5 text-base font-medium transition-all duration-200",
                   isActive
-                    ? "bg-[#5eead4]/10 text-[#5eead4] border border-[#5eead4]/30"
-                    : "text-[#a8a8a8] hover:bg-[#2a2a2a] hover:text-[#f5f5f5]",
+                    ? "bg-blue-500/10 text-blue-500 border border-blue-500/20"
+                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50",
                 )}
               >
                 <Icon className="h-6 w-6" />
@@ -136,12 +134,12 @@ export function MobileSidebar() {
           })}
         </nav>
 
-        <div className="border-t border-[#2f2f2f] p-4 shrink-0">
+        <div className="border-t border-zinc-800 p-4 shrink-0">
           <BrandingFooter className="border-0 pt-0 mt-0 mb-4" mobile />
 
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#a8a8a8] hover:bg-[#2a2a2a] hover:text-[#f5f5f5] transition-all duration-200 mb-3"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50 transition-all duration-200 mb-3"
           >
             <LogOut className="h-5 w-5" />
             Logout
@@ -152,17 +150,17 @@ export function MobileSidebar() {
               <span
                 className={cn(
                   "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-                  marketStatus?.isOpen ? "bg-[#4ade80]" : "bg-[#f87171]",
+                  marketStatus?.isOpen ? "bg-emerald-500" : "bg-red-500",
                 )}
               ></span>
               <span
                 className={cn(
                   "relative inline-flex h-2 w-2 rounded-full",
-                  marketStatus?.isOpen ? "bg-[#4ade80]" : "bg-[#f87171]",
+                  marketStatus?.isOpen ? "bg-emerald-500" : "bg-red-500",
                 )}
               ></span>
             </span>
-            <span className="text-[#8a8a8a]">
+            <span className="text-zinc-500">
               {marketStatus?.isOpen ? "Market Open" : "Market Closed"}
             </span>
           </div>

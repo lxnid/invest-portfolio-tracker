@@ -36,7 +36,7 @@ function TradingViewWidgetComponent({
   timezone = "Asia/Colombo",
   style = "1",
   locale = "en",
-  toolbar_bg = "#f1f3f6",
+  toolbar_bg = "#18181b",
   enable_publishing = false,
   allow_symbol_change = false,
   container_id = "tradingview_widget",

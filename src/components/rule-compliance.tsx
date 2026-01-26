@@ -33,16 +33,16 @@ export function RuleComplianceCard({
 
   const cashStatusColor =
     newTotals && newTotals.cashPercent >= 20
-      ? "text-[#4ade80]"
-      : "text-[#f87171]";
+      ? "text-emerald-500"
+      : "text-red-500";
 
   return (
-    <Card className="border-[#333333] bg-[#1a1a1a]">
+    <Card className="border-zinc-800 bg-zinc-900">
       <CardContent className="pt-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-[#f5f5f5] flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-zinc-50 flex items-center gap-2">
             <ShieldCheck
-              className={`h-4 w-4 ${isValid ? "text-[#4ade80]" : "text-[#f87171]"}`}
+              className={`h-4 w-4 ${isValid ? "text-emerald-500" : "text-red-500"}`}
             />
             Rule Compliance Check
           </h3>
@@ -52,13 +52,13 @@ export function RuleComplianceCard({
         </div>
 
         {newTotals && (
-          <div className="p-3 rounded-lg bg-[#262626] border border-[#333333] flex justify-between items-center text-xs">
-            <span className="text-[#a8a8a8]">Post-Trade Cash</span>
+          <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 flex justify-between items-center text-xs">
+            <span className="text-zinc-500">Post-Trade Cash</span>
             <div className="text-right">
               <p className={`font-mono font-bold ${cashStatusColor}`}>
                 {newTotals.cashPercent.toFixed(1)}%
               </p>
-              <p className="text-[#a8a8a8]">
+              <p className="text-zinc-500">
                 {newTotals.cashBalance.toLocaleString()} /{" "}
                 {newTotals.totalCapital.toLocaleString()}
               </p>
@@ -71,17 +71,17 @@ export function RuleComplianceCard({
             {criticalViolations.map((v, i) => (
               <div
                 key={`crit-${i}`}
-                className="p-3 rounded-lg bg-[#f87171]/10 border border-[#f87171]/30"
+                className="p-3 rounded-lg bg-red-500/10 border border-red-500/30"
               >
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-[#f87171] mt-0.5 shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-[#f87171]">
+                    <p className="text-sm font-semibold text-red-500">
                       {v.ruleName}
                     </p>
-                    <p className="text-xs text-[#f5f5f5] mt-1">{v.message}</p>
+                    <p className="text-xs text-zinc-50 mt-1">{v.message}</p>
                     {v.impact && (
-                      <p className="text-xs text-[#f87171] mt-1">{v.impact}</p>
+                      <p className="text-xs text-red-400 mt-1">{v.impact}</p>
                     )}
                   </div>
                 </div>
@@ -91,17 +91,17 @@ export function RuleComplianceCard({
             {warningViolations.map((v, i) => (
               <div
                 key={`warn-${i}`}
-                className="p-3 rounded-lg bg-[#fbbf24]/10 border border-[#fbbf24]/30"
+                className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30"
               >
                 <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-[#fbbf24] mt-0.5 shrink-0" />
+                  <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-[#fbbf24]">
+                    <p className="text-sm font-semibold text-amber-500">
                       {v.ruleName}
                     </p>
-                    <p className="text-xs text-[#f5f5f5] mt-1">{v.message}</p>
+                    <p className="text-xs text-zinc-50 mt-1">{v.message}</p>
                     {v.impact && (
-                      <p className="text-xs text-[#fbbf24] mt-1 border-t border-[#fbbf24]/20 pt-1">
+                      <p className="text-xs text-amber-500 mt-1 border-t border-amber-500/20 pt-1">
                         {v.impact}
                       </p>
                     )}
@@ -111,7 +111,7 @@ export function RuleComplianceCard({
             ))}
           </div>
         ) : isValid ? (
-          <div className="flex items-center gap-2 text-[#4ade80] text-sm p-3 rounded-lg bg-[#4ade80]/10 border border-[#4ade80]/20">
+          <div className="flex items-center gap-2 text-emerald-500 text-sm p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
             <CheckCircle className="h-4 w-4" />
             <p>Trade complies with all investment rules.</p>
           </div>

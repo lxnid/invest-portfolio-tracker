@@ -58,8 +58,8 @@ const StatRow = ({
   className?: string;
 }) => (
   <div className={`flex justify-between items-center py-2 ${className}`}>
-    <span className="text-sm text-[#8a8a8a]">{label}</span>
-    <div className="text-sm font-medium text-[#f5f5f5] text-right">{value}</div>
+    <span className="text-sm text-zinc-500">{label}</span>
+    <div className="text-sm font-medium text-zinc-50 text-right">{value}</div>
   </div>
 );
 
@@ -72,7 +72,7 @@ const PriceChange = ({
 }) => {
   const isPositive = change >= 0;
   const Icon = isPositive ? TrendingUp : TrendingDown;
-  const colorClass = isPositive ? "text-[#4ade80]" : "text-[#f87171]";
+  const colorClass = isPositive ? "text-emerald-500" : "text-red-500";
 
   return (
     <div className={`flex items-center gap-1 ${colorClass}`}>
@@ -122,8 +122,8 @@ export default function StockDetailPage({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-[#5eead4]" />
-        <p className="text-[#8a8a8a]">Loading stock data...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <p className="text-zinc-500">Loading stock data...</p>
       </div>
     );
   }
@@ -131,12 +131,12 @@ export default function StockDetailPage({
   if (error || !stock) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <AlertCircle className="h-10 w-10 text-[#f87171]" />
-        <h2 className="text-xl font-bold text-[#f5f5f5]">Stock Not Found</h2>
-        <p className="text-[#8a8a8a]">We couldn't find data for {symbol}</p>
+        <AlertCircle className="h-10 w-10 text-red-500" />
+        <h2 className="text-xl font-bold text-zinc-50">Stock Not Found</h2>
+        <p className="text-zinc-500">We couldn't find data for {symbol}</p>
         <button
           onClick={() => router.back()}
-          className="text-[#5eead4] hover:underline mt-2"
+          className="text-blue-500 hover:underline mt-2"
         >
           Go Back
         </button>
@@ -159,16 +159,16 @@ export default function StockDetailPage({
       {/* Navigation */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-[#a8a8a8] hover:text-[#5eead4] transition-colors"
+        className="flex items-center gap-2 text-zinc-400 hover:text-blue-500 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         <span>Back to Portfolio</span>
       </button>
 
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#333333] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
         <div className="flex items-start gap-4">
-          <div className="h-16 w-16 rounded-xl bg-[#262626] border border-[#333333] flex items-center justify-center overflow-hidden shrink-0">
+          <div className="h-16 w-16 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
             {stock.logoPath ? (
               <img
                 src={stock.logoPath}
@@ -179,12 +179,12 @@ export default function StockDetailPage({
                 }}
               />
             ) : (
-              <Building2 className="h-8 w-8 text-[#5eead4]" />
+              <Building2 className="h-8 w-8 text-blue-500" />
             )}
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-4xl font-black text-[#f5f5f5] tracking-tight">
+              <h1 className="text-4xl font-black text-zinc-50 tracking-tight">
                 {stock.symbol}
               </h1>
               {isEditingSector ? (
@@ -192,13 +192,13 @@ export default function StockDetailPage({
                   <Input
                     value={sectorInput}
                     onChange={(e) => setSectorInput(e.target.value)}
-                    className="h-7 w-32 py-0 text-xs bg-[#262626] border-[#333333]"
+                    className="h-7 w-32 py-0 text-xs bg-zinc-900 border-zinc-800"
                     autoFocus
                   />
                   <button
                     onClick={handleSaveSector}
                     disabled={updateStock.isPending}
-                    className="p-1 text-[#4ade80] hover:bg-[#333333] rounded"
+                    className="p-1 text-emerald-500 hover:bg-zinc-800 rounded"
                   >
                     {updateStock.isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -211,7 +211,7 @@ export default function StockDetailPage({
                       setIsEditingSector(false);
                       setSectorInput(stock.sector || "");
                     }}
-                    className="p-1 text-[#f87171] hover:bg-[#333333] rounded"
+                    className="p-1 text-red-500 hover:bg-zinc-800 rounded"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -220,25 +220,25 @@ export default function StockDetailPage({
                 <div className="group flex items-center gap-2">
                   <Badge
                     variant="outline"
-                    className="border-[#333333] hidden md:inline-flex"
+                    className="border-zinc-800 hidden md:inline-flex"
                   >
                     {stock.sector || "Unknown Sector"}
                   </Badge>
                   <button
                     onClick={() => setIsEditingSector(true)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-[#666666] hover:text-[#5eead4] transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-blue-500 transition-all"
                   >
                     <Pencil className="h-3 w-3" />
                   </button>
                 </div>
               )}
             </div>
-            <p className="text-[#a8a8a8] mt-1 text-lg">{stock.name}</p>
+            <p className="text-zinc-400 mt-1 text-lg">{stock.name}</p>
           </div>
         </div>
 
         <div className="text-right">
-          <p className="text-4xl font-mono font-bold text-[#f5f5f5]">
+          <p className="text-4xl font-mono font-bold text-zinc-50">
             LKR {marketData.price.toFixed(2)}
           </p>
           <div className="flex justify-end mt-1">
@@ -248,7 +248,7 @@ export default function StockDetailPage({
             />
           </div>
           <p
-            className={`text-xs mt-2 ${marketData.isOpen ? "text-[#4ade80]" : "text-[#f87171]"}`}
+            className={`text-xs mt-2 ${marketData.isOpen ? "text-emerald-500" : "text-red-500"}`}
           >
             Market is {marketData.isOpen ? "Open" : "Closed"}
           </p>
@@ -259,7 +259,7 @@ export default function StockDetailPage({
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-[#262626]">
+        <TabsList className="bg-zinc-900">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="analysis">Analysis & Charts</TabsTrigger>
           <TabsTrigger value="financials">Financials</TabsTrigger>
@@ -274,17 +274,17 @@ export default function StockDetailPage({
             <div className="lg:col-span-1 space-y-6">
               {/* My Position Card */}
               {hasPosition ? (
-                <Card className="border-[#5eead4]/30 bg-[#1e1e1e]/50 backdrop-blur-md">
+                <Card className="border-blue-500/20 bg-zinc-900/50 backdrop-blur-md">
                   <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-[#5eead4]">
+                    <CardTitle className="flex items-center gap-2 text-blue-500">
                       <Briefcase className="h-4 w-4" />
                       Your Position
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-1">
                     <div className="my-4 text-center">
-                      <p className="text-sm text-[#8a8a8a]">Current Value</p>
-                      <p className="text-3xl font-bold text-[#f5f5f5] mt-1">
+                      <p className="text-sm text-zinc-500">Current Value</p>
+                      <p className="text-3xl font-bold text-zinc-50 mt-1">
                         {formatCurrency(position.currentValue)}
                       </p>
                       <Badge
@@ -298,7 +298,7 @@ export default function StockDetailPage({
                         {position.unrealizedPLPercent.toFixed(2)}%)
                       </Badge>
                     </div>
-                    <Separator className="bg-[#333333]" />
+                    <Separator className="bg-zinc-800" />
                     <StatRow
                       label="Shares Owned"
                       value={
@@ -340,14 +340,14 @@ export default function StockDetailPage({
                   </CardContent>
                 </Card>
               ) : (
-                <Card className="border-dashed border-[#333333]">
+                <Card className="border-dashed border-zinc-800">
                   <CardContent className="py-8 text-center">
-                    <p className="text-[#8a8a8a] mb-4">
+                    <p className="text-zinc-500 mb-4">
                       You don't own this stock yet.
                     </p>
                     <Link
                       href="/portfolio?action=buy"
-                      className="text-sm text-[#5eead4] hover:underline"
+                      className="text-sm text-blue-500 hover:underline"
                     >
                       Add to Portfolio
                     </Link>
@@ -358,7 +358,7 @@ export default function StockDetailPage({
               {/* Performance Card */}
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-[#a8a8a8]">
+                  <CardTitle className="text-sm font-medium text-zinc-400">
                     Performance Insights
                   </CardTitle>
                 </CardHeader>
@@ -366,7 +366,7 @@ export default function StockDetailPage({
                   <StatRow
                     label="Total Dividends Received"
                     value={
-                      <span className="text-[#4ade80] font-mono">
+                      <span className="text-emerald-500 font-mono">
                         +{formatCurrency(performance.totalDividends)}
                       </span>
                     }
@@ -385,7 +385,7 @@ export default function StockDetailPage({
               {/* Market Summary Wrapper */}
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-[#a8a8a8]">
+                  <CardTitle className="text-sm font-medium text-zinc-400">
                     Market Activity
                   </CardTitle>
                 </CardHeader>
@@ -398,15 +398,15 @@ export default function StockDetailPage({
                     label="Trades (Today)"
                     value={marketData.trades?.toLocaleString()}
                   />
-                  <Separator className="bg-[#333333] my-2" />
+                  <Separator className="bg-zinc-800 my-2" />
                   <StatRow
                     label="Change"
                     value={
                       <span
                         className={
                           marketData.change >= 0
-                            ? "text-[#4ade80]"
-                            : "text-[#f87171]"
+                            ? "text-emerald-500"
+                            : "text-red-500"
                         }
                       >
                         {marketData.change >= 0 ? "+" : ""}
@@ -442,10 +442,10 @@ export default function StockDetailPage({
 
             {/* Right Column - Transaction History */}
             <div className="lg:col-span-2">
-              <Card className="h-full border-[#333333]">
+              <Card className="h-full border-zinc-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <History className="h-5 w-5 text-[#5eead4]" />
+                    <History className="h-5 w-5 text-blue-500" />
                     Transaction History
                   </CardTitle>
                 </CardHeader>
@@ -453,7 +453,7 @@ export default function StockDetailPage({
                   {transactions.length > 0 ? (
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent border-[#333333]">
+                        <TableRow className="hover:bg-transparent border-zinc-800">
                           <TableHead className="w-[100px]">Date</TableHead>
                           <TableHead>Type</TableHead>
                           <TableHead className="text-right">Qty</TableHead>
@@ -465,18 +465,18 @@ export default function StockDetailPage({
                         {transactions.map((tx: any) => (
                           <TableRow
                             key={tx.id}
-                            className="border-[#333333] hover:bg-[#262626]"
+                            className="border-zinc-800 hover:bg-zinc-900"
                           >
-                            <TableCell className="font-mono text-xs text-[#a8a8a8]">
+                            <TableCell className="font-mono text-xs text-zinc-400">
                               {new Date(tx.date).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
                               <Badge
                                 variant="outline"
                                 className={`
-                                  ${tx.type === "BUY" ? "bg-[#4ade80]/10 text-[#4ade80] border-[#4ade80]/20" : ""}
-                                  ${tx.type === "SELL" ? "bg-[#f87171]/10 text-[#f87171] border-[#f87171]/20" : ""}
-                                  ${tx.type === "DIVIDEND" ? "bg-[#fbbf24]/10 text-[#fbbf24] border-[#fbbf24]/20" : ""}
+                                  ${tx.type === "BUY" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : ""}
+                                  ${tx.type === "SELL" ? "bg-red-500/10 text-red-500 border-red-500/20" : ""}
+                                  ${tx.type === "DIVIDEND" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : ""}
                                 `}
                               >
                                 {tx.type}
@@ -485,7 +485,7 @@ export default function StockDetailPage({
                             <TableCell className="text-right font-mono">
                               {tx.quantity}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-[#a8a8a8]">
+                            <TableCell className="text-right font-mono text-zinc-400">
                               {parseFloat(tx.price).toFixed(2)}
                             </TableCell>
                             <TableCell className="text-right font-mono">
@@ -496,7 +496,7 @@ export default function StockDetailPage({
                       </TableBody>
                     </Table>
                   ) : (
-                    <div className="text-center py-12 text-[#666666]">
+                    <div className="text-center py-12 text-zinc-500">
                       No transaction history available.
                     </div>
                   )}
@@ -514,7 +514,7 @@ export default function StockDetailPage({
 
           <ResizableDiv
             defaultHeight={800}
-            className="rounded-lg border border-[#333333] bg-card text-card-foreground shadow-sm"
+            className="rounded-lg border border-zinc-800 bg-card text-card-foreground shadow-sm"
           >
             <div className="h-full w-full p-2 pb-5">
               <TradingViewWidget symbol={tvSymbol} autosize />
@@ -527,10 +527,10 @@ export default function StockDetailPage({
           className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500"
         >
           <div className="grid gap-6">
-            <Card className="border-[#333333] bg-[#1e1e1e]/50 backdrop-blur-md">
-              <CardHeader className="border-b border-[#333333] pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg font-medium text-[#f5f5f5]">
-                  <Building2 className="h-5 w-5 text-[#5eead4]" />
+            <Card className="border-zinc-800 bg-zinc-900/50 backdrop-blur-md">
+              <CardHeader className="border-b border-zinc-800 pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg font-medium text-zinc-50">
+                  <Building2 className="h-5 w-5 text-blue-500" />
                   Company Profile
                 </CardTitle>
               </CardHeader>
@@ -539,10 +539,10 @@ export default function StockDetailPage({
               </CardContent>
             </Card>
 
-            <div className="rounded-xl border border-[#333333] bg-[#1e1e1e]/50 backdrop-blur-md shadow-lg">
-              <div className="flex items-center gap-2 p-4 border-b border-[#333333]">
-                <FileText className="h-5 w-5 text-[#5eead4]" />
-                <h3 className="text-lg font-medium text-[#f5f5f5]">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 backdrop-blur-md shadow-lg">
+              <div className="flex items-center gap-2 p-4 border-b border-zinc-800">
+                <FileText className="h-5 w-5 text-blue-500" />
+                <h3 className="text-lg font-medium text-zinc-50">
                   Financial Statements
                 </h3>
               </div>

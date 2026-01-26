@@ -30,7 +30,7 @@ export function LastUpdated({
 
   return (
     <div
-      className={`flex items-center gap-1.5 text-xs text-[#8a8a8a] ${className}`}
+      className={`flex items-center gap-1.5 text-xs text-zinc-500 ${className}`}
     >
       <Clock className="h-3 w-3" />
       <span>Last synced {timeAgo}</span>

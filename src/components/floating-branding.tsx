@@ -10,10 +10,10 @@ export function FloatingBranding() {
         href="https://dinilr.com"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1e1e1e]/80 backdrop-blur-sm border border-[#2f2f2f] text-xs text-[#666666] hover:text-[#f5f5f5] hover:border-[#5eead4]/30 transition-all duration-300 shadow-lg hover:shadow-[#5eead4]/10 group"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 text-xs text-zinc-500 hover:text-zinc-50 hover:border-blue-500/30 transition-all duration-300 shadow-lg hover:shadow-blue-500/10 group"
       >
         <span>Built by</span>
-        <span className="font-semibold text-[#a8a8a8] group-hover:text-[#5eead4] transition-colors">
+        <span className="font-semibold text-zinc-400 group-hover:text-blue-500 transition-colors">
           lxnid
         </span>
       </Link>

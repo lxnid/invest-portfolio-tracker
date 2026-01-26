@@ -98,35 +98,35 @@ export default function MarketPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-[#f5f5f5]">Market Explorer</h1>
-        <p className="text-[#8a8a8a] mt-1">
+        <h1 className="text-3xl font-bold text-zinc-50">Market Explorer</h1>
+        <p className="text-zinc-500 mt-1">
           Explore Colombo Stock Exchange indices and listed companies
         </p>
       </div>
 
       {/* Indices Section */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="bg-linear-to-br from-[#1e1e1e] to-[#252525] border-[#333333]">
+        <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#a8a8a8]">
+            <CardTitle className="text-sm font-medium text-zinc-400">
               All Share Price Index (ASPI)
             </CardTitle>
-            <Activity className="h-4 w-4 text-[#5eead4]" />
+            <Activity className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-[#5eead4]" />
+              <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
             ) : (
               <>
-                <div className="text-2xl font-bold text-[#f5f5f5]">
+                <div className="text-2xl font-bold text-zinc-50">
                   {marketData?.aspi?.index.toFixed(2) ?? "0.00"}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span
                     className={`text-sm font-medium ${
                       (marketData?.aspi?.change || 0) >= 0
-                        ? "text-[#4ade80]"
-                        : "text-[#f87171]"
+                        ? "text-emerald-500"
+                        : "text-red-500"
                     }`}
                   >
                     {(marketData?.aspi?.change || 0) > 0 ? "+" : ""}
@@ -147,27 +147,27 @@ export default function MarketPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-linear-to-br from-[#1e1e1e] to-[#252525] border-[#333333]">
+        <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-[#a8a8a8]">
+            <CardTitle className="text-sm font-medium text-zinc-400">
               S&P SL20 Index
             </CardTitle>
-            <Layers className="h-4 w-4 text-[#fbbf24]" />
+            <Layers className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-[#fbbf24]" />
+              <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
             ) : (
               <>
-                <div className="text-2xl font-bold text-[#f5f5f5]">
+                <div className="text-2xl font-bold text-zinc-50">
                   {marketData?.sp20?.index.toFixed(2) ?? "0.00"}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span
                     className={`text-sm font-medium ${
                       (marketData?.sp20?.change || 0) >= 0
-                        ? "text-[#4ade80]"
-                        : "text-[#f87171]"
+                        ? "text-emerald-500"
+                        : "text-red-500"
                     }`}
                   >
                     {(marketData?.sp20?.change || 0) > 0 ? "+" : ""}
@@ -190,31 +190,31 @@ export default function MarketPage() {
       </div>
 
       {/* Stock Library */}
-      <Card className="border-[#333333] bg-[#1e1e1e]">
+      <Card className="border-zinc-800 bg-zinc-950">
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <CardTitle>Stock Library</CardTitle>
             <div className="relative w-full md:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#666666]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <Input
                 placeholder="Search symbol or company..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-[#262626] border-[#333333]"
+                className="pl-9 bg-zinc-900 border-zinc-800"
               />
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="rounded-md border border-[#333333] overflow-hidden">
+          <div className="rounded-md border border-zinc-800 overflow-hidden">
             <Table>
-              <TableHeader className="bg-[#262626]">
-                <TableRow className="hover:bg-transparent border-b-[#333333]">
+              <TableHeader className="bg-zinc-900">
+                <TableRow className="hover:bg-transparent border-b-zinc-800">
                   <TableHead className="w-[100px]">
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("symbol")}
-                      className="p-0 hover:bg-transparent text-[#a8a8a8] font-semibold"
+                      className="p-0 hover:bg-transparent text-zinc-400 font-semibold"
                     >
                       Symbol <ArrowUpDown className="ml-2 h-3 w-3" />
                     </Button>
@@ -223,7 +223,7 @@ export default function MarketPage() {
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("name")}
-                      className="p-0 hover:bg-transparent text-[#a8a8a8] font-semibold"
+                      className="p-0 hover:bg-transparent text-zinc-400 font-semibold"
                     >
                       Company Name <ArrowUpDown className="ml-2 h-3 w-3" />
                     </Button>
@@ -232,7 +232,7 @@ export default function MarketPage() {
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("price")}
-                      className="p-0 hover:bg-transparent text-[#a8a8a8] font-semibold"
+                      className="p-0 hover:bg-transparent text-zinc-400 font-semibold"
                     >
                       Price (LKR) <ArrowUpDown className="ml-2 h-3 w-3" />
                     </Button>
@@ -241,7 +241,7 @@ export default function MarketPage() {
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("change")}
-                      className="p-0 hover:bg-transparent text-[#a8a8a8] font-semibold"
+                      className="p-0 hover:bg-transparent text-zinc-400 font-semibold"
                     >
                       Change <ArrowUpDown className="ml-2 h-3 w-3" />
                     </Button>
@@ -250,7 +250,7 @@ export default function MarketPage() {
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("percentChange")}
-                      className="p-0 hover:bg-transparent text-[#a8a8a8] font-semibold"
+                      className="p-0 hover:bg-transparent text-zinc-400 font-semibold"
                     >
                       Change % <ArrowUpDown className="ml-2 h-3 w-3" />
                     </Button>
@@ -259,7 +259,7 @@ export default function MarketPage() {
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("qty")}
-                      className="p-0 hover:bg-transparent text-[#a8a8a8] font-semibold"
+                      className="p-0 hover:bg-transparent text-zinc-400 font-semibold"
                     >
                       Volume <ArrowUpDown className="ml-2 h-3 w-3" />
                     </Button>
@@ -270,14 +270,14 @@ export default function MarketPage() {
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-[#5eead4]" />
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" />
                     </TableCell>
                   </TableRow>
                 ) : visibleStocks.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={6}
-                      className="h-24 text-center text-[#666666]"
+                      className="h-24 text-center text-zinc-500"
                     >
                       No stocks found.
                     </TableCell>
@@ -287,7 +287,7 @@ export default function MarketPage() {
                     {visibleStocks.map((stock) => (
                       <TableRow
                         key={stock.symbol}
-                        className="hover:bg-[#262626] border-b-[#333333]"
+                        className="hover:bg-zinc-900 border-b-zinc-800"
                       >
                         <TableCell className="font-mono font-medium text-zinc-300">
                           <Link
@@ -300,11 +300,11 @@ export default function MarketPage() {
                         <TableCell className="text-zinc-500">
                           {stock.name}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-[#f5f5f5]">
+                        <TableCell className="text-right font-mono text-zinc-50">
                           {(stock.price || 0).toFixed(2)}
                         </TableCell>
                         <TableCell
-                          className={`text-right font-mono ${(stock.change || 0) >= 0 ? "text-[#4ade80]" : "text-[#f87171]"}`}
+                          className={`text-right font-mono ${(stock.change || 0) >= 0 ? "text-emerald-500" : "text-red-500"}`}
                         >
                           {(stock.change || 0) > 0 ? "+" : ""}
                           {(stock.change || 0).toFixed(2)}
@@ -322,7 +322,7 @@ export default function MarketPage() {
                             {(stock.percentChange || 0).toFixed(2)}%
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right font-mono text-[#a8a8a8]">
+                        <TableCell className="text-right font-mono text-zinc-500">
                           {(stock.volume || 0).toLocaleString()}
                         </TableCell>
                       </TableRow>
@@ -336,7 +336,7 @@ export default function MarketPage() {
                             ref={loadMoreRef}
                             className="h-10 flex items-center justify-center"
                           >
-                            <Loader2 className="h-5 w-5 animate-spin text-[#5eead4]" />
+                            <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -346,7 +346,7 @@ export default function MarketPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="p-4 text-xs text-center text-[#666666]">
+          <div className="p-4 text-xs text-center text-zinc-500">
             Showing {visibleStocks.length} of {sortedStocks.length} listed
             securities
           </div>

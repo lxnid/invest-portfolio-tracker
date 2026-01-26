@@ -38,13 +38,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] p-4">
-      <Card className="w-full max-w-md border-[#333] bg-[#1a1a1a]">
+    <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
+      <Card className="w-full max-w-md border-zinc-800 bg-zinc-900">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-[#f5f5f5]">
+          <CardTitle className="text-2xl font-bold text-zinc-50">
             Access Portfolio
           </CardTitle>
-          <p className="text-[#8a8a8a] text-sm mt-1">
+          <p className="text-zinc-500 text-sm mt-1">
             Personal Investment Tracker
           </p>
         </CardHeader>
@@ -52,22 +52,22 @@ export default function LoginPage() {
           {/* Admin Login */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-[#a8a8a8]">
+              <label className="text-sm font-medium text-zinc-400">
                 Admin Access
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-[#666]" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
                 <Input
                   type="password"
                   placeholder="Enter Admin Password"
-                  className="pl-9 bg-[#262626] border-[#333] text-[#f5f5f5]"
+                  className="pl-9 bg-zinc-900 border-zinc-800 text-zinc-50"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>
             <Button
-              className="w-full bg-[#3b82f6] hover:bg-[#2563eb]"
+              className="w-full bg-blue-600 hover:bg-blue-700"
               onClick={() => handleLogin("admin")}
               disabled={isLoading || !password}
             >
@@ -77,17 +77,19 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-[#333]" />
+              <span className="w-full border-t border-zinc-800" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#1a1a1a] px-2 text-[#666]">Or Try Demo</span>
+              <span className="bg-zinc-900 px-2 text-zinc-500">
+                Or Try Demo
+              </span>
             </div>
           </div>
 
           {/* Guest Login */}
           <Button
             variant="outline"
-            className="w-full border-[#333] text-[#f5f5f5] hover:bg-[#262626]"
+            className="w-full border-zinc-800 text-zinc-50 hover:bg-zinc-800"
             onClick={() => handleLogin("guest")}
             disabled={isLoading}
           >

@@ -52,15 +52,15 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
-      <Card className="w-full max-w-md bg-[#1e1e1e] border-[#333333] shadow-2xl">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-[#2f2f2f] pb-4">
-          <CardTitle className="text-[#f5f5f5]">Share Feedback</CardTitle>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+      <Card className="w-full max-w-md bg-zinc-900 border-zinc-800 shadow-2xl">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-800 pb-4">
+          <CardTitle className="text-zinc-50">Share Feedback</CardTitle>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-8 w-8 text-[#a8a8a8] hover:text-[#f5f5f5]"
+            className="h-8 w-8 text-zinc-400 hover:text-zinc-50"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -71,15 +71,15 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
-              <h3 className="text-lg font-medium text-[#f5f5f5]">Thank You!</h3>
-              <p className="text-[#a8a8a8]">
+              <h3 className="text-lg font-medium text-zinc-50">Thank You!</h3>
+              <p className="text-zinc-500">
                 Your feedback has been received and will be reviewed.
               </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[#a8a8a8]">Feedback Type</Label>
+                <Label className="text-zinc-400">Feedback Type</Label>
                 <div className="flex gap-2">
                   {(["FEATURE", "BUG", "OTHER"] as const).map((t) => (
                     <button
@@ -88,8 +88,8 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                       onClick={() => setType(t)}
                       className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors border ${
                         type === t
-                          ? "bg-[#5eead4]/10 border-[#5eead4] text-[#5eead4]"
-                          : "bg-[#262626] border-[#333333] text-[#a8a8a8] hover:bg-[#333333]"
+                          ? "bg-blue-500/10 border-blue-500 text-blue-500"
+                          : "bg-zinc-950 border-zinc-800 text-zinc-500 hover:bg-zinc-800"
                       }`}
                     >
                       {t}
@@ -99,9 +99,9 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[#a8a8a8]">Message</Label>
+                <Label className="text-zinc-400">Message</Label>
                 <textarea
-                  className="w-full min-h-[120px] rounded-md border border-[#333333] bg-[#262626] px-3 py-2 text-sm text-[#f5f5f5] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#5eead4] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full min-h-[120px] rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Tell us what you think..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -121,14 +121,14 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   type="button"
                   variant="ghost"
                   onClick={onClose}
-                  className="hover:bg-[#333333] text-[#a8a8a8]"
+                  className="hover:bg-zinc-800 text-zinc-400"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting || !message.trim()}
-                  className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white border-0"
+                  className="bg-blue-600 hover:bg-blue-700 text-white border-0"
                 >
                   {isSubmitting ? (
                     <>

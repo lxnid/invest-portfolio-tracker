@@ -147,8 +147,8 @@ export default function TransactionsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#f5f5f5]">Transactions</h1>
-          <p className="text-[#8a8a8a] mt-1">Your complete trading history</p>
+          <h1 className="text-3xl font-bold text-zinc-50">Transactions</h1>
+          <p className="text-zinc-500 mt-1">Your complete trading history</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <Button variant="outline" className="flex-1 md:flex-none">
@@ -171,8 +171,8 @@ export default function TransactionsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Transactions</p>
-                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                <p className="text-sm text-zinc-500">Transactions</p>
+                <p className="text-2xl font-bold text-zinc-50 mt-1">
                   {isLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />
                   ) : (
@@ -180,8 +180,8 @@ export default function TransactionsPage() {
                   )}
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#333333]">
-                <ArrowRightLeft className="h-5 w-5 text-[#a8a8a8]" />
+              <div className="p-2.5 rounded-lg bg-zinc-800">
+                <ArrowRightLeft className="h-5 w-5 text-zinc-400" />
               </div>
             </div>
           </CardContent>
@@ -191,8 +191,8 @@ export default function TransactionsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Total Buys</p>
-                <p className="text-2xl font-bold text-[#4ade80] mt-1">
+                <p className="text-sm text-zinc-500">Total Buys</p>
+                <p className="text-2xl font-bold text-emerald-500 mt-1">
                   {isLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />
                   ) : (
@@ -200,8 +200,8 @@ export default function TransactionsPage() {
                   )}
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
-                <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+              <div className="p-2.5 rounded-lg bg-emerald-500/10">
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
             </div>
           </CardContent>
@@ -211,8 +211,8 @@ export default function TransactionsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Total Sells</p>
-                <p className="text-2xl font-bold text-[#f87171] mt-1">
+                <p className="text-sm text-zinc-500">Total Sells</p>
+                <p className="text-2xl font-bold text-red-500 mt-1">
                   {isLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />
                   ) : (
@@ -220,8 +220,8 @@ export default function TransactionsPage() {
                   )}
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#f87171]/10">
-                <TrendingDown className="h-5 w-5 text-[#f87171]" />
+              <div className="p-2.5 rounded-lg bg-red-500/10">
+                <TrendingDown className="h-5 w-5 text-red-500" />
               </div>
             </div>
           </CardContent>
@@ -229,8 +229,8 @@ export default function TransactionsPage() {
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Dividends</p>
-            <p className="text-2xl font-bold text-[#fbbf24] mt-1">
+            <p className="text-sm text-zinc-500">Dividends</p>
+            <p className="text-2xl font-bold text-amber-500 mt-1">
               {isLoading ? (
                 <Loader2 className="h-6 w-6 animate-spin" />
               ) : (
@@ -248,7 +248,7 @@ export default function TransactionsPage() {
             <CardTitle className="my-auto">Transaction History</CardTitle>
             <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666666]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
                 <Input
                   placeholder="Search..."
                   value={searchQuery}
@@ -275,7 +275,7 @@ export default function TransactionsPage() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-[#5eead4]" />
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
             </div>
           ) : (
             <Table>
@@ -293,15 +293,15 @@ export default function TransactionsPage() {
               <TableBody>
                 {filteredTransactions.map((transaction) => (
                   <TableRow key={transaction.id}>
-                    <TableCell className="text-[#a8a8a8]">
+                    <TableCell className="text-zinc-500">
                       {formatDate(transaction.date)}
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-semibold text-[#f5f5f5]">
+                        <p className="font-semibold text-zinc-50">
                           {transaction.stock.symbol}
                         </p>
-                        <p className="text-sm text-[#8a8a8a]">
+                        <p className="text-sm text-zinc-500">
                           {transaction.stock.name}
                         </p>
                       </div>
@@ -313,14 +313,14 @@ export default function TransactionsPage() {
                     <TableCell className="text-right font-mono">
                       {parseFloat(transaction.price).toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-[#8a8a8a]">
+                    <TableCell className="text-right font-mono text-zinc-500">
                       {parseFloat(transaction.fees || "0").toFixed(2)}
                     </TableCell>
                     <TableCell
                       className={`text-right font-mono font-semibold ${
                         transaction.type === "BUY"
-                          ? "text-red-400"
-                          : "text-emerald-400"
+                          ? "text-red-500"
+                          : "text-emerald-500"
                       }`}
                     >
                       {transaction.type === "BUY" ? "-" : "+"}
@@ -335,7 +335,7 @@ export default function TransactionsPage() {
           )}
 
           {!isLoading && filteredTransactions.length === 0 && (
-            <div className="text-center py-8 text-[#8a8a8a]">
+            <div className="text-center py-8 text-zinc-500">
               No transactions found.
             </div>
           )}
@@ -532,13 +532,13 @@ function TransactionModal({
   // Need to import RuleComplianceCard
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-0 md:p-8">
-      <Card className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-5xl bg-[#1e1e1e] border-[#333333] shadow-2xl rounded-none md:rounded-xl flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-[#2f2f2f] pb-4 shrink-0">
+      <Card className="w-full h-full md:h-auto md:max-h-[85vh] md:max-w-5xl bg-zinc-950 border-zinc-800 shadow-2xl rounded-none md:rounded-xl flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-800 pb-4 shrink-0">
           <CardTitle>Add Transaction</CardTitle>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 hover:bg-[#333333]"
+            className="h-8 w-8 hover:bg-zinc-800"
             onClick={onClose}
           >
             <X className="h-4 w-4" />
@@ -594,11 +594,11 @@ function TransactionModal({
                   {/* Symbol Selection */}
                   {selectedType === "DIVIDEND" || selectedType === "SELL" ? (
                     <div>
-                      <Label className="text-[#a8a8a8]">
+                      <Label className="text-zinc-500">
                         Select Stock (Active Holdings)
                       </Label>
                       <select
-                        className="flex h-10 w-full rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1.5"
+                        className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1.5"
                         onChange={(e) => {
                           const holding = holdings?.find(
                             (h) => h.stock.symbol === e.target.value,
@@ -641,9 +641,9 @@ function TransactionModal({
                     </div>
                   ) : (
                     <div className="relative" ref={wrapperRef}>
-                      <Label className="text-[#a8a8a8]">Stock Symbol</Label>
+                      <Label className="text-zinc-500">Stock Symbol</Label>
                       <div className="relative mt-1.5">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#666666]" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
                         <Input
                           placeholder="Search symbol..."
                           className="pl-9 font-mono uppercase"
@@ -660,23 +660,23 @@ function TransactionModal({
                         />
                       </div>
                       {showSuggestions && filteredStocks.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 overflow-hidden bg-[#262626] border border-[#333333] rounded-md shadow-lg">
+                        <div className="absolute z-10 w-full mt-1 overflow-hidden bg-zinc-900 border border-zinc-800 rounded-md shadow-lg">
                           {filteredStocks.map((stock) => (
                             <div
                               key={stock.symbol}
-                              className="flex items-center justify-between px-4 py-3 hover:bg-[#333333] cursor-pointer"
+                              className="flex items-center justify-between px-4 py-3 hover:bg-zinc-800 cursor-pointer"
                               onClick={() => handleSelectStock(stock)}
                             >
                               <div>
-                                <p className="font-bold text-[#f5f5f5]">
+                                <p className="font-bold text-zinc-50">
                                   {stock.symbol}
                                 </p>
-                                <p className="text-xs text-[#a8a8a8]">
+                                <p className="text-xs text-zinc-500">
                                   {stock.name}
                                 </p>
                               </div>
                               <div className="text-right">
-                                <p className="font-mono text-[#5eead4]">
+                                <p className="font-mono text-blue-500">
                                   LKR {stock.price.toFixed(2)}
                                 </p>
                               </div>
@@ -688,14 +688,14 @@ function TransactionModal({
                   )}
 
                   {formData.name && selectedType === "BUY" && (
-                    <div className="text-sm text-[#a8a8a8] px-1">
+                    <div className="text-sm text-zinc-500 px-1">
                       {formData.name}
                     </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-[#a8a8a8]">Quantity</Label>
+                      <Label className="text-zinc-500">Quantity</Label>
                       <Input
                         type="number"
                         className="mt-1.5 font-mono"
@@ -710,7 +710,7 @@ function TransactionModal({
                       />
                     </div>
                     <div>
-                      <Label className="text-[#a8a8a8]">
+                      <Label className="text-zinc-500">
                         {selectedType === "DIVIDEND"
                           ? "Dividend Per Share"
                           : "Price"}
@@ -730,13 +730,13 @@ function TransactionModal({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-[#a8a8a8]">
+                      <Label className="text-zinc-500">
                         {selectedType === "DIVIDEND"
                           ? "Total Income"
                           : "Fees (1.12%)"}
                       </Label>
                       {selectedType === "DIVIDEND" ? (
-                        <div className="flex h-10 w-full items-center rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-2 text-sm text-[#f5f5f5] font-mono mt-1.5">
+                        <div className="flex h-10 w-full items-center rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 font-mono mt-1.5">
                           LKR{" "}
                           {(
                             (parseFloat(formData.quantity) || 0) *
@@ -747,7 +747,7 @@ function TransactionModal({
                         <Input
                           type="number"
                           step="0.01"
-                          className="mt-1.5 font-mono text-[#a8a8a8]"
+                          className="mt-1.5 font-mono text-zinc-500"
                           value={formData.fees}
                           onChange={(e) =>
                             setFormData({ ...formData, fees: e.target.value })
@@ -756,7 +756,7 @@ function TransactionModal({
                       )}
                     </div>
                     <div>
-                      <Label className="text-[#a8a8a8]">Date</Label>
+                      <Label className="text-zinc-500">Date</Label>
                       <Input
                         type="date"
                         className="mt-1.5"
@@ -774,17 +774,17 @@ function TransactionModal({
                 <div className="space-y-6">
                   {/* Capital Allocation (BUY) */}
                   {selectedType === "BUY" && (
-                    <div className="p-4 rounded-lg bg-[#262626] border border-[#333333] space-y-4">
+                    <div className="p-4 rounded-lg bg-zinc-900 border border-zinc-800 space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Calculator className="h-4 w-4 text-[#5eead4]" />
-                          <span className="text-sm font-medium text-[#f5f5f5]">
+                          <Calculator className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm font-medium text-zinc-50">
                             Capital Allocation
                           </span>
                         </div>
-                        <span className="text-xs text-[#a8a8a8]">
+                        <span className="text-xs text-zinc-400">
                           Capital:{" "}
-                          <span className="font-mono text-[#f5f5f5]">
+                          <span className="font-mono text-zinc-50">
                             LKR {totalCapital.toLocaleString()}
                           </span>
                         </span>
@@ -792,10 +792,10 @@ function TransactionModal({
 
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-[#a8a8a8]">
+                          <span className="text-zinc-400">
                             Allocate % of Total Capital
                           </span>
-                          <span className="font-mono text-[#5eead4]">
+                          <span className="font-mono text-blue-500">
                             {allocationPercent}% (LKR{" "}
                             {(
                               totalCapital *
@@ -817,7 +817,7 @@ function TransactionModal({
                               key={pct}
                               type="button"
                               onClick={() => handleAllocationChange([pct])}
-                              className="text-[10px] px-2 py-1 rounded bg-[#333333] hover:bg-[#404040] text-[#a8a8a8] transition-colors"
+                              className="text-[10px] px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition-colors"
                             >
                               {pct}%
                             </button>
@@ -829,17 +829,17 @@ function TransactionModal({
 
                   {/* Sell Allocation (SELL) */}
                   {selectedType === "SELL" && selectedHolding && (
-                    <div className="p-4 rounded-lg bg-[#262626] border border-[#333333] space-y-4">
+                    <div className="p-4 rounded-lg bg-zinc-900 border border-zinc-800 space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <TrendingDown className="h-4 w-4 text-[#f87171]" />
-                          <span className="text-sm font-medium text-[#f5f5f5]">
+                          <TrendingDown className="h-4 w-4 text-red-500" />
+                          <span className="text-sm font-medium text-zinc-50">
                             Sell Quantity
                           </span>
                         </div>
-                        <span className="text-xs text-[#a8a8a8]">
+                        <span className="text-xs text-zinc-400">
                           Available:{" "}
-                          <span className="font-mono text-[#f5f5f5]">
+                          <span className="font-mono text-zinc-50">
                             {selectedHolding.quantity} Shares
                           </span>
                         </span>
@@ -847,10 +847,10 @@ function TransactionModal({
 
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-[#a8a8a8]">
+                          <span className="text-zinc-400">
                             Sell % of Holding
                           </span>
-                          <span className="font-mono text-[#f87171]">
+                          <span className="font-mono text-red-500">
                             {sellPercent}% (
                             {Math.floor(
                               selectedHolding.quantity * (sellPercent / 100),
@@ -893,19 +893,19 @@ function TransactionModal({
                               }}
                               className={`text-[10px] px-2 py-1 rounded transition-colors ${
                                 sellPercent === pct
-                                  ? "bg-[#f87171] text-white"
-                                  : "bg-[#333333] hover:bg-[#404040] text-[#a8a8a8]"
+                                  ? "bg-red-600 text-white"
+                                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-400"
                               }`}
                             >
                               {pct}%
                             </button>
                           ))}
                         </div>
-                        <div className="pt-2 border-t border-[#333333] flex justify-between text-sm">
-                          <span className="text-[#a8a8a8]">
+                        <div className="pt-2 border-t border-zinc-800 flex justify-between text-sm">
+                          <span className="text-zinc-400">
                             Estimated Value:
                           </span>
-                          <span className="font-mono text-[#f5f5f5]">
+                          <span className="font-mono text-zinc-50">
                             LKR{" "}
                             {(
                               Math.floor(
@@ -936,7 +936,7 @@ function TransactionModal({
                         <Button
                           type="button"
                           variant="outline"
-                          className="w-full border-dashed border-[#5eead4]/50 text-[#5eead4] hover:bg-[#5eead4]/10 disabled:opacity-50 disabled:cursor-not-allowed h-auto py-3"
+                          className="w-full border-dashed border-blue-500/50 text-blue-500 hover:bg-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed h-auto py-3"
                           onClick={handleSimulate}
                           disabled={
                             simulating ||
@@ -973,18 +973,18 @@ function TransactionModal({
               </div>
 
               {/* Actions Footer */}
-              <div className="flex justify-end gap-2 pt-6 mt-6 border-t border-[#333333]">
+              <div className="flex justify-end gap-2 pt-6 mt-6 border-t border-zinc-800">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={onClose}
-                  className="hover:bg-[#333333]"
+                  className="hover:bg-zinc-800"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-linear-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-0"
+                  className="bg-emerald-600 hover:bg-emerald-700 border-0"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (

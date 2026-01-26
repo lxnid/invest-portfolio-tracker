@@ -29,12 +29,12 @@ import {
 } from "@/lib/rule-engine";
 
 const SECTOR_COLORS = [
-  "#5eead4",
-  "#4ade80",
-  "#a78bfa",
-  "#fbbf24",
-  "#f472b6",
-  "#60a5fa",
+  "#2dd4bf", // teal-400
+  "#34d399", // emerald-400
+  "#a78bfa", // violet-400
+  "#fbbf24", // amber-400
+  "#f472b6", // pink-400
+  "#60a5fa", // blue-400
 ];
 
 export default function AnalyticsPage() {
@@ -104,8 +104,8 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-[#f5f5f5]">Analytics</h1>
-        <p className="text-[#8a8a8a] mt-1">
+        <h1 className="text-3xl font-bold text-zinc-50">Analytics</h1>
+        <p className="text-zinc-500 mt-1">
           Performance insights and portfolio analysis
         </p>
       </div>
@@ -114,25 +114,25 @@ export default function AnalyticsPage() {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Total Return</p>
+            <p className="text-sm text-zinc-500">Total Return</p>
             {isLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin mt-1" />
+              <Loader2 className="h-6 w-6 animate-spin mt-1 text-zinc-400" />
             ) : (
               <div className="flex items-center gap-2 mt-1">
                 <p
                   className={`text-2xl font-bold ${
                     totals.profitLossPercent >= 0
-                      ? "text-[#4ade80]"
-                      : "text-[#f87171]"
+                      ? "text-emerald-500"
+                      : "text-red-500"
                   }`}
                 >
                   {totals.profitLossPercent >= 0 ? "+" : ""}
                   {totals.profitLossPercent.toFixed(2)}%
                 </p>
                 {totals.profitLossPercent >= 0 ? (
-                  <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+                  <TrendingUp className="h-5 w-5 text-emerald-500" />
                 ) : (
-                  <TrendingDown className="h-5 w-5 text-[#f87171]" />
+                  <TrendingDown className="h-5 w-5 text-red-500" />
                 )}
               </div>
             )}
@@ -141,13 +141,13 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Total P/L</p>
+            <p className="text-sm text-zinc-500">Total P/L</p>
             {isLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin mt-1" />
+              <Loader2 className="h-6 w-6 animate-spin mt-1 text-zinc-400" />
             ) : (
               <p
                 className={`text-2xl font-bold mt-1 ${
-                  totals.profitLoss >= 0 ? "text-[#4ade80]" : "text-[#f87171]"
+                  totals.profitLoss >= 0 ? "text-emerald-500" : "text-red-500"
                 }`}
               >
                 {totals.profitLoss >= 0 ? "+" : ""}LKR{" "}
@@ -159,11 +159,11 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">Portfolio Value</p>
+            <p className="text-sm text-zinc-500">Portfolio Value</p>
             {isLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin mt-1" />
+              <Loader2 className="h-6 w-6 animate-spin mt-1 text-zinc-400" />
             ) : (
-              <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+              <p className="text-2xl font-bold text-zinc-50 mt-1">
                 LKR {totals.totalValue.toLocaleString()}
               </p>
             )}
@@ -172,23 +172,23 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardContent className="pt-5 pb-4">
-            <p className="text-sm text-[#8a8a8a]">vs ASPI</p>
+            <p className="text-sm text-zinc-500">vs ASPI</p>
             {isLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin mt-1" />
+              <Loader2 className="h-6 w-6 animate-spin mt-1 text-zinc-400" />
             ) : (
               <>
                 <div className="flex items-center gap-2 mt-1">
                   <p
                     className={`text-2xl font-bold ${
-                      outperformance >= 0 ? "text-[#4ade80]" : "text-[#f87171]"
+                      outperformance >= 0 ? "text-emerald-500" : "text-red-500"
                     }`}
                   >
                     {outperformance >= 0 ? "+" : ""}
                     {outperformance.toFixed(2)}%
                   </p>
-                  <Target className="h-5 w-5 text-[#5eead4]" />
+                  <Target className="h-5 w-5 text-blue-500" />
                 </div>
-                <p className="text-xs text-[#8a8a8a] mt-1">
+                <p className="text-xs text-zinc-500 mt-1">
                   {outperformance >= 0 ? "Outperforming" : "Underperforming"}
                 </p>
               </>
@@ -203,7 +203,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-[#60a5fa]" />
+              <BarChart3 className="h-5 w-5 text-blue-500" />
               Invested Capital History
             </CardTitle>
           </CardHeader>
@@ -211,10 +211,10 @@ export default function AnalyticsPage() {
             <div className="h-64">
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
-                  <Loader2 className="h-8 w-8 animate-spin text-[#5eead4]" />
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
                 </div>
               ) : !historyData || historyData.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-[#8a8a8a]">
+                <div className="flex items-center justify-center h-full text-zinc-500">
                   No transaction history available
                 </div>
               ) : (
@@ -238,10 +238,10 @@ export default function AnalyticsPage() {
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#262626",
-                        border: "1px solid #3a3a3a",
+                        backgroundColor: "#18181b", // zinc-900
+                        border: "1px solid #27272a", // zinc-800
                         borderRadius: "8px",
-                        color: "#f5f5f5",
+                        color: "#fafafa", // zinc-50
                       }}
                       formatter={(value) => [
                         `LKR ${(value ?? 0).toLocaleString()}`,
@@ -258,12 +258,12 @@ export default function AnalyticsPage() {
                       >
                         <stop
                           offset="5%"
-                          stopColor="#5eead4"
+                          stopColor="#3b82f6"
                           stopOpacity={0.3}
                         />
                         <stop
                           offset="95%"
-                          stopColor="#5eead4"
+                          stopColor="#3b82f6"
                           stopOpacity={0}
                         />
                       </linearGradient>
@@ -271,7 +271,7 @@ export default function AnalyticsPage() {
                     <Line
                       type="monotone"
                       dataKey="value"
-                      stroke="#5eead4"
+                      stroke="#3b82f6"
                       strokeWidth={2}
                       dot={false}
                       fill="url(#colorValue)"
@@ -287,17 +287,17 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-[#a78bfa]" />
+              <PieChart className="h-5 w-5 text-purple-500" />
               Sector Allocation
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="flex items-center justify-center h-48">
-                <Loader2 className="h-8 w-8 animate-spin text-[#5eead4]" />
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
               </div>
             ) : sectorData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 text-[#8a8a8a]">
+              <div className="flex items-center justify-center h-48 text-zinc-500">
                 No holdings to analyze
               </div>
             ) : (
@@ -320,10 +320,10 @@ export default function AnalyticsPage() {
                       </Pie>
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#262626",
-                          border: "1px solid #3a3a3a",
+                          backgroundColor: "#18181b", // zinc-900
+                          border: "1px solid #27272a", // zinc-800
                           borderRadius: "8px",
-                          color: "#f5f5f5",
+                          color: "#fafafa", // zinc-50
                         }}
                         formatter={(value) => [`${value ?? 0}%`, "Allocation"]}
                       />
@@ -337,10 +337,10 @@ export default function AnalyticsPage() {
                         className="h-3 w-3 rounded-full"
                         style={{ backgroundColor: sector.color }}
                       />
-                      <span className="text-[#a8a8a8] flex-1">
+                      <span className="text-zinc-400 flex-1">
                         {sector.name}
                       </span>
-                      <span className="font-mono text-[#f5f5f5] font-medium">
+                      <span className="font-mono text-zinc-50 font-medium">
                         {sector.value}%
                       </span>
                     </div>
@@ -357,30 +357,30 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#4ade80]" />
+              <TrendingUp className="h-5 w-5 text-emerald-500" />
               Top Performers
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-[#5eead4]" />
+                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
               </div>
             ) : topPerformers.length === 0 ? (
-              <p className="text-[#8a8a8a] text-center py-4">
+              <p className="text-zinc-500 text-center py-4">
                 No profitable positions yet
               </p>
             ) : (
               topPerformers.map((stock, index) => (
                 <div
                   key={stock.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-[#2a2a2a] border border-[#333333]"
+                  className="flex items-center justify-between p-3 rounded-lg bg-zinc-900 border border-zinc-800"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-[#666666] font-mono text-sm">
+                    <span className="text-zinc-500 font-mono text-sm">
                       0{index + 1}
                     </span>
-                    <span className="font-semibold text-[#f5f5f5]">
+                    <span className="font-semibold text-zinc-50">
                       {stock.stock.symbol}
                     </span>
                   </div>
@@ -396,30 +396,30 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-[#f87171]" />
+              <TrendingDown className="h-5 w-5 text-red-500" />
               Under Performers
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-[#5eead4]" />
+                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
               </div>
             ) : underPerformers.length === 0 ? (
-              <p className="text-[#8a8a8a] text-center py-4">
+              <p className="text-zinc-500 text-center py-4">
                 No underperformers — great job!
               </p>
             ) : (
               underPerformers.map((stock, index) => (
                 <div
                   key={stock.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-[#2a2a2a] border border-[#333333]"
+                  className="flex items-center justify-between p-3 rounded-lg bg-zinc-900 border border-zinc-800"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-[#666666] font-mono text-sm">
+                    <span className="text-zinc-500 font-mono text-sm">
                       0{index + 1}
                     </span>
-                    <span className="font-semibold text-[#f5f5f5]">
+                    <span className="font-semibold text-zinc-50">
                       {stock.stock.symbol}
                     </span>
                   </div>
@@ -441,50 +441,50 @@ export default function AnalyticsPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-[#5eead4]" />
+              <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
             </div>
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-[#a8a8a8]">Your Portfolio</span>
+                <span className="text-zinc-500">Your Portfolio</span>
                 <span
                   className={`font-bold ${
                     totals.profitLossPercent >= 0
-                      ? "text-[#4ade80]"
-                      : "text-[#f87171]"
+                      ? "text-emerald-500"
+                      : "text-red-500"
                   }`}
                 >
                   {totals.profitLossPercent >= 0 ? "+" : ""}
                   {totals.profitLossPercent.toFixed(2)}%
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-[#333333] overflow-hidden">
+              <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
                 <div
-                  className="h-full bg-linear-to-r from-[#5eead4] to-[#4ade80] rounded-full transition-all"
+                  className="h-full bg-linear-to-r from-blue-500 to-emerald-500 rounded-full transition-all"
                   style={{
                     width: `${Math.min(100, Math.max(0, (totals.profitLossPercent / 50) * 100 + 50))}%`,
                   }}
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#a8a8a8]">ASPI Index (YTD est.)</span>
-                <span className="font-bold text-[#f5f5f5]">
+                <span className="text-zinc-500">ASPI Index (YTD est.)</span>
+                <span className="font-bold text-zinc-50">
                   +{(aspiChange * 10).toFixed(2)}%
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-[#333333] overflow-hidden">
+              <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
                 <div
-                  className="h-full bg-[#666666] rounded-full"
+                  className="h-full bg-zinc-600 rounded-full"
                   style={{
                     width: `${Math.min(100, Math.max(0, ((aspiChange * 10) / 50) * 100 + 50))}%`,
                   }}
                 />
               </div>
-              <p className="text-sm text-[#8a8a8a] pt-2">
+              <p className="text-sm text-zinc-500 pt-2">
                 {outperformance >= 0 ? (
                   <>
                     Your portfolio is outperforming the ASPI benchmark by{" "}
-                    <span className="text-[#4ade80] font-medium">
+                    <span className="text-emerald-500 font-medium">
                       {outperformance.toFixed(2)}%
                     </span>
                     .
@@ -492,7 +492,7 @@ export default function AnalyticsPage() {
                 ) : (
                   <>
                     Your portfolio is underperforming the ASPI benchmark by{" "}
-                    <span className="text-[#f87171] font-medium">
+                    <span className="text-red-500 font-medium">
                       {Math.abs(outperformance).toFixed(2)}%
                     </span>
                     .

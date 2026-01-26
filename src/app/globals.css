@@ -1,31 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  /* Background Elevation System */
-  --background: #1e1e1e;
-  --surface-1: #262626;
-  --surface-2: #2a2a2a;
-  --surface-3: #333333;
-  --border: #3a3a3a;
-  --border-muted: #2f2f2f;
+  /* Background Elevation System - Deep Zinc Theme for Professional Finance Vibe */
+  --background: #09090b; /* Zinc 950 */
+  --surface-1: #18181b; /* Zinc 900 */
+  --surface-2: #27272a; /* Zinc 800 */
+  --surface-3: #3f3f46; /* Zinc 700 */
+  --border: #27272a; /* Zinc 800 */
+  --border-muted: #18181b;
 
-  /* Text Hierarchy - Higher Contrast */
-  --text-primary: #f5f5f5;
-  --text-secondary: #a8a8a8;
-  --text-muted: #8a8a8a;
-  --text-disabled: #666666;
+  /* Text Hierarchy */
+  --text-primary: #fafafa; /* Zinc 50 */
+  --text-secondary: #a1a1aa; /* Zinc 400 */
+  --text-muted: #71717a; /* Zinc 500 */
+  --text-disabled: #52525b; /* Zinc 600 */
 
-  /* Semantic Colors - Desaturated for Dark Theme */
-  --color-gain: #4ade80;
-  --color-gain-muted: #22c55e;
-  --color-gain-bg: rgba(74, 222, 128, 0.1);
-  --color-loss: #f87171;
-  --color-loss-muted: #ef4444;
-  --color-loss-bg: rgba(248, 113, 113, 0.1);
-  --color-warning: #fbbf24;
-  --color-warning-bg: rgba(251, 191, 36, 0.1);
-  --color-accent: #5eead4;
-  --color-accent-muted: #2dd4bf;
+  /* Semantic Colors - Professional Financial Standards */
+  --color-gain: #10b981; /* Emerald 500 */
+  --color-gain-muted: #059669; /* Emerald 600 */
+  --color-gain-bg: rgba(16, 185, 129, 0.1);
+  --color-loss: #ef4444; /* Red 500 */
+  --color-loss-muted: #dc2626; /* Red 600 */
+  --color-loss-bg: rgba(239, 68, 68, 0.1);
+  --color-warning: #f59e0b; /* Amber 500 */
+  --color-warning-bg: rgba(245, 158, 11, 0.1);
+
+  /* Brand Accent - Trustworthy Blue */
+  --color-accent: #3b82f6; /* Blue 500 */
+  --color-accent-muted: #2563eb; /* Blue 600 */
 
   --foreground: var(--text-primary);
 }
@@ -44,32 +46,28 @@ body {
   min-height: 100vh;
 }
 
-/* Custom scrollbar - improved visibility */
+/* Custom scrollbar - Professional and subtle */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--surface-1);
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4a4a4a;
+  background: var(--surface-2);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #5a5a5a;
+  background: var(--surface-3);
 }
 
-/* Gradient text utility */
+/* Gradient text utility - Subtle, professional sheen */
 .gradient-text {
-  background: linear-gradient(
-    135deg,
-    var(--color-accent) 0%,
-    var(--color-accent-muted) 100%
-  );
+  background: linear-gradient(135deg, #fafafa 0%, var(--color-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

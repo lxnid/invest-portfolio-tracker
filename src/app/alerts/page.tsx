@@ -62,34 +62,38 @@ const ruleTypeConfig: Record<
   POSITION_SIZE: {
     icon: Percent,
     label: "Position Size",
-    color: "text-[#60a5fa]",
+    color: "text-blue-400",
   },
   STOP_LOSS: {
     icon: TrendingDown,
     label: "Stop Loss",
-    color: "text-[#f87171]",
+    color: "text-red-400",
   },
-  TAKE_PROFIT: { icon: Target, label: "Take Profit", color: "text-[#4ade80]" },
+  TAKE_PROFIT: {
+    icon: Target,
+    label: "Take Profit",
+    color: "text-emerald-400",
+  },
   SECTOR_LIMIT: {
     icon: PieChart,
     label: "Sector Limit",
-    color: "text-[#a78bfa]",
+    color: "text-purple-400",
   },
-  TRADE_FREQUENCY: { icon: Clock, label: "Frequency", color: "text-[#fbbf24]" },
+  TRADE_FREQUENCY: { icon: Clock, label: "Frequency", color: "text-amber-400" },
   CASH_BUFFER: {
     icon: ShieldCheck,
     label: "Cash Buffer",
-    color: "text-[#10b981]",
+    color: "text-emerald-500",
   },
   BUY_CONDITION: {
     icon: TrendingDown,
     label: "Buy Signal",
-    color: "text-[#3b82f6]",
+    color: "text-blue-500",
   },
   SELL_CONDITION: {
     icon: TrendingUp,
     label: "Sell Signal",
-    color: "text-[#f43f5e]",
+    color: "text-rose-500",
   },
 };
 
@@ -213,8 +217,8 @@ export default function AlertsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#f5f5f5]">Trading Alerts</h1>
-          <p className="text-[#8a8a8a] mt-1">
+          <h1 className="text-3xl font-bold text-zinc-50">Trading Alerts</h1>
+          <p className="text-zinc-500 mt-1">
             Market monitors and portfolio alerts
           </p>
         </div>
@@ -236,35 +240,35 @@ export default function AlertsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Active Alerts</p>
-                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                <p className="text-sm text-zinc-500">Active Alerts</p>
+                <p className="text-2xl font-bold text-zinc-50 mt-1">
                   {rulesLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />
                   ) : (
                     <>
                       {activeRules.length}
-                      <span className="text-[#8a8a8a] text-lg font-normal">
+                      <span className="text-zinc-500 text-lg font-normal">
                         /{rules?.length || 0}
                       </span>
                     </>
                   )}
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
-                <ShieldCheck className="h-5 w-5 text-[#4ade80]" />
+              <div className="p-2.5 rounded-lg bg-emerald-500/10">
+                <ShieldCheck className="h-5 w-5 text-emerald-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className={totalViolations > 0 ? "border-[#fbbf24]/30" : ""}>
+        <Card className={totalViolations > 0 ? "border-amber-500/30" : ""}>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Violations</p>
+                <p className="text-sm text-zinc-500">Violations</p>
                 <p
                   className={`text-2xl font-bold mt-1 ${
-                    totalViolations > 0 ? "text-[#fbbf24]" : "text-[#f5f5f5]"
+                    totalViolations > 0 ? "text-amber-500" : "text-zinc-50"
                   }`}
                 >
                   {totalViolations}
@@ -272,12 +276,12 @@ export default function AlertsPage() {
               </div>
               <div
                 className={`p-2.5 rounded-lg ${
-                  totalViolations > 0 ? "bg-[#fbbf24]/10" : "bg-[#333333]"
+                  totalViolations > 0 ? "bg-amber-500/10" : "bg-zinc-800"
                 }`}
               >
                 <AlertTriangle
                   className={`h-5 w-5 ${
-                    totalViolations > 0 ? "text-[#fbbf24]" : "text-[#8a8a8a]"
+                    totalViolations > 0 ? "text-amber-500" : "text-zinc-500"
                   }`}
                 />
               </div>
@@ -289,13 +293,13 @@ export default function AlertsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">Discipline Score</p>
-                <p className="text-2xl font-bold text-[#4ade80] mt-1">
+                <p className="text-sm text-zinc-500">Discipline Score</p>
+                <p className="text-2xl font-bold text-emerald-500 mt-1">
                   {disciplineScore}%
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#4ade80]/10">
-                <BarChart3 className="h-5 w-5 text-[#4ade80]" />
+              <div className="p-2.5 rounded-lg bg-emerald-500/10">
+                <BarChart3 className="h-5 w-5 text-emerald-500" />
               </div>
             </div>
           </CardContent>
@@ -305,13 +309,13 @@ export default function AlertsPage() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#8a8a8a]">This Week</p>
-                <p className="text-2xl font-bold text-[#f5f5f5] mt-1">
+                <p className="text-sm text-zinc-500">This Week</p>
+                <p className="text-2xl font-bold text-zinc-50 mt-1">
                   {tradesThisWeek} trades
                 </p>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#60a5fa]/10">
-                <Clock className="h-5 w-5 text-[#60a5fa]" />
+              <div className="p-2.5 rounded-lg bg-blue-500/10">
+                <Clock className="h-5 w-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
@@ -320,14 +324,14 @@ export default function AlertsPage() {
 
       {/* Violations Alert */}
       {totalViolations > 0 && (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/20">
-          <AlertTriangle className="h-5 w-5 text-[#fbbf24] shrink-0" />
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
+          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
           <div className="flex-1">
-            <span className="font-medium text-[#fbbf24]">
+            <span className="font-medium text-amber-500">
               {totalViolations} rule violation{totalViolations > 1 ? "s" : ""}{" "}
               detected
             </span>
-            <span className="text-[#a8a8a8] ml-1">
+            <span className="text-zinc-400 ml-1">
               — Review before making new trades
             </span>
           </div>
@@ -342,7 +346,7 @@ export default function AlertsPage() {
         <CardContent className="p-0">
           {rulesLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-[#5eead4]" />
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
             </div>
           ) : (
             <Table>
@@ -375,17 +379,17 @@ export default function AlertsPage() {
                   return (
                     <Fragment key={rule.id}>
                       <TableRow
-                        className={`${!rule.isActive ? "opacity-50" : ""} cursor-pointer hover:bg-[#262626]`}
+                        className={`${!rule.isActive ? "opacity-50" : ""} cursor-pointer hover:bg-zinc-900`}
                         onClick={toggleExpand}
                       >
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <button
-                            className="text-[#8a8a8a] hover:text-[#f5f5f5] transition-colors"
+                            className="text-zinc-500 hover:text-zinc-50 transition-colors"
                             onClick={() => handleToggle(rule)}
                             disabled={toggleRule.isPending}
                           >
                             {rule.isActive ? (
-                              <ToggleRight className="h-5 w-5 text-[#4ade80]" />
+                              <ToggleRight className="h-5 w-5 text-emerald-500" />
                             ) : (
                               <ToggleLeft className="h-5 w-5" />
                             )}
@@ -394,7 +398,7 @@ export default function AlertsPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {count > 0 && (
-                              <div className="text-[#a8a8a8]">
+                              <div className="text-zinc-500">
                                 {isExpanded ? (
                                   <ChevronUp className="h-4 w-4" />
                                 ) : (
@@ -403,10 +407,10 @@ export default function AlertsPage() {
                               </div>
                             )}
                             <div>
-                              <p className="font-semibold text-[#f5f5f5]">
+                              <p className="font-semibold text-zinc-50">
                                 {rule.name}
                               </p>
-                              <p className="text-sm text-[#8a8a8a] mt-0.5">
+                              <p className="text-sm text-zinc-500 mt-0.5">
                                 {rule.description}
                               </p>
                             </div>
@@ -415,13 +419,13 @@ export default function AlertsPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Icon className={`h-4 w-4 ${config.color}`} />
-                            <span className="text-[#a8a8a8]">
+                            <span className="text-zinc-400">
                               {config.label}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <span className="font-mono text-[#f5f5f5]">
+                          <span className="font-mono text-zinc-50">
                             {rule.threshold}
                             {rule.ruleType === "TRADE_FREQUENCY" ? "/wk" : "%"}
                           </span>
@@ -430,7 +434,7 @@ export default function AlertsPage() {
                           {count > 0 ? (
                             <Badge variant="warning">{count}</Badge>
                           ) : (
-                            <span className="text-[#666666]">—</span>
+                            <span className="text-zinc-600">—</span>
                           )}
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
@@ -446,7 +450,7 @@ export default function AlertsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-[#f87171] hover:text-[#fca5a5]"
+                              className="h-8 w-8 text-red-500 hover:text-red-400"
                               onClick={() => handleDelete(rule.id)}
                               disabled={deleteRule.isPending}
                             >
@@ -457,22 +461,22 @@ export default function AlertsPage() {
                       </TableRow>
 
                       {isExpanded && count > 0 && (
-                        <TableRow className="bg-[#262626]/50 hover:bg-[#262626]/50 border-0">
+                        <TableRow className="bg-zinc-900/50 hover:bg-zinc-900/50 border-0">
                           <TableCell colSpan={6} className="p-0">
-                            <div className="p-4 space-y-2 border-l-2 border-[#fbbf24] ml-4 bg-[#1e1e1e]">
+                            <div className="p-4 space-y-2 border-l-2 border-amber-500 ml-4 bg-zinc-950">
                               {ruleViolations.map(
                                 (v: RuleViolation, i: number) => (
                                   <div
                                     key={i}
                                     className="flex items-start gap-2 text-sm"
                                   >
-                                    <AlertTriangle className="h-4 w-4 text-[#fbbf24] mt-0.5 shrink-0" />
+                                    <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                                     <div>
-                                      <p className="text-[#f5f5f5]">
+                                      <p className="text-zinc-50">
                                         {v.message}
                                       </p>
                                       {v.impact && (
-                                        <p className="text-[#a8a8a8] text-xs mt-1">
+                                        <p className="text-zinc-500 text-xs mt-1">
                                           {v.impact}
                                         </p>
                                       )}
@@ -492,7 +496,7 @@ export default function AlertsPage() {
           )}
 
           {!rulesLoading && (!rules || rules.length === 0) && (
-            <div className="text-center py-8 text-[#8a8a8a]">
+            <div className="text-center py-8 text-zinc-500">
               No alerts configured. Add your first trading alert to get started.
             </div>
           )}
@@ -519,7 +523,7 @@ export default function AlertsPage() {
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-sm font-medium text-zinc-500">
                     Alert Name
                   </label>
                   <Input
@@ -533,7 +537,7 @@ export default function AlertsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-sm font-medium text-zinc-500">
                     Alert Type
                   </label>
                   <div className="grid grid-cols-2 gap-2 mt-1.5">
@@ -565,7 +569,7 @@ export default function AlertsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-sm font-medium text-zinc-500">
                     Threshold{" "}
                     {selectedType === "TRADE_FREQUENCY"
                       ? "(trades per week)"
@@ -587,7 +591,7 @@ export default function AlertsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-[#a8a8a8]">
+                  <label className="text-sm font-medium text-zinc-500">
                     Description (optional)
                   </label>
                   <Input

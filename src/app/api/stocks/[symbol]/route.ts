@@ -41,7 +41,34 @@ export async function GET(request: Request, { params }: RouteParams) {
     ]);
 
     const externalInfo = infoRes.data?.reqSymbolInfo;
-    const marketIsOpen = statusRes.data?.status?.toLowerCase() === "open";
+    let marketIsOpen = statusRes.data?.status?.toLowerCase() === "open";
+
+    // Fallback: If API says closed (or fails) but it's clearly trading hours (Mon-Fri, 09:30-14:30 IST/SLST), assume open.
+    // This fixes issues where the CSE API 'marketStatus' endpoint might be lagging or unreliable.
+    if (!marketIsOpen) {
+      try {
+        const now = new Date();
+        const colomboTime = new Date(
+          now.toLocaleString("en-US", { timeZone: "Asia/Colombo" }),
+        );
+        const day = colomboTime.getDay(); // 0 is Sunday, 6 is Saturday
+        const hour = colomboTime.getHours();
+        const minute = colomboTime.getMinutes();
+        const timeInMinutes = hour * 60 + minute;
+
+        // Mon-Fri
+        const isWeekday = day >= 1 && day <= 5;
+        // 09:30 to 14:30
+        const isTradingHours =
+          timeInMinutes >= 9 * 60 + 30 && timeInMinutes < 14 * 60 + 30;
+
+        if (isWeekday && isTradingHours) {
+          marketIsOpen = true;
+        }
+      } catch (e) {
+        // Ignore time calculation errors
+      }
+    }
 
     const marketData = {
       price: externalInfo?.lastTradedPrice || 0,
@@ -49,6 +76,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       percentChange: externalInfo?.changePercentage || 0,
       volume: externalInfo?.tdyShareVolume || 0,
       trades: externalInfo?.tdyTradeVolume || 0,
+      fiftyTwoWeekHigh: externalInfo?.p12HiPrice || 0,
+      fiftyTwoWeekLow: externalInfo?.p12LowPrice || 0,
       isOpen: marketIsOpen,
     };
 
@@ -105,6 +134,8 @@ export async function GET(request: Request, { params }: RouteParams) {
         name: dbStock.name,
         sector: dbStock.sector,
         logoPath: dbStock.logoPath,
+        logoPath: dbStock.logoPath,
+        company: infoRes.data || null,
         marketData,
         position,
         performance: {

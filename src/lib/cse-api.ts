@@ -174,6 +174,15 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
+export function formatCompactCurrency(value: number): string {
+  return new Intl.NumberFormat("en-LK", {
+    style: "currency",
+    currency: "LKR",
+    notation: "compact",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 export function formatPercentage(value: number): string {
   const sign = value >= 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;

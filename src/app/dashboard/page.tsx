@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useHoldings, useMarketData } from "@/lib/hooks";
 import { LastUpdated } from "@/components/last-updated";
+import { TradingViewWidget } from "@/components/tradingview-widget";
 import {
   calculatePortfolioTotals,
   enrichHoldingsWithPrices,
@@ -201,42 +202,15 @@ export default function DashboardPage() {
           Market Overview
         </h2>
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="border-[#5eead4]/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-[#8a8a8a]">
-                All Share Price Index (ASPI)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {marketLoading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-[#5eead4]" />
-                </div>
-              ) : marketData?.aspi ? (
-                <div className="flex items-end gap-2">
-                  <span className="text-3xl font-bold text-[#f5f5f5]">
-                    {marketData.aspi.index.toLocaleString()}
-                  </span>
-                  <div className="flex items-center gap-1 mb-1">
-                    {marketData.aspi.change >= 0 ? (
-                      <TrendingUp className="h-4 w-4 text-[#4ade80]" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-[#f87171]" />
-                    )}
-                    <span
-                      className={`text-sm font-medium ${marketData.aspi.change >= 0 ? "text-[#4ade80]" : "text-[#f87171]"}`}
-                    >
-                      {marketData.aspi.change >= 0 ? "+" : ""}
-                      {marketData.aspi.change.toFixed(2)} (
-                      {marketData.aspi.percentChange.toFixed(2)}%)
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <span className="text-[#8a8a8a]">No data available</span>
-              )}
-            </CardContent>
-          </Card>
+          {/* ASPI Index Card */}
+          <StatCard
+            title="ASPI Index"
+            value={marketData?.aspi?.index.toFixed(2) ?? "0.00"}
+            change={marketData?.aspi?.change}
+            changePercent={marketData?.aspi?.percentChange}
+            icon={Activity}
+            isLoading={marketLoading}
+          />
 
           <Card>
             <CardHeader className="pb-2">
@@ -299,6 +273,17 @@ export default function DashboardPage() {
               ) : (
                 <span className="text-[#8a8a8a]">No data</span>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-[#5eead4]/20 col-span-1 md:col-span-2 lg:col-span-3 h-[500px]">
+            <CardHeader className="pb-0">
+              <CardTitle className="text-sm font-medium text-[#8a8a8a]">
+                All Share Price Index (ASPI)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="h-[430px] p-2">
+              <TradingViewWidget symbol="CSELK:ASI" />
             </CardContent>
           </Card>
         </div>

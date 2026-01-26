@@ -28,6 +28,7 @@ import {
   Wallet,
   Calculator,
   Save,
+  Sparkles,
 } from "lucide-react";
 import {
   useHoldings,
@@ -226,6 +227,17 @@ export default function PortfolioPage() {
           <p className="text-[#8a8a8a] mt-1">Manage your stock holdings</p>
         </div>
         <div className="flex gap-3">
+          {/* Simulator Button */}
+          <Link href="/portfolio/simulator">
+            <Button
+              variant="outline"
+              className="gap-2 border-[#333333] bg-[#1e1e1e] hover:bg-[#262626] text-[#f5f5f5]"
+            >
+              <Sparkles className="h-4 w-4 text-[#e879f9]" />
+              Simulator
+            </Button>
+          </Link>
+
           {/* Capital Settings */}
           {isEditingCapital ? (
             <div className="flex items-center gap-2 bg-[#1e1e1e] border border-[#333333] rounded-lg p-1 pr-3 shadow-lg animate-in fade-in slide-in-from-top-2">

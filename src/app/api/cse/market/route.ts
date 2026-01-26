@@ -32,7 +32,18 @@ export async function GET() {
       for (const trade of stockPrices.data.reqDetailTrades) {
         const cleanSymbol = trade.symbol?.trim().toUpperCase();
         if (cleanSymbol && !stockMap.has(cleanSymbol)) {
-          stockMap.set(cleanSymbol, { ...trade, symbol: cleanSymbol });
+          // Normalize data structure
+          // detailedTrades endpoint uses 'qty' for volume
+          stockMap.set(cleanSymbol, {
+            symbol: cleanSymbol,
+            name: trade.name,
+            price: trade.price,
+            change: trade.change || 0,
+            percentChange: trade.changePercentage || 0,
+            volume: trade.qty || 0,
+            trades: trade.trades || 0,
+            securityId: trade.securityId,
+          });
         }
       }
     }

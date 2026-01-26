@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     // 2. Input Validation
     const schema = z.object({
-      password: z.string().min(1),
+      password: z.string(),
       type: z.enum(["admin", "guest"]),
     });
 
@@ -44,6 +44,13 @@ export async function POST(request: Request) {
     // Admin Login
     console.log("Admin login attempt");
     if (type === "admin") {
+      if (!password) {
+        return NextResponse.json(
+          { error: "Password is required" },
+          { status: 400 },
+        );
+      }
+
       const isValid = await comparePasswords(password, ADMIN_PASSWORD!);
       if (isValid) {
         await createSession("admin-user", "admin");

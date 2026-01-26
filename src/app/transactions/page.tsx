@@ -142,6 +142,51 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleExport = () => {
+    if (!filteredTransactions || filteredTransactions.length === 0) return;
+
+    const headers = [
+      "Date",
+      "Symbol",
+      "Company",
+      "Type",
+      "Quantity",
+      "Price",
+      "Fees",
+      "Total Amount",
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      ...filteredTransactions.map((t) =>
+        [
+          formatDate(t.date),
+          t.stock.symbol,
+          t.stock.name,
+          t.type,
+          t.quantity,
+          t.price,
+          t.fees || "0",
+          t.totalAmount || "0",
+        ]
+          .map((cell) => `"${cell}"`)
+          .join(","),
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `transactions_export_${new Date().toISOString().split("T")[0]}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -151,9 +196,14 @@ export default function TransactionsPage() {
           <p className="text-zinc-500 mt-1">Your complete trading history</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <Button variant="outline" className="flex-1 md:flex-none">
+          <Button
+            variant="outline"
+            className="flex-1 md:flex-none border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50"
+            onClick={handleExport}
+            disabled={!filteredTransactions?.length}
+          >
             <Download className="mr-2 h-4 w-4" />
-            Export
+            Export CSV
           </Button>
           <Button
             onClick={() => setShowAddModal(true)}

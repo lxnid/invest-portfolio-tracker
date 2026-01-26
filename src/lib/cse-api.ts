@@ -56,11 +56,11 @@ export interface ASPIData {
 }
 
 export async function getASPI(): Promise<CSEApiResponse<ASPIData>> {
-  return cseRequest<ASPIData>("sASPI");
+  return cseRequest<ASPIData>("aspiData");
 }
 
 export async function getSP20(): Promise<CSEApiResponse<ASPIData>> {
-  return cseRequest<ASPIData>("sSP20");
+  return cseRequest<ASPIData>("snpData");
 }
 
 // ============================================================================

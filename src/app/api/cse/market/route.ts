@@ -39,7 +39,12 @@ export async function GET() {
 
     return NextResponse.json({
       data: {
-        marketStatus: marketStatus.data,
+        marketStatus: marketStatus.data
+          ? {
+              status: marketStatus.data.status,
+              isOpen: marketStatus.data.status === "Regular Trading",
+            }
+          : null,
         aspi: aspi.data
           ? {
               index: aspi.data.value,

@@ -70,6 +70,7 @@ export interface Settings {
 export interface MarketData {
   marketStatus: {
     isOpen: boolean;
+    status: string;
     statusMessage?: string;
   } | null;
   aspi: {

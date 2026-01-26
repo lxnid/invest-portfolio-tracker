@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { BrandingFooter } from "@/components/branding-footer";
+import { useMarketData } from "@/lib/hooks";
 
 const navItems = [
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
@@ -25,6 +26,8 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: marketData } = useMarketData();
+  const marketStatus = marketData?.marketStatus;
 
   const handleLogout = async () => {
     // ... (same implementation)
@@ -92,12 +95,25 @@ export function Sidebar() {
         </button>
 
         {/* Market Status */}
+        {/* Market Status */}
         <div className="flex items-center gap-2 text-sm px-3">
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f87171] opacity-75"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#f87171]"></span>
+            <span
+              className={cn(
+                "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
+                marketStatus?.isOpen ? "bg-[#4ade80]" : "bg-[#f87171]",
+              )}
+            ></span>
+            <span
+              className={cn(
+                "relative inline-flex h-2 w-2 rounded-full",
+                marketStatus?.isOpen ? "bg-[#4ade80]" : "bg-[#f87171]",
+              )}
+            ></span>
           </span>
-          <span className="text-[#8a8a8a]">Market Closed</span>
+          <span className="text-[#8a8a8a]">
+            {marketStatus?.isOpen ? "Market Open" : "Market Closed"}
+          </span>
         </div>
       </div>
     </aside>

@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import { useStockDetails, useUpdateStock } from "@/lib/hooks";
 import { formatCurrency, formatPercentage } from "@/lib/cse-api";
+import { LastUpdated } from "@/components/last-updated";
 
 // Helper components
 const StatRow = ({
@@ -77,7 +78,12 @@ export default function StockDetailPage({
   const { symbol } = use(params);
   const router = useRouter();
 
-  const { data: stock, isLoading, error } = useStockDetails(symbol);
+  const {
+    data: stock,
+    isLoading,
+    error,
+    dataUpdatedAt,
+  } = useStockDetails(symbol);
   const updateStock = useUpdateStock();
 
   const [isEditingSector, setIsEditingSector] = useState(false);
@@ -224,6 +230,9 @@ export default function StockDetailPage({
           >
             Market is {marketData.isOpen ? "Open" : "Closed"}
           </p>
+          <div className="flex justify-end mt-1">
+            <LastUpdated timestamp={dataUpdatedAt} />
+          </div>
         </div>
       </div>
 

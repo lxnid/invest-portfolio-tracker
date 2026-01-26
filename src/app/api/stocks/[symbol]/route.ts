@@ -7,7 +7,7 @@ import {
 } from "@/db/schema";
 import { eq, and, asc, desc } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
-import { getStockPrice, getCompanyInfo, getMarketStatus } from "@/lib/cse-api";
+import { getCompanyInfo, getMarketStatus } from "@/lib/cse-api";
 
 interface RouteParams {
   params: Promise<{ symbol: string }>;
@@ -35,23 +35,20 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     // 2. Fetch external market data
-    const [priceRes, infoRes, statusRes] = await Promise.all([
-      getStockPrice(symbol),
+    const [infoRes, statusRes] = await Promise.all([
       getCompanyInfo(symbol),
       getMarketStatus(),
     ]);
 
-    const externalPrice = priceRes.data?.reqDetailTrades?.[0];
     const externalInfo = infoRes.data?.reqSymbolInfo;
     const marketIsOpen = statusRes.data?.status?.toLowerCase() === "open";
 
     const marketData = {
-      price: externalPrice?.price || externalInfo?.lastTradedPrice || 0,
-      change: externalPrice?.change || externalInfo?.change || 0,
-      percentChange:
-        externalPrice?.changePercentage || externalInfo?.changePercentage || 0,
-      volume: externalPrice?.qty || externalInfo?.tdyShareVolume || 0,
-      trades: externalPrice?.trades || externalInfo?.tdyTradeVolume || 0,
+      price: externalInfo?.lastTradedPrice || 0,
+      change: externalInfo?.change || 0,
+      percentChange: externalInfo?.changePercentage || 0,
+      volume: externalInfo?.tdyShareVolume || 0,
+      trades: externalInfo?.tdyTradeVolume || 0,
       isOpen: marketIsOpen,
     };
 

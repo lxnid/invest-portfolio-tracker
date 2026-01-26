@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useHoldings, useMarketData } from "@/lib/hooks";
+import { LastUpdated } from "@/components/last-updated";
 import {
   calculatePortfolioTotals,
   enrichHoldingsWithPrices,
@@ -84,7 +85,11 @@ function StatCard({
 
 export default function DashboardPage() {
   const { data: holdings, isLoading: holdingsLoading } = useHoldings();
-  const { data: marketData, isLoading: marketLoading } = useMarketData();
+  const {
+    data: marketData,
+    isLoading: marketLoading,
+    dataUpdatedAt,
+  } = useMarketData();
 
   // Build price map from market data
   const stockPrices = useMemo(() => {
@@ -135,6 +140,7 @@ export default function DashboardPage() {
           <p className="text-[#8a8a8a] mt-1">
             Your portfolio overview and market summary
           </p>
+          <LastUpdated timestamp={dataUpdatedAt} className="mt-1" />
         </div>
         <Badge variant="outline" className="gap-2">
           <span className="relative flex h-2 w-2">

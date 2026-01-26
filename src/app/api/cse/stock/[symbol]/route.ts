@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getStockPrice, getCompanyInfo } from "@/lib/cse-api";
+import { getCompanyInfo } from "@/lib/cse-api";
 
 import { getSession } from "@/lib/auth";
 
@@ -17,18 +17,30 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const { symbol } = await params;
 
-    const [priceData, companyInfo] = await Promise.all([
-      getStockPrice(symbol),
-      getCompanyInfo(symbol),
-    ]);
+    const [companyInfo] = await Promise.all([getCompanyInfo(symbol)]);
+
+    const info = companyInfo.data?.reqSymbolInfo;
+
+    // Construct price object from company info
+    const priceData = info
+      ? {
+          price: info.lastTradedPrice || 0,
+          change: info.change || 0,
+          changePercentage: info.changePercentage || 0,
+          qty: info.tdyShareVolume || 0,
+          trades: info.tdyTradeVolume || 0,
+          symbol: info.symbol,
+          name: info.name,
+        }
+      : null;
 
     return NextResponse.json({
       data: {
-        price: priceData.data?.reqDetailTrades?.[0] || null,
+        price: priceData,
         company: companyInfo.data,
       },
       errors: {
-        price: priceData.error,
+        price: null,
         company: companyInfo.error,
       },
     });

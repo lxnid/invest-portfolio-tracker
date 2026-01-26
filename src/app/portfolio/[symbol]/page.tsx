@@ -351,14 +351,52 @@ export default function StockDetailPage({
                 Market Activity
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-1">
               <StatRow
-                label="Volume"
-                value={marketData.volume.toLocaleString()}
+                label="Share Volume (Today)"
+                value={marketData.volume?.toLocaleString()}
               />
               <StatRow
-                label="Trades"
-                value={marketData.trades.toLocaleString()}
+                label="Trades (Today)"
+                value={marketData.trades?.toLocaleString()}
+              />
+              <Separator className="bg-[#333333] my-2" />
+              <StatRow
+                label="Change"
+                value={
+                  <span
+                    className={
+                      marketData.change >= 0
+                        ? "text-[#4ade80]"
+                        : "text-[#f87171]"
+                    }
+                  >
+                    {marketData.change >= 0 ? "+" : ""}
+                    {marketData.change}
+                  </span>
+                }
+              />
+              <StatRow
+                label="Change %"
+                value={
+                  <span
+                    className={
+                      marketData.percentChange >= 0
+                        ? "text-[#4ade80]"
+                        : "text-[#f87171]"
+                    }
+                  >
+                    {formatPercentage(marketData.percentChange)}
+                  </span>
+                }
+              />
+              <StatRow
+                label="Market Cap %"
+                value={
+                  stock.company?.reqSymbolInfo?.marketCapPercentage
+                    ? `${stock.company.reqSymbolInfo.marketCapPercentage.toFixed(2)}%`
+                    : "-"
+                }
               />
             </CardContent>
           </Card>

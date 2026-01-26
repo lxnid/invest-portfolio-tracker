@@ -123,6 +123,7 @@ export interface CompanyInfo {
     lastTradedPrice?: number;
     change?: number;
     changePercentage?: number;
+    marketCapPercentage?: number;
     tdyShareVolume?: number;
     tdyTradeVolume?: number;
     [key: string]: unknown;

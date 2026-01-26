@@ -24,6 +24,8 @@ import {
   RotateCcw,
   Sparkles,
   Info,
+  Save,
+  FolderOpen,
 } from "lucide-react";
 import { useMarketData, useSettings } from "@/lib/hooks";
 import {
@@ -55,6 +57,76 @@ export default function PortfolioSimulatorPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Save State
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveSimulation = async () => {
+    if (!saveName.trim()) return;
+    setIsSaving(true);
+    try {
+      const config = {
+        investmentCapital,
+        step,
+        stocks,
+      };
+
+      const res = await fetch("/api/simulations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: saveName, configuration: config }),
+      });
+
+      if (res.ok) {
+        setIsSaveModalOpen(false);
+        setSaveName("");
+        // Optional: Trigger a refresh or notification
+      }
+    } catch (e) {
+      console.error("Failed to save", e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Load State
+  const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
+  const [savedSimulations, setSavedSimulations] = useState<any[]>([]);
+  const [isLoadingSimulations, setIsLoadingSimulations] = useState(false);
+
+  const fetchSavedSimulations = async () => {
+    setIsLoadingSimulations(true);
+    try {
+      const res = await fetch("/api/simulations");
+      if (res.ok) {
+        const data = await res.json();
+        setSavedSimulations(data);
+      }
+    } catch (e) {
+      console.error("Failed to load simulations", e);
+    } finally {
+      setIsLoadingSimulations(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isLoadModalOpen) {
+      fetchSavedSimulations();
+    }
+  }, [isLoadModalOpen]);
+
+  const handleLoadSimulation = (sim: any) => {
+    const config = sim.configuration;
+    if (config) {
+      setInvestmentCapital(config.investmentCapital || "");
+      setStep(config.step || 10);
+      setStocks(config.stocks || []);
+      setResults(null); // Clear previous results
+      setIsLoadModalOpen(false);
+    }
+  };
 
   // Initialize capital from settings once loaded
   useEffect(() => {
@@ -150,7 +222,7 @@ export default function PortfolioSimulatorPage() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-[#f5f5f5] flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-[#5eead4]" />
@@ -161,17 +233,36 @@ export default function PortfolioSimulatorPage() {
             tranche logic.
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            setStocks([]);
-            setResults(null);
-          }}
-          className="border-[#333333] hover:bg-[#262626]"
-        >
-          <RotateCcw className="h-4 w-4 mr-2" />
-          Reset
-        </Button>
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <Button
+            variant="outline"
+            onClick={() => setIsLoadModalOpen(true)}
+            className="border-[#333333] hover:bg-[#262626]"
+          >
+            <FolderOpen className="h-4 w-4 mr-2" />
+            Load
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsSaveModalOpen(true)}
+            className="border-[#333333] hover:bg-[#262626]"
+            disabled={stocks.length === 0}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setStocks([]);
+              setResults(null);
+            }}
+            className="border-[#333333] hover:bg-[#262626]"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
@@ -501,6 +592,122 @@ export default function PortfolioSimulatorPage() {
           )}
         </div>
       </div>
+      {/* Save Modal */}
+      {isSaveModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <Card className="w-full max-w-md bg-[#1e1e1e] border-[#333333] shadow-2xl">
+            <CardHeader className="pb-3 border-b border-[#2f2f2f]">
+              <div className="flex items-center justify-between">
+                <CardTitle>Save Simulation</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-[#333333]"
+                  onClick={() => setIsSaveModalOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="space-y-2">
+                <Label className="text-[#a8a8a8]">Simulation Name</Label>
+                <Input
+                  autoFocus
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  placeholder="e.g. Dividend Portfolio Plan A"
+                  className="bg-[#262626] border-[#444444]"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveSimulation();
+                  }}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsSaveModalOpen(false)}
+                  className="border-[#333333] hover:bg-[#262626]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveSimulation}
+                  disabled={isSaving || !saveName.trim()}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold"
+                >
+                  {isSaving ? "Saving..." : "Save Simulation"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Load Modal */}
+      {isLoadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <Card className="w-full max-w-2xl bg-[#1e1e1e] border-[#333333] shadow-2xl max-h-[80vh] flex flex-col">
+            <CardHeader className="pb-3 border-b border-[#2f2f2f] shrink-0">
+              <div className="flex items-center justify-between">
+                <CardTitle>Load Saved Simulation</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-[#333333]"
+                  onClick={() => setIsLoadModalOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 overflow-y-auto custom-scrollbar">
+              {isLoadingSimulations ? (
+                <div className="flex justify-center p-8 text-[#666666]">
+                  Loading...
+                </div>
+              ) : savedSimulations.length === 0 ? (
+                <div className="text-center p-8 text-[#666666] border-2 border-dashed border-[#333333] rounded-lg">
+                  <FolderOpen className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                  <p>No saved simulations found.</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {savedSimulations.map((sim: any) => (
+                    <div
+                      key={sim.id}
+                      className="p-4 rounded-lg border border-[#333333] bg-[#262626] hover:bg-[#333333] transition-colors cursor-pointer group"
+                      onClick={() => handleLoadSimulation(sim)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="font-bold text-[#f5f5f5]">
+                            {sim.name}
+                          </h3>
+                          <p className="text-xs text-[#a8a8a8] mt-1">
+                            {new Date(sim.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-mono text-[#5eead4]">
+                            {parseFloat(
+                              sim.configuration.investmentCapital,
+                            ).toLocaleString()}{" "}
+                            LKR
+                          </div>
+                          <div className="text-xs text-[#666666] mt-1">
+                            {sim.configuration.stocks.length} assets
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   integer,
   boolean,
   text,
+  json,
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
@@ -139,6 +140,20 @@ export type Settings = typeof settings.$inferSelect;
 
 export type Feedback = typeof feedback.$inferSelect;
 export type NewFeedback = typeof feedback.$inferInsert;
+
+// ============================================================================
+// SAVED SIMULATIONS (User Specific)
+// ============================================================================
+export const savedSimulations = pgTable("saved_simulations", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  configuration: json("configuration").notNull(), // Stores { capital, step, stocks: [...] }
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type SavedSimulation = typeof savedSimulations.$inferSelect;
+export type NewSavedSimulation = typeof savedSimulations.$inferInsert;
 
 // ============================================================================
 // RATE LIMITS - DDoS Protection

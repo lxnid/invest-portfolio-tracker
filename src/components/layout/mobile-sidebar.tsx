@@ -12,6 +12,7 @@ import {
   LogOut,
   X,
   Menu,
+  Globe,
 } from "lucide-react";
 import { BrandingFooter } from "@/components/branding-footer";
 import { useState, useEffect } from "react";
@@ -20,6 +21,7 @@ import { useMarketData } from "@/lib/hooks";
 const navItems = [
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/market", label: "Market", icon: Globe },
   { href: "/transactions", label: "Transactions", icon: ArrowRightLeft },
   { href: "/alerts", label: "Trading Alerts", icon: ShieldCheck },
   { href: "/analytics", label: "Analytics", icon: TrendingUp },

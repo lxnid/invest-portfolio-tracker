@@ -157,7 +157,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         name: dbStock.name,
         sector: dbStock.sector,
         logoPath: dbStock.logoPath,
-        logoPath: dbStock.logoPath,
+
         company: infoRes.data || null,
         marketData,
         position,

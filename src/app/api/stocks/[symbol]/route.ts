@@ -23,16 +23,12 @@ export async function GET(request: Request, { params }: RouteParams) {
   const { symbol } = await params;
 
   try {
-    // 1. Get stock from database (metadata + user customizations like sector)
-    const [dbStock] = await db
+    // 1. Get stock from database
+    let [dbStock] = await db
       .select()
       .from(stocks)
       .where(eq(stocks.symbol, symbol))
       .limit(1);
-
-    if (!dbStock) {
-      return NextResponse.json({ error: "Stock not found" }, { status: 404 });
-    }
 
     // 2. Fetch external market data
     const [infoRes, statusRes] = await Promise.all([
@@ -41,10 +37,37 @@ export async function GET(request: Request, { params }: RouteParams) {
     ]);
 
     const externalInfo = infoRes.data?.reqSymbolInfo;
+
+    // If stock not in DB but exists in API, create/update it
+    if (!dbStock && externalInfo) {
+      const [newStock] = await db
+        .insert(stocks)
+        .values({
+          symbol: externalInfo.symbol,
+          name: externalInfo.name || symbol,
+          sector: externalInfo.sector,
+          // Use a default logo or fetch if available
+        })
+        .onConflictDoUpdate({
+          target: stocks.symbol,
+          set: {
+            name: externalInfo.name || symbol,
+            sector: externalInfo.sector,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      dbStock = newStock;
+    }
+
+    if (!dbStock && !externalInfo) {
+      return NextResponse.json({ error: "Stock not found" }, { status: 404 });
+    }
+
+    // Determine market status
     let marketIsOpen = statusRes.data?.status?.toLowerCase() === "open";
 
     // Fallback: If API says closed (or fails) but it's clearly trading hours (Mon-Fri, 09:30-14:30 IST/SLST), assume open.
-    // This fixes issues where the CSE API 'marketStatus' endpoint might be lagging or unreliable.
     if (!marketIsOpen) {
       try {
         const now = new Date();
@@ -66,7 +89,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           marketIsOpen = true;
         }
       } catch (e) {
-        // Ignore time calculation errors
+        // Ignore
       }
     }
 
@@ -81,7 +104,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       isOpen: marketIsOpen,
     };
 
-    // 3. Get user position (holdings)
+    // 3. Get user position (holdings) - only if we have a dbStock (which we should now)
     const [userHolding] = await db
       .select()
       .from(holdings)

@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { TradingViewWidget } from "@/components/tradingview-widget";
 import { TradingViewSymbolInfo } from "@/components/tradingview-symbol-info";
+import { TradingViewSymbolProfile } from "@/components/tradingview-symbol-profile";
+import { TradingViewFinancials } from "@/components/tradingview-financials";
 import { ResizableDiv } from "@/components/ui/resizable-div";
 import { useHoldings, useMarketData } from "@/lib/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -260,6 +262,7 @@ export default function StockDetailPage({
         <TabsList className="bg-[#262626]">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="analysis">Analysis & Charts</TabsTrigger>
+          <TabsTrigger value="financials">Financials</TabsTrigger>
         </TabsList>
 
         <TabsContent
@@ -517,6 +520,37 @@ export default function StockDetailPage({
               <TradingViewWidget symbol={tvSymbol} autosize />
             </div>
           </ResizableDiv>
+        </TabsContent>
+
+        <TabsContent
+          value="financials"
+          className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500"
+        >
+          <div className="grid gap-6">
+            <Card className="border-[#333333] bg-[#1e1e1e]/50 backdrop-blur-md">
+              <CardHeader className="border-b border-[#333333] pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg font-medium text-[#f5f5f5]">
+                  <Building2 className="h-5 w-5 text-[#5eead4]" />
+                  Company Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <TradingViewSymbolProfile symbol={tvSymbol} height={280} />
+              </CardContent>
+            </Card>
+
+            <div className="rounded-xl border border-[#333333] bg-[#1e1e1e]/50 backdrop-blur-md shadow-lg">
+              <div className="flex items-center gap-2 p-4 border-b border-[#333333]">
+                <FileText className="h-5 w-5 text-[#5eead4]" />
+                <h3 className="text-lg font-medium text-[#f5f5f5]">
+                  Financial Statements
+                </h3>
+              </div>
+              <div className="h-[1200px] w-full">
+                <TradingViewFinancials symbol={tvSymbol} height="100%" />
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

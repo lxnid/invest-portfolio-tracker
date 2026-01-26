@@ -3,15 +3,23 @@ import { deleteSession, getSession } from "@/lib/auth";
 import { cleanupGuestData } from "@/lib/demo-limits";
 
 export async function POST() {
-  // Get session before deleting to know the userId
-  const session = await getSession();
+  try {
+    // Get session before deleting to know the userId
+    const session = await getSession();
 
-  // Cleanup guest data if this is a guest user
-  if (session && session.userId.startsWith("guest-")) {
-    await cleanupGuestData(session.userId);
+    // Cleanup guest data if this is a guest user
+    if (session && session.userId.startsWith("guest-")) {
+      try {
+        await cleanupGuestData(session.userId);
+      } catch (cleanupError) {
+        console.error("Failed to cleanup guest data:", cleanupError);
+        // Continue with logout even if cleanup fails
+      }
+    }
+  } catch (error) {
+    console.error("Error retrieving session during logout:", error);
   }
 
-  await deleteSession();
   // Create success response
   const response = NextResponse.json({ success: true });
 

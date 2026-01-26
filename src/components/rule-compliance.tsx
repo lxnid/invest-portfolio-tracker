@@ -26,10 +26,17 @@ export function RuleComplianceCard({
   violations = [],
   newTotals,
 }: ComplianceCardProps) {
-  const criticalViolations = violations.filter(
+  const allViolations = violations || [];
+  const criticalViolations = allViolations.filter(
     (v) => v.severity === "critical",
   );
-  const warningViolations = violations.filter((v) => v.severity === "warning");
+  const warningViolations = allViolations.filter(
+    (v) => v.severity === "warning",
+  );
+  // Catch any violations that didn't match the standard severities
+  const otherViolations = allViolations.filter(
+    (v) => v.severity !== "critical" && v.severity !== "warning",
+  );
 
   const cashStatusColor =
     newTotals && newTotals.cashPercent >= 20
@@ -109,6 +116,30 @@ export function RuleComplianceCard({
                 </div>
               </div>
             ))}
+
+            {otherViolations.map((v, i) => (
+              <div
+                key={`other-${i}`}
+                className="p-3 rounded-lg bg-zinc-800 border border-zinc-700"
+              >
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-zinc-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-300">
+                      {v.ruleName || "Policy Violation"}
+                    </p>
+                    <p className="text-xs text-zinc-50 mt-1">{v.message}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : !isValid ? (
+          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+            <div className="flex items-center gap-2 text-red-500 text-sm">
+              <AlertCircle className="h-4 w-4" />
+              <p>Transaction violates rules. Please check constraints.</p>
+            </div>
           </div>
         ) : isValid ? (
           <div className="flex items-center gap-2 text-emerald-500 text-sm p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">

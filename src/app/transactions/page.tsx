@@ -547,7 +547,21 @@ function TransactionModal({
         }),
       });
       const result = await res.json();
-      setSimulationResult(result);
+
+      if (!res.ok) {
+        // If API returns error (like Missing fields which shouldn't happen now, or auth), show it
+        console.error("Simulation failed:", result.error);
+        // Instead of setting simulationResult, maybe set form error?
+        // But simulationResult is what drives the card.
+        // Let's set null result and maybe log?
+        // Or set a specific error result structure?
+        // For now, let's just NOT set result if error, to avoid the confusing UI.
+        setError(result.error || "Simulation failed");
+        setSimulationResult(null);
+      } else {
+        setSimulationResult(result);
+        setError(null);
+      }
     } catch (e) {
       console.error(e);
     } finally {

@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { stockId, symbol, type, quantity, price, fees } = body;
 
-    if (!stockId || !symbol || !type || !quantity || !price) {
+    if (!symbol || !type || !quantity || !price) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 },

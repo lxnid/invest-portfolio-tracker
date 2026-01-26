@@ -7,13 +7,23 @@ A comprehensive stock portfolio tracking application designed for the Colombo St
 ## 🚀 Features
 
 - **Real-time Market Data**: Live integration with CSE API to fetch ASPI, S&P SL20 indices, and individual stock prices.
-- **Portfolio Management**: Track multiple stock holdings with automatic calculation of average buy price, total invested, and current value.
-- **Transaction History**: Record all Buy, Sell, and Dividend transactions with detailed fee tracking.
-- **Advanced Analytics**: Visual analytics for portfolio performance, sector allocation, and historical trends.
-- **Trading Rules Engine**: A unique compliance system designed to mitigate emotional decision-making. Configure and monitor rules for Cash Buffers (to prevent over-investing), Position Sizing (concentration risk), Stop-Loss/Take-Profit limits, and Trade Frequency (to prevent over-trading), all aggregating into a "Discipline Score" to track your adherence to your own strategy.
-- **Demo & Simulation**: Built-in demo mode and stock price simulation tools for testing strategies.
-- **Responsive Design**: Modern, mobile-first UI built with Tailwind CSS and Shadcn UI.
-- **Feedback System**: Integrated user feedback collection system with automated email notifications powered by [Resend](https://resend.com/).
+- **Portfolio Management**:
+  - Track multiple stock holdings with automatic calculation of average buy price, total invested, and current value.
+  - **Capital Allocation Calculator**: Built-in tool to help calculate position sizes based on percentage of total capital.
+  - **Active vs Inactive**: Filter between current holdings and sold positions.
+- **Advanced Stock Analysis**:
+  - **TradingView Integration**: Professional-grade interactive charts, technical indicators, and financial statements (Income Statement, Balance Sheet, Cash Flow).
+  - **Key Statistics**: Deep dive into company performance with advanced metrics.
+- **Transaction History**:
+  - Record all Buy, Sell, and Dividend transactions with detailed fee tracking.
+  - **CSV Export**: Export your entire transaction history for external analysis.
+- **Trading Rules Engine**: A unique compliance system designed to mitigate emotional decision-making. Configure and monitor rules for Cash Buffers, Position Sizing, Stop-Loss/Take-Profit limits, and Trade Frequency.
+- **Guest Mode & Simulation**: Try the platform without an account using the Guest Mode, featuring a fully functional portfolio simulator.
+- **Security & Performance**:
+  - Enterprise-grade security with rate limiting, IP protection, and IDOR prevention.
+  - Edge-optimized for lightning-fast performance.
+- **Responsive Design**: Modern, mobile-first UI optimized for Desktop, Tablet, and Mobile devices.
+- **Feedback System**: Integrated user feedback collection system with automated email notifications.
 
 ## 🛠️ Tech Stack
 
@@ -24,6 +34,7 @@ A comprehensive stock portfolio tracking application designed for the Colombo St
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 - **UI Components**: [Shadcn UI](https://ui.shadcn.com/) & [Radix UI](https://www.radix-ui.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
+- **Charts**: [Recharts](https://recharts.org/) & [TradingView Widgets](https://www.tradingview.com/widget/)
 - **Email**: [Resend](https://resend.com/)
 - **Deployment**: Configured for Cloudflare via OpenNext
 
@@ -77,7 +88,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 - `npm run dev`: Starts the development server using Turbopack.
 - `npm run build`: Builds the application for production.
-- `npm run start`: Starts the production server.
+- `npm run build:pages`: Builds the application for Cloudflare Pages (OpenNext).
 - `npm run lint`: Runs ESLint.
 - `npm run db:generate`: Generates Drizzle migrations based on schema changes.
 - `npm run db:push`: Pushes schema changes directly to the database.
@@ -89,10 +100,13 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ├── src
 │   ├── app             # Next.js App Router pages and API routes
 │   │   ├── api         # Backend API endpoints (CSE, Auth, Portfolio)
-│   │   └── ...         # Frontend pages (Dashboard, Transactions, etc.)
+│   │   ├── portfolio   # Portfolio & Stock Details pages
+│   │   ├── transactions # Transaction history & management
+│   │   └── market      # Market overview & explorer
 │   ├── components      # Reusable React components
 │   │   ├── ui          # Shadcn UI primitives
-│   │   └── layout      # Layout components like Sidebar
+│   │   ├── layout      # Layout components like Sidebar
+│   │   └── tradingview-* # TradingView widget wrappers
 │   ├── db              # Database configuration and schema
 │   │   ├── schema.ts   # Drizzle ORM schema definitions
 │   │   └── migrations  # SQL migration files
@@ -116,7 +130,8 @@ The application uses a relational schema with the following key entities:
 
 ### External Integration
 
-The `src/lib/cse-api.ts` module handles all communications with the Colombo Stock Exchange API, providing a typed interface for market data retrieval.
+- **CSE API**: The `src/lib/cse-api.ts` module handles all communications with the Colombo Stock Exchange API.
+- **TradingView**: Embedded widgets provide world-class charting and financial data visualization without heavy backend storage requirements.
 
 ### Feedback & Notifications
 
@@ -125,12 +140,29 @@ The feedback system uses a dual-write approach:
 1.  **Persistence**: Feedback is stored in the `feedback` table in Neon/Postgres for record-keeping.
 2.  **Notification**: A serverless function triggers an email via **Resend** to the administrator immediately upon submission.
 
+## 🔒 Security Measures
+
+Based on a recent security audit, the application implements a robust security baseline:
+
+- **Authentication**:
+  - **Rate Limiting**: Strict IP-based rate limiting (5 attempts/15 mins) on login endpoints to prevent brute-force attacks.
+  - **Session Security**: JWT-based sessions stored in `HttpOnly`, `Secure`, `SameSite=Lax` cookies to mitigate XSS and CSRF risks.
+  - **Constant-Time Comparison**: Crypto-safe comparison logic for password verification to prevent timing attacks.
+
+- **Data Protection**:
+  - **SQL Injection**: Complete neutralizing of SQL injection vectors through Drizzle ORM's parameterized queries.
+  - **Data Isolation**: Strict middleware-level authorization limits all database queries to the authenticated user's scope. Guest users are cryptographically isolated from Admin data.
+  - **Input Validation**: Comprehensive runtime validation using `zod` ensures data integrity before it reaches the core logic.
+
+- **Guest Mode Safety**:
+  - **Resource Quotas**: Implementation of strict resource limits (transaction/holding counts) for Guest users to prevent database resource exhaustion.
+
 ## 🌍 Deployment Strategy
 
 This project leverages a modern, edge-first deployment strategy using **Cloudflare Pages** combined with the `opennextjs-cloudflare` adapter.
 
 - **Edge Computing**: Unlike traditional server-based deployments, this app runs on Cloudflare's global edge network. This ensures minimum latency by serving the application logic from the data center closest to the user.
-- **OpenNext**: Bridges the gap between Next.js App Router features and the Cloudflare Workers runtime, allowing us to use modern Next.js 15+ features (like Server Actions and Streaming) in a serverless edge environment.
+- **OpenNext**: Bridges the gap between Next.js App Router features and the Cloudflare Workers runtime, allowing us to use modern Next.js 16+ features in a serverless edge environment.
 - **CI/CD Pipeline**: The build command `npm run build:pages` transforms the standard Next.js build into a worker-compatible artifact.
 
 ## 🔌 Database Architecture (Neon)
@@ -139,4 +171,4 @@ The persistence layer is built on **Neon**, a modern serverless PostgreSQL platf
 
 - **Serverless PostgreSQL**: Neon separates storage from compute. This allows the database to scale to zero when unused (saving costs) and instantly provision compute resources during traffic spikes.
 - **Connection Management**: Since the application runs in a serverless environment (Cloudflare Workers), maintaining persistent database connections is impossible. We use the `@neondatabase/serverless` driver over HTTP/WebSockets to manage ephemeral connections efficiently.
-- **Type Safety**: Integration with **Drizzle ORM** provides end-to-end type safety. The database schema is defined in TypeScript (`src/db/schema.ts`), ensuring that any changes to the data model are instantly reflected in the application code, eliminating a common class of runtime errors.
+- **Type Safety**: Integration with **Drizzle ORM** provides end-to-end type safety. The database schema is defined in TypeScript (`src/db/schema.ts`), ensuring that any changes to the data model are instantly reflected in the application code.

@@ -2,6 +2,7 @@
 
 import { SavingsList } from "@/components/savings/savings-list";
 import { LastUpdated } from "@/components/last-updated";
+import { RateComparisonPanel } from "@/components/savings/rate-comparison-panel";
 import { useSavings } from "@/lib/hooks";
 
 export default function SavingsPage() {
@@ -19,7 +20,13 @@ export default function SavingsPage() {
         </div>
       </div>
 
-      <SavingsList />
+      <div className="grid gap-4 md:grid-cols-1">
+        <SavingsList />
+      </div>
+
+      <div className="mt-8">
+        <RateComparisonPanel />
+      </div>
     </div>
   );
 }

@@ -9,32 +9,81 @@ interface CSEApiResponse<T> {
   error: string | null;
 }
 
+// Custom timeout error class
+class TimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TimeoutError";
+  }
+}
+
+interface CSEOptions extends RequestInit {
+  timeout?: number;
+  retries?: number;
+}
+
 async function cseRequest<T>(
   endpoint: string,
   params?: Record<string, string>,
+  options: CSEOptions = {},
 ): Promise<CSEApiResponse<T>> {
-  try {
-    const response = await fetch(`${CSE_API_BASE}/${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: params ? new URLSearchParams(params).toString() : undefined,
-      next: { revalidate: 60 }, // Cache for 60 seconds
-    });
+  const { timeout = 15000, retries = 3, ...fetchOptions } = options;
 
-    if (!response.ok) {
-      throw new Error(`CSE API error: ${response.status}`);
+  let lastError: string = "Unknown error";
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+
+      const response = await fetch(`${CSE_API_BASE}/${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: params ? new URLSearchParams(params).toString() : undefined,
+        next: { revalidate: 60 }, // Cache for 60 seconds
+        signal: controller.signal,
+        ...fetchOptions,
+      });
+
+      clearTimeout(id);
+
+      if (!response.ok) {
+        throw new Error(`CSE API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (error) {
+      // Determine if we should retry
+      const isAbort = error instanceof Error && error.name === "AbortError";
+      const errorMessage = isAbort
+        ? `Request timed out after ${timeout}ms`
+        : error instanceof Error
+          ? error.message
+          : "Unknown error";
+
+      lastError = errorMessage;
+
+      // Don't retry on the last attempt
+      if (attempt === retries) {
+        break;
+      }
+
+      // Exponential backoff: 500ms, 1000ms, 2000ms...
+      const delay = 500 * Math.pow(2, attempt);
+      console.warn(
+        `[CSE API] Attempt ${attempt + 1}/${retries + 1} failed (${errorMessage}). Retrying in ${delay}ms...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
-
-    const data = await response.json();
-    return { data, error: null };
-  } catch (error) {
-    return {
-      data: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
   }
+
+  return {
+    data: null,
+    error: lastError,
+  };
 }
 
 // ============================================================================

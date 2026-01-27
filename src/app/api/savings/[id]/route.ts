@@ -2,16 +2,43 @@ import { NextResponse } from "next/server";
 import db from "@/db";
 import { savingsEntries } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const session = await getSession();
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
     const data = await request.json();
-    const userId = "admin-user";
 
+    // GUEST MODE: Return mock success
+    if (session.role === "guest") {
+      const mockUpdatedEntry = {
+        id: parseInt(id),
+        userId: session.userId,
+        name: data.name,
+        bankName: data.bankName || null,
+        type: data.type,
+        amount: data.amount,
+        interestRate: data.interestRate,
+        currency: data.currency,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        maturityDate: data.maturityDate ? new Date(data.maturityDate) : null,
+        notes: data.notes || null,
+        updatedAt: new Date(),
+        createdAt: new Date(), // Mock creation date
+      };
+      return NextResponse.json(mockUpdatedEntry);
+    }
+
+    // ADMIN MODE: Update real DB
     const updatedEntry = await db
       .update(savingsEntries)
       .set({
@@ -29,7 +56,7 @@ export async function PUT(
       .where(
         and(
           eq(savingsEntries.id, parseInt(id)),
-          eq(savingsEntries.userId, userId),
+          eq(savingsEntries.userId, session.userId),
         ),
       )
       .returning();
@@ -53,15 +80,26 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params;
-    const userId = "admin-user";
+    const session = await getSession();
 
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // GUEST MODE: Return mock success
+    if (session.role === "guest") {
+      return NextResponse.json({ success: true });
+    }
+
+    const { id } = await params;
+
+    // ADMIN MODE: Delete from real DB
     const deletedEntry = await db
       .delete(savingsEntries)
       .where(
         and(
           eq(savingsEntries.id, parseInt(id)),
-          eq(savingsEntries.userId, userId),
+          eq(savingsEntries.userId, session.userId),
         ),
       )
       .returning();

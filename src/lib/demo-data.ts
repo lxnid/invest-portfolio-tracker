@@ -1,0 +1,28 @@
+export const MOCK_SAVINGS = [
+  {
+    id: 1,
+    name: "Emergency Fund Demo",
+    bankName: "Sampath Bank",
+    type: "Savings",
+    amount: "500000.00",
+    interestRate: "8.50",
+    currency: "LKR",
+    startDate: "2024-01-01T00:00:00.000Z",
+    maturityDate: null,
+    notes: "For emergencies only",
+    userId: "guest-user",
+  },
+  {
+    id: 2,
+    name: "Standard FD Demo",
+    bankName: "Commercial Bank",
+    type: "Fixed Deposit",
+    amount: "1000000.00",
+    interestRate: "12.00",
+    currency: "LKR",
+    startDate: "2024-01-15T00:00:00.000Z",
+    maturityDate: "2025-01-15T00:00:00.000Z",
+    notes: "1 Year Maturity",
+    userId: "guest-user",
+  },
+];

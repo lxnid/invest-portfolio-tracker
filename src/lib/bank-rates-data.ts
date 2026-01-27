@@ -10,7 +10,8 @@ export type BankRate = {
     | "6 Months"
     | "9 Months"
     | "1 Year"
-    | "Annualized";
+    | "Annualized"
+    | "None";
   minAmount?: number;
   notes?: string;
   lastUpdated: string;
@@ -21,10 +22,10 @@ export const BANK_RATES: BankRate[] = [
 
   // 1 Month
   {
-    bank: "HNB Finance",
+    bank: "HNB",
     type: "FIXED_DEPOSIT",
     name: "Fixed Deposit",
-    rate: 7.0,
+    rate: 6.5,
     period: "1 Month",
     minAmount: 25000,
     lastUpdated: "2026-01",
@@ -41,10 +42,10 @@ export const BANK_RATES: BankRate[] = [
 
   // 3 Months
   {
-    bank: "HNB Finance",
+    bank: "HNB",
     type: "FIXED_DEPOSIT",
     name: "Fixed Deposit",
-    rate: 8.0,
+    rate: 7.5,
     period: "3 Months",
     minAmount: 25000,
     lastUpdated: "2026-01",
@@ -63,20 +64,30 @@ export const BANK_RATES: BankRate[] = [
   {
     bank: "Commercial Bank",
     type: "FIXED_DEPOSIT",
-    name: "Special FD",
-    rate: 8.5,
+    name: "Fixed Deposit",
+    rate: 7.5,
     period: "4 Months",
-    minAmount: 500000,
+    minAmount: 25000,
     lastUpdated: "2026-01",
     notes: "Min 500k",
+  },
+  {
+    bank: "HNB",
+    type: "FIXED_DEPOSIT",
+    name: "Special FD",
+    rate: 8.0,
+    period: "4 Months",
+    minAmount: 1000000,
+    lastUpdated: "2026-01",
+    notes: "Min 1M",
   },
 
   // 6 Months
   {
-    bank: "HNB Finance",
+    bank: "HNB",
     type: "FIXED_DEPOSIT",
     name: "Fixed Deposit",
-    rate: 9.68,
+    rate: 7.75,
     period: "6 Months",
     minAmount: 25000,
     lastUpdated: "2026-01",
@@ -93,22 +104,23 @@ export const BANK_RATES: BankRate[] = [
 
   // 9 Months
   {
-    bank: "HNB Finance",
+    bank: "HNB",
     type: "FIXED_DEPOSIT",
-    name: "Fixed Deposit",
-    rate: 7.0,
+    name: "Special FD",
+    rate: 7.25,
     period: "9 Months",
-    minAmount: 25000,
+    minAmount: 1000000,
     lastUpdated: "2026-01",
+    notes: "Min 1M",
   },
   // Commercial Bank 9M not explicitly found, omitting to adhere to "compare... time periods". If data missing, clearer to omit than guess.
 
   // 1 Year
   {
-    bank: "HNB Finance",
+    bank: "HNB",
     type: "FIXED_DEPOSIT",
     name: "Fixed Deposit",
-    rate: 11.18,
+    rate: 8.0,
     period: "1 Year",
     minAmount: 25000,
     lastUpdated: "2026-01",
@@ -152,11 +164,11 @@ export const BANK_RATES: BankRate[] = [
     bank: "HNB",
     type: "MONEY_MARKET",
     name: "Money Market Savings",
-    rate: 8.5,
-    period: "Annualized",
+    rate: 6.0,
+    period: "None",
     minAmount: 500000,
     lastUpdated: "2026-01",
-    notes: "Variable (Approx.)",
+    notes: "Variable Weekly Interest Payout",
   },
 
   // Commercial
@@ -165,7 +177,7 @@ export const BANK_RATES: BankRate[] = [
     type: "MONEY_MARKET",
     name: "Money Market Account",
     rate: 6.5,
-    period: "Annualized",
+    period: "None",
     minAmount: 100000,
     lastUpdated: "2026-01",
   },

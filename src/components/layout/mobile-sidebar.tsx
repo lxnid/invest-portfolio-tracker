@@ -13,6 +13,7 @@ import {
   X,
   Menu,
   Globe,
+  PiggyBank,
 } from "lucide-react";
 import { BrandingFooter } from "@/components/branding-footer";
 import { useState, useEffect } from "react";
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/market", label: "Market", icon: Globe },
   { href: "/transactions", label: "Transactions", icon: ArrowRightLeft },
+  { href: "/savings", label: "Savings", icon: PiggyBank },
   { href: "/alerts", label: "Trading Alerts", icon: ShieldCheck },
   { href: "/analytics", label: "Analytics", icon: TrendingUp },
 ];

@@ -166,3 +166,25 @@ export const rateLimits = pgTable("rate_limits", {
 
 export type RateLimit = typeof rateLimits.$inferSelect;
 export type NewRateLimit = typeof rateLimits.$inferInsert;
+
+// ============================================================================
+// SAVINGS ENTRIES (User Specific)
+// ============================================================================
+export const savingsEntries = pgTable("savings_entries", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  bankName: varchar("bank_name", { length: 255 }),
+  type: varchar("type", { length: 50 }).notNull(), // 'SAVINGS', 'FIXED_DEPOSIT', 'OTHER'
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  interestRate: decimal("interest_rate", { precision: 5, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("LKR").notNull(),
+  startDate: timestamp("start_date"),
+  maturityDate: timestamp("maturity_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type SavingsEntry = typeof savingsEntries.$inferSelect;
+export type NewSavingsEntry = typeof savingsEntries.$inferInsert;

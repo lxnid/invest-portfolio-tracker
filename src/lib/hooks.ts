@@ -67,6 +67,21 @@ export interface Settings {
   updatedAt: string;
 }
 
+export interface SavingsEntry {
+  id: number;
+  name: string;
+  bankName?: string;
+  type: string;
+  amount: string;
+  interestRate: string;
+  currency: string;
+  startDate?: string;
+  maturityDate?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface MarketData {
   marketStatus: {
     isOpen: boolean;
@@ -130,6 +145,13 @@ async function fetchStockPrice(
   if (!res.ok) return null;
   const json = await res.json();
   return json.data?.price || null;
+}
+
+async function fetchSavings(): Promise<SavingsEntry[]> {
+  const res = await fetch("/api/savings");
+  if (!res.ok) throw new Error("Failed to fetch savings");
+  const json = await res.json();
+  return json || [];
 }
 
 // Query Hooks
@@ -456,6 +478,78 @@ export function useUpdateRule() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rules"] });
+    },
+  });
+}
+
+export function useSavings() {
+  return useQuery({
+    queryKey: ["savings"],
+    queryFn: fetchSavings,
+    staleTime: 60000,
+  });
+}
+
+export function useCreateSavingsEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Partial<SavingsEntry>) => {
+      const res = await fetch("/api/savings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to create savings entry");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["savings"] });
+    },
+  });
+}
+
+export function useUpdateSavingsEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...data
+    }: Partial<SavingsEntry> & { id: number }) => {
+      const res = await fetch(`/api/savings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to update savings entry");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["savings"] });
+    },
+  });
+}
+
+export function useDeleteSavingsEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/savings/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete savings entry");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["savings"] });
     },
   });
 }

@@ -11,6 +11,7 @@ import {
   BarChart3,
   Activity,
   Loader2,
+  PiggyBank,
 } from "lucide-react";
 import { useHoldings, useMarketData } from "@/lib/hooks";
 import { LastUpdated } from "@/components/last-updated";
@@ -20,6 +21,7 @@ import {
   enrichHoldingsWithPrices,
 } from "@/lib/rule-engine";
 import { useMemo } from "react";
+import { SavingsCard } from "@/components/savings/savings-card";
 
 function StatCard({
   title,
@@ -110,7 +112,7 @@ export default function DashboardPage() {
   }, [holdings, stockPrices]);
 
   // Calculate portfolio totals
-  const totals = useMeta(
+  const totals = useMemo(
     () => calculatePortfolioTotals(enrichedHoldings),
     [enrichedHoldings],
   );
@@ -187,12 +189,7 @@ export default function DashboardPage() {
             prefix="LKR "
             isLoading={isLoading}
           />
-          <StatCard
-            title="Holdings"
-            value={totals.holdingsCount.toString()}
-            icon={Activity}
-            isLoading={isLoading}
-          />
+          <SavingsCard />
         </div>
       </div>
 
@@ -294,7 +291,7 @@ export default function DashboardPage() {
         <h2 className="text-lg font-semibold text-zinc-50 mb-4">
           Quick Actions
         </h2>
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           <Link href="/transactions">
             <Card className="cursor-pointer hover:border-blue-500/50 transition-colors h-full">
               <CardContent className="pt-6">
@@ -346,13 +343,26 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </Link>
+
+          <Link href="/savings">
+            <Card className="cursor-pointer hover:border-blue-500/50 transition-colors h-full">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-500/10">
+                    <PiggyBank className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-zinc-50">Manage Savings</p>
+                    <p className="text-sm text-zinc-500">
+                      Track cash & deposits
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
     </div>
   );
-}
-
-// Helper to avoid recalculating on every render
-function useMeta<T>(fn: () => T, deps: React.DependencyList): T {
-  return useMemo(fn, deps);
 }

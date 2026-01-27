@@ -11,6 +11,7 @@ import {
   TrendingUp,
   LogOut,
   Globe,
+  PiggyBank,
 } from "lucide-react";
 
 import { BrandingFooter } from "@/components/branding-footer";
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/market", label: "Market", icon: Globe },
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/transactions", label: "Transactions", icon: ArrowRightLeft },
+  { href: "/savings", label: "Savings", icon: PiggyBank },
   { href: "/alerts", label: "Trading Alerts", icon: ShieldCheck },
   { href: "/analytics", label: "Analytics", icon: TrendingUp },
 ];

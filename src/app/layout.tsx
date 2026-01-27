@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/sidebar";
 import { Providers } from "@/components/providers";
-import { DemoBanner } from "@/components/demo-banner";
-import { MobileSidebar } from "@/components/layout/mobile-sidebar";
-import { FloatingBranding } from "@/components/floating-branding";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,17 +36,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950`}
       >
-        <Providers>
-          <DemoBanner />
-          <div className="flex min-h-screen flex-col lg:flex-row">
-            <Sidebar />
-            <MobileSidebar />
-            <main className="flex-1 min-w-0 overflow-x-hidden p-4 md:px-16 lg:ml-64 lg:p-8 lg:px-8">
-              {children}
-            </main>
-          </div>
-          <FloatingBranding />
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

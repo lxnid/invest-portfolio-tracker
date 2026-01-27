@@ -183,8 +183,9 @@ export function useMarketData() {
   return useQuery({
     queryKey: ["marketData"],
     queryFn: fetchMarketData,
-    staleTime: 60000, // 1 minute - CSE data doesn't update that frequently
-    refetchInterval: 60000, // Auto-refresh every minute
+    staleTime: 300000, // 5 minutes
+    refetchInterval: 300000, // Auto-refresh every 5 minutes
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -207,8 +208,9 @@ export function useStockDetails(symbol: string) {
       return json.data;
     },
     enabled: !!symbol,
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 60000,
+    staleTime: 300000, // 5 minutes
+    refetchInterval: 300000,
+    refetchOnWindowFocus: false,
   });
 }
 

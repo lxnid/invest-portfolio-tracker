@@ -49,12 +49,27 @@ async function cseRequest<T>(
 
       clearTimeout(id);
 
+      const text = await response.text();
+
       if (!response.ok) {
-        throw new Error(`CSE API error: ${response.status}`);
+        throw new Error(
+          `CSE API error: ${response.status} ${response.statusText} - ${text.substring(0, 200)}`,
+        );
       }
 
-      const data = await response.json();
-      return { data, error: null };
+      if (!text) {
+        throw new Error("CSE API returned empty response");
+      }
+
+      try {
+        const data = JSON.parse(text);
+        return { data, error: null };
+      } catch (e) {
+        console.error(`[CSE API] JSON Parse Error for ${endpoint}:`, text);
+        throw new Error(
+          `Failed to parse CSE API response: ${(e as Error).message}`,
+        );
+      }
     } catch (error) {
       // Determine if we should retry
       const isAbort = error instanceof Error && error.name === "AbortError";

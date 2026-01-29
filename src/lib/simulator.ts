@@ -10,15 +10,21 @@ export interface SimulationResult {
   symbol: string;
   targetShares: number; // Raw fractional shares
   optimizedShares: number; // Rounded shares
-  cost: number;
+  cost: number; // Total cost including fees
+  baseCost: number; // Cost without fees
+  fees: number; // Fee amount
   actualPercent: number; // Of the total *invested* amount
 }
 
 export interface SimulationOutput {
   results: SimulationResult[];
   totalCost: number;
+  totalFees: number;
   remainingCapital: number;
 }
+
+// Transaction fee rate (1.12%)
+const FEE_RATE = 0.0112;
 
 export function calculateAllocation(
   totalCapital: number,
@@ -56,12 +62,18 @@ export function calculateAllocation(
     // Ensure we don't go negative
     if (roundedShares < 0) roundedShares = 0;
 
+    const baseCost = roundedShares * stock.price;
+    const fees = baseCost * FEE_RATE;
+    const totalCost = baseCost + fees;
+
     return {
       ...stock,
       targetAmt,
       rawShares,
       roundedShares,
-      currentCost: roundedShares * stock.price,
+      currentBaseCost: baseCost,
+      currentFees: fees,
+      currentCost: totalCost,
     };
   });
 
@@ -103,8 +115,10 @@ export function calculateAllocation(
 
     const candidate = workingSet[candidateIndex];
     candidate.roundedShares -= step;
-    candidate.currentCost = candidate.roundedShares * candidate.price;
-    currentTotalCost -= step * candidate.price;
+    candidate.currentBaseCost = candidate.roundedShares * candidate.price;
+    candidate.currentFees = candidate.currentBaseCost * FEE_RATE;
+    candidate.currentCost = candidate.currentBaseCost + candidate.currentFees;
+    currentTotalCost -= step * candidate.price * (1 + FEE_RATE);
   }
 
   // Case B: Under Budget -> Increase Shares?
@@ -121,8 +135,9 @@ export function calculateAllocation(
     const remainingInBudget = effectiveBudget - currentTotalCost;
 
     // Candidates: Anyone who can accept 'step' shares without exceeding Effective Budget
+    // Include fees in the cost check
     const validCandidates = workingSet.filter(
-      (item) => step * item.price <= remainingInBudget,
+      (item) => step * item.price * (1 + FEE_RATE) <= remainingInBudget,
     );
 
     if (validCandidates.length === 0) break;
@@ -144,8 +159,10 @@ export function calculateAllocation(
 
     // We add to Best
     best.roundedShares += step;
-    best.currentCost = best.roundedShares * best.price;
-    currentTotalCost += step * best.price;
+    best.currentBaseCost = best.roundedShares * best.price;
+    best.currentFees = best.currentBaseCost * FEE_RATE;
+    best.currentCost = best.currentBaseCost + best.currentFees;
+    currentTotalCost += step * best.price * (1 + FEE_RATE);
     improvementPossible = true;
   }
 
@@ -155,13 +172,16 @@ export function calculateAllocation(
       symbol: item.symbol,
       targetShares: item.rawShares,
       optimizedShares: item.roundedShares,
+      baseCost: item.currentBaseCost,
+      fees: item.currentFees,
       cost: item.currentCost,
       actualPercent: 0, // Will calc below
     })),
   );
 
-  // Calculate actual percentages based on *invested* amount
+  // Calculate actual percentages based on *invested* amount (total including fees)
   const finalInvested = results.reduce((sum, r) => sum + r.cost, 0);
+  const totalFees = results.reduce((sum, r) => sum + r.fees, 0);
 
   results.forEach((r) => {
     r.actualPercent = finalInvested > 0 ? (r.cost / finalInvested) * 100 : 0;
@@ -170,6 +190,7 @@ export function calculateAllocation(
   return {
     results,
     totalCost: finalInvested,
+    totalFees,
     remainingCapital: totalCapital - finalInvested, // Remaining from the GRAND total (User's context)
   };
 }

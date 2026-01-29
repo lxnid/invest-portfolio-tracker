@@ -23,8 +23,11 @@ export async function GET(request: Request, { params }: RouteParams) {
     const [companyInfo] = await Promise.all([getCompanyInfo(symbol)]);
 
     const info = companyInfo.data?.reqSymbolInfo;
+    // Check for valid data - ensure we have info, matching symbol, and a price
     const isDataValid =
-      !!info && companyInfo.data?.reqSymbolInfo?.symbol === symbol;
+      !!info &&
+      companyInfo.data?.reqSymbolInfo?.symbol === symbol &&
+      info.lastTradedPrice != null;
 
     // Construct price object from company info
     const priceData = info

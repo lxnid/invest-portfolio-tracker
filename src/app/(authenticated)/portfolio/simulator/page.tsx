@@ -50,6 +50,7 @@ export default function PortfolioSimulatorPage() {
   const [results, setResults] = useState<SimulationResult[] | null>(null);
   const [simulationSummary, setSimulationSummary] = useState<{
     totalCost: number;
+    totalFees: number;
     remainingCapital: number;
   } | null>(null);
 
@@ -211,6 +212,7 @@ export default function PortfolioSimulatorPage() {
     setResults(output.results);
     setSimulationSummary({
       totalCost: output.totalCost,
+      totalFees: output.totalFees,
       remainingCapital: output.remainingCapital,
     });
   };
@@ -347,8 +349,19 @@ export default function PortfolioSimulatorPage() {
                           <div className="font-bold text-[#f5f5f5]">
                             {stock.symbol}
                           </div>
-                          <div className="text-xs text-[#a8a8a8] font-mono">
-                            LKR {stock.price.toFixed(2)}
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-[#666666]">LKR</span>
+                            <Input
+                              type="number"
+                              value={stock.price}
+                              onChange={(e) => {
+                                const newPrice =
+                                  parseFloat(e.target.value) || 0;
+                                updateStock(index, { price: newPrice });
+                              }}
+                              className="h-6 w-24 text-xs font-mono bg-[#1e1e1e] border-[#444444] px-2 py-0"
+                              step="0.01"
+                            />
                           </div>
                         </div>
                       </div>
@@ -515,6 +528,18 @@ export default function PortfolioSimulatorPage() {
                     </span>
                   </div>
                   <div className="flex justify-between items-end">
+                    <span className="text-[#a8a8a8] text-sm">Fees (1.12%)</span>
+                    <span className="text-lg font-bold text-[#f97316] font-mono">
+                      {simulationSummary?.totalFees?.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      <span className="text-sm font-sans text-[#666666]">
+                        LKR
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-end">
                     <span className="text-[#a8a8a8] text-sm">
                       Remaining Capital
                     </span>
@@ -552,7 +577,16 @@ export default function PortfolioSimulatorPage() {
                         </div>
                         <div className="text-right">
                           <div className="font-mono text-[#f5f5f5] font-bold">
-                            {res.cost.toLocaleString()}
+                            {res.cost.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </div>
+                          <div className="text-xs text-[#666666] font-mono">
+                            {res.baseCost.toLocaleString()} +{" "}
+                            <span className="text-[#f97316]">
+                              {res.fees.toFixed(2)}
+                            </span>
                           </div>
                           <div className="text-xs text-[#5eead4]">
                             {res.actualPercent.toFixed(1)}%

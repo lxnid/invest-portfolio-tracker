@@ -29,11 +29,13 @@ export async function GET() {
     ]);
 
     // Check if we received valid data
+    // Empty arrays are truthy, so we must also check for length
     const isDataValid =
       marketStatus.data &&
       marketStatus.data.status &&
       aspi.data &&
-      stockPrices.data?.reqDetailTrades;
+      stockPrices.data?.reqDetailTrades &&
+      stockPrices.data.reqDetailTrades.length > 0;
 
     // Deduplicate stocks by symbol
     const stockMap = new Map();

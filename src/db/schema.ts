@@ -188,3 +188,15 @@ export const savingsEntries = pgTable("savings_entries", {
 
 export type SavingsEntry = typeof savingsEntries.$inferSelect;
 export type NewSavingsEntry = typeof savingsEntries.$inferInsert;
+
+// ============================================================================
+// MARKET CACHE - CSE API Response Caching
+// ============================================================================
+export const marketCache = pgTable("market_cache", {
+  key: varchar("key", { length: 255 }).primaryKey(), // e.g., "MARKET_ALL", "MARKET_STATUS", "STOCK_JKH"
+  data: json("data").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type MarketCache = typeof marketCache.$inferSelect;
+export type NewMarketCache = typeof marketCache.$inferInsert;

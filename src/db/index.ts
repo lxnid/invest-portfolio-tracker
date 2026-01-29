@@ -8,27 +8,27 @@ import * as schema from "./schema";
 // to work in non-browser environments like Cloudflare Workers
 neonConfig.webSocketConstructor = ws;
 
-// Lazy initialization for Cloudflare Workers compatibility
-let _db: ReturnType<typeof drizzle> | null = null;
+// In development/local environment, we create fresh connections per request
+// to avoid "Connection terminated unexpectedly" errors from idle timeouts.
+// The pool is NOT cached as a singleton because Neon has aggressive idle timeouts.
 
-function getDb() {
-  if (_db) return _db;
-
+function createDb() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error("DATABASE_URL environment variable is required");
   }
 
-  // Create the Neon WebSocket Pool
+  // Create a new Pool for each request context
+  // Neon's serverless driver is designed for this pattern
   const pool = new Pool({ connectionString });
-  _db = drizzle(pool, { schema });
-  return _db;
+  return drizzle(pool, { schema });
 }
 
-// Export a proxy that lazily initializes the db
+// Export a proxy that creates a fresh db connection on each access
+// This is the recommended pattern for serverless environments with Neon
 export const db = new Proxy({} as ReturnType<typeof drizzle>, {
   get(_, prop) {
-    const database = getDb();
+    const database = createDb();
     const value = (database as any)[prop];
     // Bind methods to the database instance to preserve context
     if (typeof value === "function") {

@@ -22,11 +22,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if refresh is requested
-    const searchParams = request.nextUrl.searchParams;
-    const forceRefresh = searchParams.get("refresh") === "true";
-
-    // First, always check cache
+    // First, always check cache for fallback purposes
     let cachedData = null;
     let cachedAt: Date | null = null;
     try {
@@ -44,22 +40,11 @@ export async function GET(request: NextRequest) {
       console.error("Failed to fetch from market cache:", cacheError);
     }
 
-    // CACHE-FIRST STRATEGY:
-    // If we have cached data and not forcing refresh, return it immediately
-    // This makes the page load instantly
-    if (cachedData && !forceRefresh) {
-      console.log("Serving market data from cache (cache-first strategy)");
-      return NextResponse.json({
-        data: cachedData,
-        errors: { fromCache: true, cachedAt: cachedAt?.toISOString() },
-      });
-    }
-
-    // Only fetch from API if:
-    // 1. No cache exists, OR
-    // 2. Refresh was explicitly requested
+    // API-FIRST STRATEGY:
+    // Always fetch fresh data from API for accuracy.
+    // Cache is only used as fallback when API fails.
     console.log(
-      forceRefresh ? "Force refresh requested" : "No cache, fetching from API",
+      "Fetching fresh market data from API (accuracy-first strategy)",
     );
 
     try {

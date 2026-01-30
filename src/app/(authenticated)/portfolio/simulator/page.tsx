@@ -30,8 +30,10 @@ import {
 import { useMarketData, useSettings } from "@/lib/hooks";
 import {
   calculateAllocation,
-  StockInput,
+  StockEntry,
+  Tranche,
   SimulationResult,
+  CombinedStockResult,
 } from "@/lib/simulator";
 import { Badge } from "@/components/ui/badge";
 
@@ -43,11 +45,14 @@ export default function PortfolioSimulatorPage() {
   const [investmentCapital, setInvestmentCapital] = useState<string>("");
   const [step, setStep] = useState<number>(10);
 
-  // Stock Inputs
-  const [stocks, setStocks] = useState<StockInput[]>([]);
+  // Stock Entries (with nested tranches)
+  const [stocks, setStocks] = useState<StockEntry[]>([]);
 
   // Simulation Results
   const [results, setResults] = useState<SimulationResult[] | null>(null);
+  const [combinedResults, setCombinedResults] = useState<
+    CombinedStockResult[] | null
+  >(null);
   const [simulationSummary, setSimulationSummary] = useState<{
     totalCost: number;
     totalFees: number;
@@ -169,39 +174,140 @@ export default function PortfolioSimulatorPage() {
   }, []);
 
   const handleAddStock = (stock: any) => {
-    // Check if already added
-    if (stocks.find((s) => s.symbol === stock.symbol)) return;
+    // Check if this symbol already exists
+    const existingStock = stocks.find((s) => s.symbol === stock.symbol);
 
-    // Distribute remaining allocation equally? Or just defaults.
-    // Let's default to a split or 0
+    if (existingStock) {
+      // Add a new tranche to the existing stock
+      handleAddTranche(existingStock.id, stock.price);
+    } else {
+      // Create new stock entry with one default tranche
+      const stockId = `${stock.symbol}-${Date.now()}`;
+      const trancheId = `${stockId}-t1`;
 
-    setStocks((prev) => [
-      ...prev,
-      {
-        symbol: stock.symbol,
-        price: stock.price,
-        allocationPercent: 0,
-        tranchePercent: 100,
-        isPriority: false,
-      },
-    ]);
+      setStocks((prev) => [
+        ...prev,
+        {
+          id: stockId,
+          symbol: stock.symbol,
+          allocationPercent: 0,
+          isPriority: false,
+          tranches: [
+            {
+              id: trancheId,
+              price: stock.price,
+              percent: 100, // Single tranche gets 100% of this stock's allocation
+              label: undefined,
+            },
+          ],
+        },
+      ]);
+    }
+
     setSearchQuery("");
     setShowSuggestions(false);
-    setResults(null); // Reset results on change
+    setResults(null);
+    setCombinedResults(null);
   };
 
-  const updateStock = (index: number, updates: Partial<StockInput>) => {
-    setStocks((prev) => {
-      const copy = [...prev];
-      copy[index] = { ...copy[index], ...updates };
-      return copy;
-    });
+  const handleAddTranche = (stockId: string, defaultPrice?: number) => {
+    setStocks((prev) =>
+      prev.map((stock) => {
+        if (stock.id !== stockId) return stock;
+
+        const trancheNum = stock.tranches.length + 1;
+        const newTrancheId = `${stockId}-t${trancheNum}-${Date.now()}`;
+
+        // Redistribute percentages evenly
+        const newPercent = Math.floor(100 / (stock.tranches.length + 1));
+        const updatedTranches = stock.tranches.map((t) => ({
+          ...t,
+          percent: newPercent,
+        }));
+
+        // Give remainder to new tranche
+        const remainder = 100 - newPercent * stock.tranches.length;
+
+        return {
+          ...stock,
+          tranches: [
+            ...updatedTranches,
+            {
+              id: newTrancheId,
+              price: defaultPrice || stock.tranches[0]?.price || 0,
+              percent: remainder,
+              label: `Tranche ${trancheNum}`,
+            },
+          ],
+        };
+      }),
+    );
     setResults(null);
+    setCombinedResults(null);
   };
 
-  const removeStock = (index: number) => {
-    setStocks((prev) => prev.filter((_, i) => i !== index));
+  const updateStock = (
+    stockId: string,
+    updates: Partial<Omit<StockEntry, "tranches">>,
+  ) => {
+    setStocks((prev) =>
+      prev.map((stock) =>
+        stock.id === stockId ? { ...stock, ...updates } : stock,
+      ),
+    );
     setResults(null);
+    setCombinedResults(null);
+  };
+
+  const updateTranche = (
+    stockId: string,
+    trancheId: string,
+    updates: Partial<Tranche>,
+  ) => {
+    setStocks((prev) =>
+      prev.map((stock) => {
+        if (stock.id !== stockId) return stock;
+        return {
+          ...stock,
+          tranches: stock.tranches.map((t) =>
+            t.id === trancheId ? { ...t, ...updates } : t,
+          ),
+        };
+      }),
+    );
+    setResults(null);
+    setCombinedResults(null);
+  };
+
+  const removeTranche = (stockId: string, trancheId: string) => {
+    setStocks((prev) =>
+      prev
+        .map((stock) => {
+          if (stock.id !== stockId) return stock;
+          const remaining = stock.tranches.filter((t) => t.id !== trancheId);
+          // If no tranches left, return null to filter out
+          if (remaining.length === 0) return null as any;
+          // Redistribute percentages
+          const perTranche = Math.floor(100 / remaining.length);
+          const last = 100 - perTranche * (remaining.length - 1);
+          return {
+            ...stock,
+            tranches: remaining.map((t, i) => ({
+              ...t,
+              percent: i === remaining.length - 1 ? last : perTranche,
+            })),
+          };
+        })
+        .filter(Boolean),
+    );
+    setResults(null);
+    setCombinedResults(null);
+  };
+
+  const removeStock = (stockId: string) => {
+    setStocks((prev) => prev.filter((s) => s.id !== stockId));
+    setResults(null);
+    setCombinedResults(null);
   };
 
   const handleRunSimulation = () => {
@@ -210,6 +316,7 @@ export default function PortfolioSimulatorPage() {
 
     const output = calculateAllocation(capital, stocks, step);
     setResults(output.results);
+    setCombinedResults(output.combinedResults);
     setSimulationSummary({
       totalCost: output.totalCost,
       totalFees: output.totalFees,
@@ -217,10 +324,15 @@ export default function PortfolioSimulatorPage() {
     });
   };
 
+  // Sum of target allocations (how much capital is designated to each entry)
   const totalAllocation = stocks.reduce(
     (sum, s) => sum + s.allocationPercent,
     0,
   );
+
+  // Effective investment = sum of all allocations (100% of each stock's allocation now)
+  // Since tranches within each stock sum to 100%, effective = total allocation
+  const effectiveInvestment = totalAllocation;
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
@@ -328,56 +440,76 @@ export default function PortfolioSimulatorPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-[#a8a8a8]">Asset Allocation</Label>
-                  <div
-                    className={`text-sm font-mono ${totalAllocation > 100 ? "text-[#f87171]" : totalAllocation === 100 ? "text-[#4ade80]" : "text-[#facc15]"}`}
-                  >
-                    Total: {totalAllocation}%
+                  <div className="flex items-center gap-3 text-sm font-mono">
+                    <span
+                      className={`${totalAllocation > 100 ? "text-[#f87171]" : totalAllocation === 100 ? "text-[#4ade80]" : "text-[#facc15]"}`}
+                    >
+                      Total: {totalAllocation}%
+                    </span>
+                    <span className="text-[#666666]">|</span>
+                    <span
+                      className="text-[#5eead4]"
+                      title="Effective investment considering tranche %"
+                    >
+                      Invest: {effectiveInvestment.toFixed(1)}%
+                    </span>
                   </div>
                 </div>
 
-                {stocks.map((stock, index) => (
+                {stocks.map((stock) => (
                   <div
-                    key={stock.symbol}
-                    className="p-3 bg-[#262626] rounded-lg border border-[#333333] animate-in fade-in slide-in-from-bottom-2"
+                    key={stock.id}
+                    className="p-4 bg-[#262626] rounded-lg border border-[#333333] animate-in fade-in slide-in-from-bottom-2"
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    {/* Stock Header */}
+                    <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded bg-[#333333] flex items-center justify-center font-bold text-[#f5f5f5]">
+                        <div className="h-10 w-10 rounded bg-[#333333] flex items-center justify-center font-bold text-[#f5f5f5] text-lg">
                           {stock.symbol[0]}
                         </div>
                         <div>
-                          <div className="font-bold text-[#f5f5f5]">
-                            {stock.symbol}
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[#f5f5f5] text-lg">
+                              {stock.symbol}
+                            </span>
+                            {stock.tranches.length > 1 && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs text-[#e879f9] border-[#e879f9]/30"
+                              >
+                                {stock.tranches.length} tranches
+                              </Badge>
+                            )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-[#666666]">LKR</span>
-                            <Input
-                              type="number"
-                              value={stock.price}
-                              onChange={(e) => {
-                                const newPrice =
-                                  parseFloat(e.target.value) || 0;
-                                updateStock(index, { price: newPrice });
-                              }}
-                              className="h-6 w-24 text-xs font-mono bg-[#1e1e1e] border-[#444444] px-2 py-0"
-                              step="0.01"
-                            />
+                          <div className="text-xs text-[#666666]">
+                            {stock.allocationPercent}% of capital
                           </div>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-[#666666] hover:text-[#f87171]"
-                        onClick={() => removeStock(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs text-[#5eead4] hover:text-[#5eead4]/80"
+                          onClick={() => handleAddTranche(stock.id)}
+                        >
+                          + Tranche
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-[#666666] hover:text-[#f87171]"
+                          onClick={() => removeStock(stock.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    {/* Stock-level Controls */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center mb-4 pb-4 border-b border-[#333333]">
                       {/* Target Allocation */}
-                      <div className="md:col-span-5 space-y-1">
+                      <div className="md:col-span-8 space-y-1">
                         <div className="flex justify-between text-xs">
                           <span className="text-[#a8a8a8]">
                             Target Allocation
@@ -391,54 +523,119 @@ export default function PortfolioSimulatorPage() {
                           max={100}
                           step={1}
                           onValueChange={(vals) =>
-                            updateStock(index, { allocationPercent: vals[0] })
+                            updateStock(stock.id, {
+                              allocationPercent: vals[0],
+                            })
                           }
                           className="py-1"
                         />
                       </div>
 
-                      {/* Tranche % */}
-                      <div className="md:col-span-4 space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-[#a8a8a8]">
-                            Initial Tranche
-                          </span>
-                          <span className="font-mono text-[#e879f9]">
-                            {stock.tranchePercent}%
-                          </span>
-                        </div>
-                        <Slider
-                          value={[stock.tranchePercent]}
-                          max={100}
-                          step={5}
-                          onValueChange={(vals) =>
-                            updateStock(index, { tranchePercent: vals[0] })
-                          }
-                          className="py-1 [&_.relative_span]:bg-[#e879f9]"
-                        />
-                      </div>
-
                       {/* Priority */}
-                      <div className="md:col-span-3 flex justify-end">
+                      <div className="md:col-span-4 flex justify-end">
                         <div className="flex items-center space-x-2">
                           <Checkbox
-                            id={`priority-${stock.symbol}`}
+                            id={`priority-${stock.id}`}
                             checked={stock.isPriority}
                             onCheckedChange={(checked: boolean) =>
-                              updateStock(index, {
-                                isPriority: checked,
-                              })
+                              updateStock(stock.id, { isPriority: checked })
                             }
                             className="border-[#666666] data-[state=checked]:bg-[#5eead4] data-[state=checked]:text-black"
                           />
                           <label
-                            htmlFor={`priority-${stock.symbol}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[#a8a8a8]"
+                            htmlFor={`priority-${stock.id}`}
+                            className="text-sm font-medium text-[#a8a8a8]"
                           >
                             Priority
                           </label>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Nested Tranches */}
+                    <div className="space-y-3">
+                      {stock.tranches.map((tranche, idx) => (
+                        <div
+                          key={tranche.id}
+                          className="pl-4 border-l-2 border-[#444444] py-2"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-[#666666]">
+                                {idx + 1}.
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-[#666666]">
+                                  @
+                                </span>
+                                <Input
+                                  type="number"
+                                  value={tranche.price}
+                                  onChange={(e) =>
+                                    updateTranche(stock.id, tranche.id, {
+                                      price: parseFloat(e.target.value) || 0,
+                                    })
+                                  }
+                                  className="h-6 w-20 text-xs font-mono bg-[#1e1e1e] border-[#444444] px-2"
+                                  step="0.01"
+                                />
+                              </div>
+                              <Input
+                                type="text"
+                                placeholder="Label"
+                                value={tranche.label || ""}
+                                onChange={(e) =>
+                                  updateTranche(stock.id, tranche.id, {
+                                    label: e.target.value || undefined,
+                                  })
+                                }
+                                className="h-6 w-24 text-xs bg-[#1e1e1e] border-[#444444] px-2"
+                              />
+                            </div>
+                            {stock.tranches.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 text-[#666666] hover:text-[#f87171]"
+                                onClick={() =>
+                                  removeTranche(stock.id, tranche.id)
+                                }
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-[#a8a8a8] w-20">
+                              {tranche.percent}% of alloc
+                            </span>
+                            <Slider
+                              value={[tranche.percent]}
+                              max={100}
+                              step={5}
+                              onValueChange={(vals) =>
+                                updateTranche(stock.id, tranche.id, {
+                                  percent: vals[0],
+                                })
+                              }
+                              className="flex-1 py-1 [&_.relative_span]:bg-[#e879f9]"
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Tranche % Validation Warning */}
+                      {stock.tranches.reduce((sum, t) => sum + t.percent, 0) !==
+                        100 && (
+                        <div className="text-xs text-[#f87171] pl-4">
+                          ⚠ Tranche percentages sum to{" "}
+                          {stock.tranches.reduce(
+                            (sum, t) => sum + t.percent,
+                            0,
+                          )}
+                          % (should be 100%)
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -553,52 +750,85 @@ export default function PortfolioSimulatorPage() {
                 </CardContent>
               </Card>
 
-              {/* Detailed List */}
+              {/* Combined Results - Grouped by Symbol */}
               <div className="space-y-3">
-                {results.map((res) => (
+                {combinedResults?.map((combined) => (
                   <Card
-                    key={res.symbol}
+                    key={combined.symbol}
                     className="border-[#333333] bg-[#1e1e1e] hover:bg-[#262626] transition-colors"
                   >
                     <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-2">
+                      {/* Header with symbol and totals */}
+                      <div className="flex justify-between items-start mb-3">
                         <div>
-                          <div className="font-bold text-[#f5f5f5] text-lg">
-                            {res.symbol}
-                          </div>
-                          <div className="text-xs text-[#a8a8a8] flex items-center gap-1">
-                            Target: {Math.round(res.targetShares)} sh
-                            {res.targetShares !== res.optimizedShares && (
-                              <span className="text-[#e879f9] ml-1">
-                                → {res.optimizedShares} sh
-                              </span>
+                          <div className="font-bold text-[#f5f5f5] text-lg flex items-center gap-2">
+                            {combined.symbol}
+                            {combined.entries.length > 1 && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs text-[#e879f9] border-[#e879f9]/30"
+                              >
+                                {combined.entries.length} tranches
+                              </Badge>
                             )}
+                          </div>
+                          <div className="text-xs text-[#a8a8a8] mt-1">
+                            Total: {combined.totalShares} shares @ avg LKR{" "}
+                            {combined.avgPrice.toFixed(2)}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-mono text-[#f5f5f5] font-bold">
-                            {res.cost.toLocaleString(undefined, {
+                          <div className="font-mono text-[#f5f5f5] font-bold text-lg">
+                            {combined.totalCost.toLocaleString(undefined, {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}
                           </div>
                           <div className="text-xs text-[#666666] font-mono">
-                            {res.baseCost.toLocaleString()} +{" "}
+                            {combined.totalBaseCost.toLocaleString()} +{" "}
                             <span className="text-[#f97316]">
-                              {res.fees.toFixed(2)}
+                              {combined.totalFees.toFixed(2)}
                             </span>
-                          </div>
-                          <div className="text-xs text-[#5eead4]">
-                            {res.actualPercent.toFixed(1)}%
                           </div>
                         </div>
                       </div>
 
-                      {/* Simple Visual Bar */}
-                      <div className="h-1.5 w-full bg-[#333333] rounded-full overflow-hidden">
+                      {/* Individual Tranches (if more than 1) */}
+                      {combined.entries.length > 1 && (
+                        <div className="mt-3 pt-3 border-t border-[#333333] space-y-2">
+                          {combined.entries.map((entry, idx) => (
+                            <div
+                              key={entry.trancheId}
+                              className="flex justify-between items-center text-sm"
+                            >
+                              <div className="text-[#a8a8a8]">
+                                <span className="text-[#666666]">├─</span> @
+                                {entry.price.toFixed(2)}
+                                {entry.trancheLabel && (
+                                  <span className="text-[#e879f9] ml-2">
+                                    ({entry.trancheLabel})
+                                  </span>
+                                )}
+                              </div>
+                              <div className="font-mono text-[#f5f5f5]">
+                                {entry.optimizedShares} sh →{" "}
+                                {entry.cost.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Visual Bar */}
+                      <div className="h-1.5 w-full bg-[#333333] rounded-full overflow-hidden mt-3">
                         <div
                           className="h-full bg-linear-to-r from-teal-500 to-emerald-500"
-                          style={{ width: `${res.actualPercent}%` }}
+                          style={{
+                            width: `${(combined.totalCost / (simulationSummary?.totalCost || 1)) * 100}%`,
+                          }}
                         />
                       </div>
                     </CardContent>

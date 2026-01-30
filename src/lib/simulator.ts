@@ -1,13 +1,37 @@
-export interface StockInput {
+// Tranche represents a single price-point entry within a stock
+export interface Tranche {
+  id: string;
+  price: number;
+  percent: number; // % of this stock's allocation (should sum to 100)
+  label?: string; // "Initial", "Price Drop", etc.
+}
+
+// StockEntry represents a stock with its total allocation and nested tranches
+export interface StockEntry {
+  id: string;
+  symbol: string;
+  allocationPercent: number; // % of TOTAL capital for this stock
+  isPriority: boolean;
+  tranches: Tranche[]; // Price points for staged buying
+}
+
+// Legacy interface for internal calculation (flattened from StockEntry)
+export interface FlattenedTranche {
+  entryId: string; // StockEntry.id
+  trancheId: string; // Tranche.id
   symbol: string;
   price: number;
-  allocationPercent: number; // 0-100
-  tranchePercent: number; // 0-100 (staged investment)
+  effectiveAllocation: number; // (stock.allocationPercent * tranche.percent / 100)
   isPriority: boolean;
+  label?: string;
 }
 
 export interface SimulationResult {
+  entryId: string; // Maps back to StockEntry.id
+  trancheId: string; // Maps back to Tranche.id
   symbol: string;
+  trancheLabel?: string;
+  price: number; // Entry price for this tranche
   targetShares: number; // Raw fractional shares
   optimizedShares: number; // Rounded shares
   cost: number; // Total cost including fees
@@ -16,8 +40,19 @@ export interface SimulationResult {
   actualPercent: number; // Of the total *invested* amount
 }
 
+export interface CombinedStockResult {
+  symbol: string;
+  entries: SimulationResult[]; // Individual tranches
+  totalShares: number;
+  totalBaseCost: number;
+  totalFees: number;
+  totalCost: number;
+  avgPrice: number; // Weighted average price
+}
+
 export interface SimulationOutput {
   results: SimulationResult[];
+  combinedResults: CombinedStockResult[]; // Grouped by symbol
   totalCost: number;
   totalFees: number;
   remainingCapital: number;
@@ -28,46 +63,49 @@ const FEE_RATE = 0.0112;
 
 export function calculateAllocation(
   totalCapital: number,
-  stocks: StockInput[],
+  stocks: StockEntry[],
   step: number = 10,
 ): SimulationOutput {
   const results: SimulationResult[] = [];
   let currentTotalCost = 0;
 
-  // 1. Calculate Initial Targets & Effective Budget
-  // The user specifies "Tranche Percent" which implies a specific budget for this run.
-  // We should not optimize up to 'totalCapital' (User's Total Portfolio Value) if the Tranche is only a fraction.
-  // We calculate the 'Effective Budget' as the sum of all target amounts for this tranche.
+  // 1. Flatten StockEntry[] into FlattenedTranche[] for processing
+  const flattenedTranches: FlattenedTranche[] = [];
+  for (const stock of stocks) {
+    for (const tranche of stock.tranches) {
+      flattenedTranches.push({
+        entryId: stock.id,
+        trancheId: tranche.id,
+        symbol: stock.symbol,
+        price: tranche.price,
+        effectiveAllocation: (stock.allocationPercent * tranche.percent) / 100,
+        isPriority: stock.isPriority,
+        label: tranche.label,
+      });
+    }
+  }
 
+  // 2. Calculate Initial Targets & Effective Budget
   let effectiveBudget = 0;
 
-  const initialCalculations = stocks.map((stock) => {
-    // How much *of the total capital* is allocated to this stock?
-    const fullAllocationAmt = totalCapital * (stock.allocationPercent / 100);
-    // How much of that allocation are we investing *now*?
-    const targetAmt = fullAllocationAmt * (stock.tranchePercent / 100);
-
+  const initialCalculations = flattenedTranches.map((tranche) => {
+    // How much of capital is allocated to this tranche?
+    const targetAmt = totalCapital * (tranche.effectiveAllocation / 100);
     effectiveBudget += targetAmt;
 
     // Raw shares needed to hit that target amount
-    // Avoid division by zero
-    const rawShares = stock.price > 0 ? targetAmt / stock.price : 0;
+    const rawShares = tranche.price > 0 ? targetAmt / tranche.price : 0;
 
-    // Initial rounding
-    // User requirement: "number of stocks that can be bought to a nearest 10 multiple"
-    // "Can be bought" implies we generally shouldn't exceed the budget (Floor).
-    // "Remaining will be left out" supports the conservative approach.
+    // Initial rounding (floor to step)
     let roundedShares = Math.floor(rawShares / step) * step;
-
-    // Ensure we don't go negative
     if (roundedShares < 0) roundedShares = 0;
 
-    const baseCost = roundedShares * stock.price;
+    const baseCost = roundedShares * tranche.price;
     const fees = baseCost * FEE_RATE;
     const totalCost = baseCost + fees;
 
     return {
-      ...stock,
+      ...tranche,
       targetAmt,
       rawShares,
       roundedShares,
@@ -82,36 +120,24 @@ export function calculateAllocation(
     0,
   );
 
-  // 2. Adjustments (Skewing) to fit Effective Budget
-  // We respect 'effectiveBudget' as the soft target, but 'totalCapital' is the hard limit (though usually effectiveBudget <= totalCapital).
-
-  // Clone to modify
+  // 3. Adjustments to fit Effective Budget
   let workingSet = [...initialCalculations];
 
   // Case A: Over Budget -> Reduce Shares
-  // Usually with Math.floor we are under budget, BUT if step is large or prices vary, maybe?
-  // Or if we decide to treat 'effectiveBudget' strictly.
-
   while (currentTotalCost > effectiveBudget) {
-    // Find the best candidate to reduce
     workingSet.sort((a, b) => {
-      // If one is priority and other isn't, priority comes later (less likely to be cut)
       if (a.isPriority && !b.isPriority) return 1;
       if (!a.isPriority && b.isPriority) return -1;
-
       const diffA = a.currentCost - a.targetAmt;
       const diffB = b.currentCost - b.targetAmt;
-      return diffB - diffA; // Largest diff first
+      return diffB - diffA;
     });
 
-    // Try to reduce the first one that has shares >= step
     const candidateIndex = workingSet.findIndex(
       (item) => item.roundedShares >= step,
     );
 
-    if (candidateIndex === -1) {
-      break;
-    }
+    if (candidateIndex === -1) break;
 
     const candidate = workingSet[candidateIndex];
     candidate.roundedShares -= step;
@@ -121,43 +147,29 @@ export function calculateAllocation(
     currentTotalCost -= step * candidate.price * (1 + FEE_RATE);
   }
 
-  // Case B: Under Budget -> Increase Shares?
-  // User: "remaining will be left out to the next tranche"
-  // However, we should try to get as close to the target as possible WITHOUT exceeding it significantly just to be nice?
-  // With Math.floor, we might be consistently under.
-  // If we have enough "remainder" to buy a full step for someone, we should, provided it keeps us <= Effective Budget.
-  // OR at least closest to Effective Budget without going over 'totalCapital' (which is minimal constraint here).
-  // Actually, strictly respecting 'effectiveBudget' means we don't add if it exceeds effectiveBudget.
-
+  // Case B: Under Budget -> Increase Shares
   let improvementPossible = true;
   while (improvementPossible) {
     improvementPossible = false;
     const remainingInBudget = effectiveBudget - currentTotalCost;
 
-    // Candidates: Anyone who can accept 'step' shares without exceeding Effective Budget
-    // Include fees in the cost check
     const validCandidates = workingSet.filter(
       (item) => step * item.price * (1 + FEE_RATE) <= remainingInBudget,
     );
 
     if (validCandidates.length === 0) break;
 
-    // Criteria:
-    // 1. Most "Underweight" (TargetAmt - CurrentCost)
-    // 2. Priority
     validCandidates.sort((a, b) => {
       const diffA = a.targetAmt - a.currentCost;
       const diffB = b.targetAmt - b.currentCost;
 
-      if (a.isPriority && !b.isPriority) return -1; // Priority first
+      if (a.isPriority && !b.isPriority) return -1;
       if (!a.isPriority && b.isPriority) return 1;
 
-      return diffB - diffA; // Largest underweight first
+      return diffB - diffA;
     });
 
     const best = validCandidates[0];
-
-    // We add to Best
     best.roundedShares += step;
     best.currentBaseCost = best.roundedShares * best.price;
     best.currentFees = best.currentBaseCost * FEE_RATE;
@@ -166,20 +178,24 @@ export function calculateAllocation(
     improvementPossible = true;
   }
 
-  // 3. Finalize Output
+  // 4. Finalize Output
   results.push(
     ...workingSet.map((item) => ({
+      entryId: item.entryId,
+      trancheId: item.trancheId,
       symbol: item.symbol,
+      trancheLabel: item.label,
+      price: item.price,
       targetShares: item.rawShares,
       optimizedShares: item.roundedShares,
       baseCost: item.currentBaseCost,
       fees: item.currentFees,
       cost: item.currentCost,
-      actualPercent: 0, // Will calc below
+      actualPercent: 0,
     })),
   );
 
-  // Calculate actual percentages based on *invested* amount (total including fees)
+  // Calculate actual percentages
   const finalInvested = results.reduce((sum, r) => sum + r.cost, 0);
   const totalFees = results.reduce((sum, r) => sum + r.fees, 0);
 
@@ -187,10 +203,39 @@ export function calculateAllocation(
     r.actualPercent = finalInvested > 0 ? (r.cost / finalInvested) * 100 : 0;
   });
 
+  // 5. Compute Combined Results (grouped by symbol)
+  const symbolMap = new Map<string, SimulationResult[]>();
+  for (const r of results) {
+    if (!symbolMap.has(r.symbol)) {
+      symbolMap.set(r.symbol, []);
+    }
+    symbolMap.get(r.symbol)!.push(r);
+  }
+
+  const combinedResults: CombinedStockResult[] = [];
+  for (const [symbol, entries] of symbolMap) {
+    const totalShares = entries.reduce((sum, e) => sum + e.optimizedShares, 0);
+    const totalBaseCost = entries.reduce((sum, e) => sum + e.baseCost, 0);
+    const totalFeesForSymbol = entries.reduce((sum, e) => sum + e.fees, 0);
+    const totalCostForSymbol = entries.reduce((sum, e) => sum + e.cost, 0);
+    const avgPrice = totalShares > 0 ? totalBaseCost / totalShares : 0;
+
+    combinedResults.push({
+      symbol,
+      entries,
+      totalShares,
+      totalBaseCost,
+      totalFees: totalFeesForSymbol,
+      totalCost: totalCostForSymbol,
+      avgPrice,
+    });
+  }
+
   return {
     results,
+    combinedResults,
     totalCost: finalInvested,
     totalFees,
-    remainingCapital: totalCapital - finalInvested, // Remaining from the GRAND total (User's context)
+    remainingCapital: totalCapital - finalInvested,
   };
 }

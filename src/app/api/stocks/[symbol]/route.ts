@@ -7,7 +7,7 @@ import {
 } from "@/db/schema";
 import { eq, and, asc, desc } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
-import { getCompanyInfo, getMarketStatus } from "@/lib/cse-api";
+import { getCompanyInfo, getMarketStatus, getStockPrice } from "@/lib/cse-api";
 
 interface RouteParams {
   params: Promise<{ symbol: string }>;
@@ -31,9 +31,11 @@ export async function GET(request: Request, { params }: RouteParams) {
       .limit(1);
 
     // 2. Fetch external market data
-    const [infoRes, statusRes] = await Promise.all([
+    // Use both getCompanyInfo (for metadata) and getStockPrice (for accurate price matching portfolio view)
+    const [infoRes, statusRes, priceRes] = await Promise.all([
       getCompanyInfo(symbol),
       getMarketStatus(),
+      getStockPrice(symbol),
     ]);
 
     const externalInfo = infoRes.data?.reqSymbolInfo;
@@ -93,8 +95,12 @@ export async function GET(request: Request, { params }: RouteParams) {
       }
     }
 
+    // Get price from detailedTrades endpoint (same as portfolio view) for consistency
+    const tradeData = priceRes.data?.reqDetailTrades?.[0];
+    const currentPrice = tradeData?.price ?? externalInfo?.lastTradedPrice ?? 0;
+
     const marketData = {
-      price: externalInfo?.lastTradedPrice || 0,
+      price: currentPrice,
       change: externalInfo?.change || 0,
       percentChange: externalInfo?.changePercentage || 0,
       volume: externalInfo?.tdyShareVolume || 0,

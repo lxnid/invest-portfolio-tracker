@@ -20,7 +20,12 @@ function createDb() {
 
   // Create a new Pool for each request context
   // Neon's serverless driver is designed for this pattern
-  const pool = new Pool({ connectionString });
+  const pool = new Pool({
+    connectionString,
+    max: 10, // Maximum connections in the pool
+    idleTimeoutMillis: 30000, // 30 seconds idle timeout
+    connectionTimeoutMillis: 10000, // 10 seconds connection timeout
+  });
   return drizzle(pool, { schema });
 }
 

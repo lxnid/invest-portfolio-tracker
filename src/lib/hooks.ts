@@ -138,7 +138,7 @@ async function fetchMarketData(): Promise<MarketData> {
   return json.data;
 }
 
-async function fetchStockPrice(
+export async function fetchStockPrice(
   symbol: string,
 ): Promise<{ price: number; change: number; percentChange: number } | null> {
   const res = await fetch(`/api/cse/stock/${symbol}`);

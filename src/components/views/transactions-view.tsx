@@ -31,6 +31,7 @@ import {
   useSettings,
   useHoldings,
   type Holding,
+  fetchStockPrice,
 } from "@/lib/hooks";
 
 type TransactionType = "BUY" | "SELL" | "DIVIDEND";
@@ -430,7 +431,8 @@ function TransactionModal({
       .slice(0, 5);
   }, [marketData, formData.symbol]);
 
-  const handleSelectStock = (stock: any) => {
+  const handleSelectStock = async (stock: any) => {
+    // Initial set with potentially stale price
     setFormData((prev) => ({
       ...prev,
       symbol: stock.symbol,
@@ -439,6 +441,19 @@ function TransactionModal({
       price: stock.price.toString(),
     }));
     setShowSuggestions(false);
+
+    // Fetch real-time accurate price
+    try {
+      const freshData = await fetchStockPrice(stock.symbol);
+      if (freshData?.price) {
+        setFormData((prev) => ({
+          ...prev,
+          price: freshData.price.toString(),
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch fresh price", error);
+    }
   };
 
   const handleAllocationChange = (value: number[]) => {

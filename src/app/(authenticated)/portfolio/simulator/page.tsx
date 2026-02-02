@@ -27,7 +27,7 @@ import {
   Save,
   FolderOpen,
 } from "lucide-react";
-import { useMarketData, useSettings } from "@/lib/hooks";
+import { useMarketData, useSettings, fetchStockPrice } from "@/lib/hooks";
 import {
   calculateAllocation,
   StockEntry,
@@ -173,15 +173,26 @@ export default function PortfolioSimulatorPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleAddStock = (stock: any) => {
+  const handleAddStock = async (stock: any) => {
+    // Fetch fresh price first for accuracy
+    let currentPrice = stock.price;
+    try {
+      const freshData = await fetchStockPrice(stock.symbol);
+      if (freshData?.price) {
+        currentPrice = freshData.price;
+      }
+    } catch (e) {
+      console.error("Failed to fetch fresh price", e);
+    }
+
     // Check if this symbol already exists
     const existingStock = stocks.find((s) => s.symbol === stock.symbol);
 
     if (existingStock) {
-      // Add a new tranche to the existing stock
-      handleAddTranche(existingStock.id, stock.price);
+      // Add a new tranche to the existing stock using fresh price
+      handleAddTranche(existingStock.id, currentPrice);
     } else {
-      // Create new stock entry with one default tranche
+      // Create new stock entry with one default tranche using fresh price
       const stockId = `${stock.symbol}-${Date.now()}`;
       const trancheId = `${stockId}-t1`;
 
@@ -195,7 +206,7 @@ export default function PortfolioSimulatorPage() {
           tranches: [
             {
               id: trancheId,
-              price: stock.price,
+              price: currentPrice,
               percent: 100, // Single tranche gets 100% of this stock's allocation
               label: undefined,
             },

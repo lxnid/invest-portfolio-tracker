@@ -33,6 +33,7 @@ import {
 import {
   useHoldings,
   useMarketData,
+  useHoldingPrices,
   useCreateTransaction,
   useDeleteHolding,
   useSettings,
@@ -69,7 +70,8 @@ export function PortfolioView() {
 
   // Hooks
   const { data: holdings, isLoading: holdingsLoading } = useHoldings();
-  const { data: marketData } = useMarketData();
+  const { data: holdingPrices } = useHoldingPrices(); // Lightweight, 30s polling for real-time P/L
+  const { data: marketData } = useMarketData(); // Only used for autocomplete when adding holdings
   const { data: settings, isLoading: settingsLoading } = useSettings();
   const createTransaction = useCreateTransaction();
   const deleteHolding = useDeleteHolding(); // Kept for cleanup if needed, but UI uses transactions now
@@ -96,16 +98,27 @@ export function PortfolioView() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Build price map
+  // Build price map from lightweight holdingPrices (30s refresh for real-time P/L)
+  // Falls back to marketData only if holdingPrices not available yet
   const stockPrices = useMemo(() => {
     const map = new Map<string, number>();
-    if (marketData?.allStocks) {
+
+    // Primary: Use holdingPrices (lightweight, 30s polling)
+    if (holdingPrices?.prices) {
+      for (const [symbol, data] of Object.entries(holdingPrices.prices)) {
+        map.set(symbol, data.price);
+      }
+    }
+
+    // Fallback: If holdingPrices not loaded yet, use marketData
+    if (map.size === 0 && marketData?.allStocks) {
       for (const stock of marketData.allStocks) {
         map.set(stock.symbol, stock.price);
       }
     }
+
     return map;
-  }, [marketData]);
+  }, [holdingPrices, marketData]);
 
   // Stocks for autocomplete
   const availableStocks = useMemo(() => {

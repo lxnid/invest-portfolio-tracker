@@ -198,6 +198,30 @@ export function useStockPrice(symbol: string) {
   });
 }
 
+// Lightweight hook for portfolio prices - only fetches prices for user's holdings
+// Uses 30-second polling for near real-time accuracy
+export function useHoldingPrices() {
+  return useQuery({
+    queryKey: ["holdingPrices"],
+    queryFn: async () => {
+      const res = await fetch("/api/holdings/prices");
+      if (!res.ok) throw new Error("Failed to fetch holding prices");
+      const json = await res.json();
+      return json.data as {
+        prices: Record<
+          string,
+          { price: number; change: number; percentChange: number }
+        >;
+        fetchedAt: string;
+        symbolCount: number;
+      };
+    },
+    staleTime: 30000, // 30 seconds
+    refetchInterval: 30000, // Auto-refresh every 30 seconds for real-time accuracy
+    refetchOnWindowFocus: true, // Refresh when user returns to tab
+  });
+}
+
 export function useStockDetails(symbol: string) {
   return useQuery({
     queryKey: ["stockDetails", symbol],

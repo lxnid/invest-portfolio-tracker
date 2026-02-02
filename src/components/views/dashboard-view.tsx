@@ -13,7 +13,7 @@ import {
   Loader2,
   PiggyBank,
 } from "lucide-react";
-import { useHoldings, useMarketData } from "@/lib/hooks";
+import { useHoldings, useMarketData, useHoldingPrices } from "@/lib/hooks";
 import { LastUpdated } from "@/components/last-updated";
 import { TradingViewWidget } from "@/components/tradingview-widget";
 import {
@@ -88,22 +88,33 @@ function StatCard({
 
 export function DashboardView() {
   const { data: holdings, isLoading: holdingsLoading } = useHoldings();
+  const { data: holdingPrices } = useHoldingPrices(); // 30s polling for real-time P/L
   const {
     data: marketData,
     isLoading: marketLoading,
     dataUpdatedAt,
-  } = useMarketData();
+  } = useMarketData(); // For ASPI, top gainer/loser
 
-  // Build price map from market data
+  // Build price map - prioritize lightweight holdingPrices (30s refresh)
   const stockPrices = useMemo(() => {
     const map = new Map<string, number>();
-    if (marketData?.allStocks) {
+
+    // Primary: Use holdingPrices (lightweight, 30s polling)
+    if (holdingPrices?.prices) {
+      for (const [symbol, data] of Object.entries(holdingPrices.prices)) {
+        map.set(symbol, data.price);
+      }
+    }
+
+    // Fallback: If holdingPrices not loaded yet, use marketData
+    if (map.size === 0 && marketData?.allStocks) {
       for (const stock of marketData.allStocks) {
         map.set(stock.symbol, stock.price);
       }
     }
+
     return map;
-  }, [marketData]);
+  }, [holdingPrices, marketData]);
 
   // Enrich holdings with current prices
   const enrichedHoldings = useMemo(() => {

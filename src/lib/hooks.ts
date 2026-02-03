@@ -98,14 +98,7 @@ export interface MarketData {
     change: number;
     percentChange: number;
   } | null;
-  allStocks: Array<{
-    symbol: string;
-    name: string;
-    price: number;
-    change: number;
-    percentChange: number;
-    volume: number;
-  }>;
+  // allStocks removed as part of optimization
 }
 
 // Fetch functions

@@ -27,7 +27,8 @@ import {
   Save,
   FolderOpen,
 } from "lucide-react";
-import { useMarketData, useSettings, fetchStockPrice } from "@/lib/hooks";
+import { useSettings, fetchStockPrice } from "@/lib/hooks";
+import { ALL_STOCKS } from "@/lib/stocks";
 import {
   calculateAllocation,
   StockEntry,
@@ -40,7 +41,6 @@ import { Badge } from "@/components/ui/badge";
 export default function PortfolioSimulatorPage() {
   // Global State
   const { data: settings } = useSettings();
-  const { data: marketData } = useMarketData();
 
   const [investmentCapital, setInvestmentCapital] = useState<string>("");
   const [step, setStep] = useState<number>(10);
@@ -142,22 +142,16 @@ export default function PortfolioSimulatorPage() {
   }, [settings, investmentCapital]);
 
   // Stocks for autocomplete
-  const availableStocks = useMemo(() => {
-    return marketData?.allStocks || [];
-  }, [marketData]);
-
   const filteredStocks = useMemo(() => {
     if (!searchQuery) return [];
     const query = searchQuery.toLowerCase();
 
-    return availableStocks
-      .filter(
-        (s) =>
-          s.symbol.toLowerCase().includes(query) ||
-          s.name.toLowerCase().includes(query),
-      )
-      .slice(0, 5);
-  }, [availableStocks, searchQuery]);
+    return ALL_STOCKS.filter(
+      (s) =>
+        s.symbol.toLowerCase().includes(query) ||
+        s.name.toLowerCase().includes(query),
+    ).slice(0, 5);
+  }, [searchQuery]);
 
   // Click outside to close suggestions
   useEffect(() => {
@@ -175,7 +169,7 @@ export default function PortfolioSimulatorPage() {
 
   const handleAddStock = async (stock: any) => {
     // Fetch fresh price first for accuracy
-    let currentPrice = stock.price;
+    let currentPrice = 0; // Default to 0 as static list has no price
     try {
       const freshData = await fetchStockPrice(stock.symbol);
       if (freshData?.price) {
@@ -689,7 +683,7 @@ export default function PortfolioSimulatorPage() {
                                 </span>
                               </div>
                               <div className="font-mono text-[#5eead4]">
-                                {stock.price.toFixed(2)}
+                                {/* Price removed */}
                               </div>
                             </div>
                           ))}

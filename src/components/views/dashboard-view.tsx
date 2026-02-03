@@ -107,11 +107,7 @@ export function DashboardView() {
     }
 
     // Fallback: If holdingPrices not loaded yet, use marketData
-    if (map.size === 0 && marketData?.allStocks) {
-      for (const stock of marketData.allStocks) {
-        map.set(stock.symbol, stock.price);
-      }
-    }
+    // Fallback logic removed
 
     return map;
   }, [holdingPrices, marketData]);
@@ -129,18 +125,8 @@ export function DashboardView() {
   );
 
   // Find top gainer and loser from market data
-  const { topGainer, topLoser } = useMemo(() => {
-    if (!marketData?.allStocks || marketData.allStocks.length === 0) {
-      return { topGainer: null, topLoser: null };
-    }
-    const sorted = [...marketData.allStocks].sort(
-      (a, b) => b.percentChange - a.percentChange,
-    );
-    return {
-      topGainer: sorted[0],
-      topLoser: sorted[sorted.length - 1],
-    };
-  }, [marketData]);
+  // Top Gainer/Loser removed
+  const { topGainer, topLoser } = { topGainer: null, topLoser: null };
 
   const isLoading = holdingsLoading || marketLoading;
   const marketOpen = marketData?.marketStatus?.isOpen ?? false;
@@ -220,69 +206,7 @@ export function DashboardView() {
             isLoading={marketLoading}
           />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-zinc-500">
-                Today&apos;s Top Gainer
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {marketLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-              ) : topGainer ? (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Link
-                      href={`/portfolio/${topGainer.symbol}`}
-                      className="block hover:text-blue-500 hover:underline transition-colors"
-                    >
-                      <p className="text-lg font-semibold text-zinc-50">
-                        {topGainer.symbol}
-                      </p>
-                    </Link>
-                    <p className="text-sm text-zinc-500">{topGainer.name}</p>
-                  </div>
-                  <Badge variant="success">
-                    +{(topGainer.percentChange ?? 0).toFixed(2)}%
-                  </Badge>
-                </div>
-              ) : (
-                <span className="text-zinc-500">No data</span>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-zinc-500">
-                Today&apos;s Top Loser
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {marketLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-              ) : topLoser ? (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Link
-                      href={`/portfolio/${topLoser.symbol}`}
-                      className="block hover:text-red-500 hover:underline transition-colors"
-                    >
-                      <p className="text-lg font-semibold text-zinc-50">
-                        {topLoser.symbol}
-                      </p>
-                    </Link>
-                    <p className="text-sm text-zinc-500">{topLoser.name}</p>
-                  </div>
-                  <Badge variant="destructive">
-                    {(topLoser.percentChange ?? 0).toFixed(2)}%
-                  </Badge>
-                </div>
-              ) : (
-                <span className="text-zinc-500">No data</span>
-              )}
-            </CardContent>
-          </Card>
+          {/* Top Gainer/Loser Cards Removed */}
 
           <Card className="border-blue-500/20 col-span-1 md:col-span-2 lg:col-span-3 h-[500px]">
             <CardHeader className="pb-0">

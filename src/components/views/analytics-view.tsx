@@ -22,7 +22,12 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useHoldings, useMarketData, usePortfolioHistory } from "@/lib/hooks";
+import {
+  useHoldings,
+  useMarketData,
+  usePortfolioHistory,
+  useHoldingPrices,
+} from "@/lib/hooks";
 import {
   enrichHoldingsWithPrices,
   calculatePortfolioTotals,
@@ -43,15 +48,21 @@ export function AnalyticsView() {
   const { data: historyData, isLoading: historyLoading } =
     usePortfolioHistory();
 
+  const { data: holdingPrices } = useHoldingPrices();
+
   // Build price map and enrich holdings
   const enrichedHoldings = useMemo(() => {
-    if (!holdings || !marketData?.allStocks) return [];
+    if (!holdings) return [];
     const priceMap = new Map<string, number>();
-    for (const stock of marketData.allStocks) {
-      priceMap.set(stock.symbol, stock.price);
+
+    if (holdingPrices?.prices) {
+      for (const [symbol, data] of Object.entries(holdingPrices.prices)) {
+        priceMap.set(symbol, data.price);
+      }
     }
+
     return enrichHoldingsWithPrices(holdings, priceMap);
-  }, [holdings, marketData]);
+  }, [holdings, holdingPrices]);
 
   const totals = useMemo(
     () => calculatePortfolioTotals(enrichedHoldings),

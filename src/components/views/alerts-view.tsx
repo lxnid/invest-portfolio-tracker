@@ -36,6 +36,7 @@ import {
 import {
   useRules,
   useHoldings,
+  useHoldingPrices,
   useTransactions,
   useMarketData,
   useCreateRule,
@@ -119,14 +120,20 @@ export function AlertsView() {
   const toggleRule = useToggleRule();
 
   // Build price map and enrich holdings
+  const { data: holdingPrices } = useHoldingPrices();
+
   const enrichedHoldings = useMemo(() => {
-    if (!holdings || !marketData?.allStocks) return [];
+    if (!holdings) return [];
     const priceMap = new Map<string, number>();
-    for (const stock of marketData.allStocks) {
-      priceMap.set(stock.symbol, stock.price);
+
+    if (holdingPrices?.prices) {
+      for (const [symbol, data] of Object.entries(holdingPrices.prices)) {
+        priceMap.set(symbol, data.price);
+      }
     }
+
     return enrichHoldingsWithPrices(holdings, priceMap);
-  }, [holdings, marketData]);
+  }, [holdings, holdingPrices]);
 
   // Evaluate rule violations
   const violations = useMemo(() => {

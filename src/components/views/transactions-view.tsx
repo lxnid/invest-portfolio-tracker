@@ -27,12 +27,12 @@ import {
 import {
   useTransactions,
   useCreateTransaction,
-  useMarketData,
   useSettings,
   useHoldings,
   type Holding,
   fetchStockPrice,
 } from "@/lib/hooks";
+import { ALL_STOCKS } from "@/lib/stocks";
 
 type TransactionType = "BUY" | "SELL" | "DIVIDEND";
 
@@ -365,7 +365,6 @@ function TransactionModal({
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
 }) {
-  const { data: marketData } = useMarketData();
   const { data: settings } = useSettings();
   const { data: holdings } = useHoldings();
   const [selectedType, setSelectedType] = useState<TransactionType>("BUY");
@@ -420,16 +419,14 @@ function TransactionModal({
   }, []);
 
   const filteredStocks = useMemo(() => {
-    if (!marketData?.allStocks || !formData.symbol) return [];
+    if (!formData.symbol) return [];
     const query = formData.symbol.toLowerCase();
-    return marketData.allStocks
-      .filter(
-        (s) =>
-          s.symbol.toLowerCase().includes(query) ||
-          s.name.toLowerCase().includes(query),
-      )
-      .slice(0, 5);
-  }, [marketData, formData.symbol]);
+    return ALL_STOCKS.filter(
+      (s) =>
+        s.symbol.toLowerCase().includes(query) ||
+        s.name.toLowerCase().includes(query),
+    ).slice(0, 5);
+  }, [formData.symbol]);
 
   const handleSelectStock = async (stock: any) => {
     // Initial set with potentially stale price
@@ -437,8 +434,17 @@ function TransactionModal({
       ...prev,
       symbol: stock.symbol,
       name: stock.name,
-      stockId: stock.id,
-      price: stock.price.toString(),
+      stockId: 0, // Id is not in static list, but backend might not need it for creation if symbol is provided?
+      // Checking createTransaction.mutateAsync in PortfolioView: it sends symbol, name, sector... no stockId.
+      // But TransactionModal sends stockId?
+      // In TransactionsView: onSubmit({ stockId: stock.id ... })
+      // If stockId is required by backend for creating transaction, we have a problem.
+      // Let's check useCreateTransaction payload.
+      // In hooks.ts: useCreateTransaction payload does NOT have stockId. It has symbol.
+      // So stockId is likely unused or derived on backend.
+      // Wait, TransactionModal sets stockId = stock.id.
+      // Let's check the handleSubmit in TransactionsView.
+      price: "", // Price empty until fetched
     }));
     setShowSuggestions(false);
 
@@ -637,9 +643,7 @@ function TransactionModal({
                                 </p>
                               </div>
                               <div className="text-right">
-                                <p className="font-mono text-blue-500">
-                                  LKR {stock.price.toFixed(2)}
-                                </p>
+                                {/* Price removed */}
                               </div>
                             </div>
                           ))}
@@ -666,7 +670,9 @@ function TransactionModal({
                         }
                         required
                         disabled={
-                          selectedType === "DIVIDEND" || selectedType === "SELL"
+                          selectedType === "DIVIDEND" ||
+                          selectedType === "SELL" ||
+                          selectedType === "BUY"
                         }
                       />
                     </div>

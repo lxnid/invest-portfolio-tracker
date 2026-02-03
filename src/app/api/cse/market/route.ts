@@ -1,10 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import {
-  getMarketStatus,
-  getASPI,
-  getSP20,
-  getAllStockPrices,
-} from "@/lib/cse-api";
+import { getMarketStatus, getASPI, getSP20 } from "@/lib/cse-api";
 import { getSession } from "@/lib/auth";
 import { db } from "@/db";
 import { marketCache } from "@/db/schema";
@@ -48,39 +43,14 @@ export async function GET(request: NextRequest) {
     );
 
     try {
-      const [marketStatus, aspi, sp20, stockPrices] = await Promise.all([
+      const [marketStatus, aspi, sp20] = await Promise.all([
         getMarketStatus(),
         getASPI(),
         getSP20(),
-        getAllStockPrices(),
       ]);
 
       const isDataValid =
-        marketStatus.data &&
-        marketStatus.data.status &&
-        aspi.data &&
-        stockPrices.data?.reqDetailTrades &&
-        stockPrices.data.reqDetailTrades.length > 0;
-
-      // Deduplicate stocks by symbol
-      const stockMap = new Map();
-      if (stockPrices.data?.reqDetailTrades) {
-        for (const trade of stockPrices.data.reqDetailTrades) {
-          const cleanSymbol = trade.symbol?.trim().toUpperCase();
-          if (cleanSymbol && !stockMap.has(cleanSymbol)) {
-            stockMap.set(cleanSymbol, {
-              symbol: cleanSymbol,
-              name: trade.name,
-              price: trade.price,
-              change: trade.change || 0,
-              percentChange: trade.changePercentage || 0,
-              volume: trade.qty || 0,
-              trades: trade.trades || 0,
-              securityId: trade.securityId,
-            });
-          }
-        }
-      }
+        marketStatus.data && marketStatus.data.status && aspi.data;
 
       const responseData = {
         marketStatus: marketStatus.data
@@ -103,14 +73,12 @@ export async function GET(request: NextRequest) {
               percentChange: sp20.data.changePercentage || 0,
             }
           : null,
-        allStocks: Array.from(stockMap.values()),
       };
 
       const responseErrors = {
         marketStatus: marketStatus.error,
         aspi: aspi.error,
         sp20: sp20.error,
-        stockPrices: stockPrices.error,
       };
 
       // Update cache if data is valid

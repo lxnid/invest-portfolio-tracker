@@ -32,7 +32,6 @@ import {
 } from "lucide-react";
 import {
   useHoldings,
-  useMarketData,
   useHoldingPrices,
   useCreateTransaction,
   useDeleteHolding,
@@ -43,6 +42,7 @@ import {
   enrichHoldingsWithPrices,
   calculatePortfolioTotals,
 } from "@/lib/rule-engine";
+import { ALL_STOCKS } from "@/lib/stocks";
 
 export function PortfolioView() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,7 +71,6 @@ export function PortfolioView() {
   // Hooks
   const { data: holdings, isLoading: holdingsLoading } = useHoldings();
   const { data: holdingPrices } = useHoldingPrices(); // Lightweight, 30s polling for real-time P/L
-  const { data: marketData } = useMarketData(); // Only used for autocomplete when adding holdings
   const { data: settings, isLoading: settingsLoading } = useSettings();
   const createTransaction = useCreateTransaction();
   const deleteHolding = useDeleteHolding(); // Kept for cleanup if needed, but UI uses transactions now
@@ -111,30 +110,26 @@ export function PortfolioView() {
     }
 
     // Fallback: If holdingPrices not loaded yet, use marketData
-    if (map.size === 0 && marketData?.allStocks) {
-      for (const stock of marketData.allStocks) {
-        map.set(stock.symbol, stock.price);
-      }
-    }
+    // REMOVED Fallback to marketData.allStocks as it is being deprecated.
+    // if (map.size === 0 && marketData?.allStocks) {
+    //   for (const stock of marketData.allStocks) {
+    //     map.set(stock.symbol, stock.price);
+    //   }
+    // }
 
     return map;
-  }, [holdingPrices, marketData]);
+  }, [holdingPrices]);
 
   // Stocks for autocomplete
-  const availableStocks = useMemo(() => {
-    return marketData?.allStocks || [];
-  }, [marketData]);
-
   const filteredStocks = useMemo(() => {
     if (!formData.symbol) return [];
     const query = formData.symbol.toLowerCase();
 
-    return availableStocks
-      .filter(
-        (s) =>
-          s.symbol.toLowerCase().includes(query) ||
-          s.name.toLowerCase().includes(query),
-      )
+    return ALL_STOCKS.filter(
+      (s) =>
+        s.symbol.toLowerCase().includes(query) ||
+        s.name.toLowerCase().includes(query),
+    )
       .sort((a, b) => {
         const aSym = a.symbol.toLowerCase();
         const bSym = b.symbol.toLowerCase();
@@ -143,7 +138,7 @@ export function PortfolioView() {
         return 0;
       })
       .slice(0, 5);
-  }, [availableStocks, formData.symbol]);
+  }, [formData.symbol]);
 
   // Enrich holdings
   const enrichedHoldings = useMemo(() => {
@@ -183,8 +178,8 @@ export function PortfolioView() {
       ...formData,
       symbol: stock.symbol,
       name: stock.name,
-      sector: stock.sector || "",
-      buyPrice: stock.price.toString(),
+      sector: "", // sector not in static list
+      buyPrice: "", // price not in static list, will be fetched or user entered
     });
     setShowSuggestions(false);
   };
@@ -609,15 +604,7 @@ export function PortfolioView() {
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-mono text-blue-500">
-                              LKR {stock.price.toFixed(2)}
-                            </p>
-                            <p
-                              className={`text-xs ${stock.percentChange >= 0 ? "text-emerald-500" : "text-red-500"}`}
-                            >
-                              {stock.percentChange > 0 ? "+" : ""}
-                              {stock.percentChange}%
-                            </p>
+                            {/* Price removed as we don't have it in static list */}
                           </div>
                         </div>
                       ))}

@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   TrendingUp,
   LogOut,
-  Globe,
   PiggyBank,
 } from "lucide-react";
 
@@ -19,7 +18,7 @@ import { useMarketData } from "@/lib/hooks";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/market", label: "Market", icon: Globe },
+
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/transactions", label: "Transactions", icon: ArrowRightLeft },
   { href: "/savings", label: "Savings", icon: PiggyBank },

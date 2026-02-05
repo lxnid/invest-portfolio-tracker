@@ -65,6 +65,7 @@ self.addEventListener("fetch", (event) => {
       "/alerts",
       "/goals",
       "/simulator",
+      "/profile",
     ];
     const isAuthenticatedRoute = authenticatedPaths.some((path) =>
       url.pathname.startsWith(path),
@@ -99,10 +100,31 @@ self.addEventListener("fetch", (event) => {
   }
 
   // For static assets - stale-while-revalidate strategy
-  if (
-    url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico|woff2?)$/) ||
-    url.pathname.startsWith("/_next/static/")
-  ) {
+  // Optimize Next.js static assets (Cache First - Immutable)
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        // Return cached response immediately if available
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // Otherwise fetch from network and cache
+        return fetch(request).then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return response;
+        });
+      }),
+    );
+    return;
+  }
+
+  // For other static assets - stale-while-revalidate strategy
+  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico|woff2?)$/)) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) => {
         return cache.match(request).then((cachedResponse) => {

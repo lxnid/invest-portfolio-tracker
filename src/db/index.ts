@@ -13,6 +13,7 @@ neonConfig.webSocketConstructor = ws;
 // Determine if we're using a local PostgreSQL or Neon
 function isLocalPostgres(connectionString: string): boolean {
   return (
+    process.env.NODE_ENV === "development" ||
     connectionString.includes("localhost") ||
     connectionString.includes("127.0.0.1")
   );
@@ -45,15 +46,18 @@ function createDb() {
   return drizzleNeon(pool, { schema });
 }
 
-// Export a proxy that creates a fresh db connection on each access
-// This is the recommended pattern for serverless environments with Neon
-export const db = new Proxy({} as ReturnType<typeof drizzleNeon>, {
+// Cache the database instance to prevent connection exhaustion
+let cachedDb: ReturnType<typeof createDb> | null = null;
+
+export const db = new Proxy({} as ReturnType<typeof createDb>, {
   get(_, prop) {
-    const database = createDb();
-    const value = (database as any)[prop];
+    if (!cachedDb) {
+      cachedDb = createDb();
+    }
+    const value = (cachedDb as any)[prop];
     // Bind methods to the database instance to preserve context
     if (typeof value === "function") {
-      return value.bind(database);
+      return value.bind(cachedDb);
     }
     return value;
   },

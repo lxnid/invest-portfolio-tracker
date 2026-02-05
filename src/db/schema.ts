@@ -44,6 +44,7 @@ export const users = pgTable("users", {
   resetToken: varchar("reset_token", { length: 255 }),
   resetTokenExpiry: timestamp("reset_token_expiry"),
   plan: varchar("plan", { length: 50 }).default("free").notNull(), // free, pro
+  onboardingCompletedAt: timestamp("onboarding_completed_at"), // null = show onboarding
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastLoginAt: timestamp("last_login_at"),
 });
@@ -56,7 +57,9 @@ export type NewUser = typeof users.$inferInsert;
 // ============================================================================
 export const holdings = pgTable("holdings", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
+  userId: varchar("user_id", { length: 100 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   stockId: integer("stock_id")
     .references(() => stocks.id, { onDelete: "cascade" })
     .notNull(),
@@ -85,7 +88,9 @@ export const holdingsRelations = relations(holdings, ({ one }) => ({
 // ============================================================================
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
+  userId: varchar("user_id", { length: 100 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   stockId: integer("stock_id")
     .references(() => stocks.id, { onDelete: "cascade" })
     .notNull(),
@@ -111,7 +116,9 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
 // ============================================================================
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
+  userId: varchar("user_id", { length: 100 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   capital: decimal("capital", { precision: 15, scale: 2 })
     .default("0")
     .notNull(),
@@ -123,7 +130,9 @@ export const settings = pgTable("settings", {
 // ============================================================================
 export const tradingRules = pgTable("trading_rules", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
+  userId: varchar("user_id", { length: 100 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
   ruleType: varchar("rule_type", { length: 50 }).notNull(), // STOP_LOSS, TAKE_PROFIT, etc.
@@ -167,7 +176,9 @@ export type NewFeedback = typeof feedback.$inferInsert;
 // ============================================================================
 export const savedSimulations = pgTable("saved_simulations", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
+  userId: varchar("user_id", { length: 100 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   configuration: json("configuration").notNull(), // Stores { capital, step, stocks: [...] }
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -193,7 +204,9 @@ export type NewRateLimit = typeof rateLimits.$inferInsert;
 // ============================================================================
 export const savingsEntries = pgTable("savings_entries", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 100 }).default("admin-user").notNull(),
+  userId: varchar("user_id", { length: 100 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
   bankName: varchar("bank_name", { length: 255 }),
   type: varchar("type", { length: 50 }).notNull(), // 'SAVINGS', 'FIXED_DEPOSIT', 'OTHER'

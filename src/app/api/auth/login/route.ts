@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSession, comparePasswords } from "@/lib/auth";
-import { verifyPassword } from "@/lib/password";
+import { verifyPassword, hashPassword } from "@/lib/password";
 import { z } from "zod";
 import { RateLimiter } from "@/lib/rate-limit";
 import { db } from "@/db";
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     let ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim();
     if (!ip) {
       console.warn("Missing IP in login request");
-      ip = "unknown-" + crypto.randomUUID();
+      ip = "unknown-ip"; // Static fallback key to ensure rate limiting applies
     }
     const limitResult = await RateLimiter.check(ip, 5, 60 * 15); // 5 attempts per 15 mins
 
@@ -69,42 +69,67 @@ export async function POST(request: Request) {
     if (data.type === "user") {
       const emailLower = data.email.toLowerCase();
 
-      // Hidden admin login - check for secret admin email
-      if (emailLower === ADMIN_EMAIL) {
-        console.log("Admin login attempt via hidden email");
-        const isValid = await comparePasswords(data.password, ADMIN_PASSWORD!);
-        if (isValid) {
-          await createSession("admin-user", "admin");
-          return NextResponse.json({ success: true });
-        } else {
-          // Use same error message to not reveal admin email exists
-          return NextResponse.json(
-            { error: "Invalid email or password" },
-            { status: 401 },
-          );
+      // 1. Always fetch user first to normalize timing flow
+      let user = (
+        await db.select().from(users).where(eq(users.email, emailLower))
+      )[0];
+
+      // 2. Special handling for Admin: Sync to DB if needed
+      // This logic runs if the admin is trying to log in but isn't in the DB yet (first run)
+      // or if we want to ensure sync.
+      if (emailLower === ADMIN_EMAIL && !user) {
+        // Check ENV password (Fast)
+        const isValidEnv = await comparePasswords(
+          data.password,
+          ADMIN_PASSWORD!,
+        );
+
+        if (isValidEnv) {
+          // Valid Admin credential -> Sync to DB now
+          try {
+            const adminPasswordHash = await hashPassword(ADMIN_PASSWORD!);
+            const newUser = await db
+              .insert(users)
+              .values({
+                id: "admin-user",
+                email: ADMIN_EMAIL,
+                passwordHash: adminPasswordHash,
+                name: "Admin User",
+                plan: "pro",
+                emailVerified: true,
+                lastLoginAt: new Date(),
+              })
+              .onConflictDoUpdate({
+                target: users.email,
+                set: {
+                  id: "admin-user",
+                  passwordHash: adminPasswordHash,
+                  lastLoginAt: new Date(),
+                },
+              })
+              .returning();
+
+            user = newUser[0];
+            console.log("Admin user synced to database during login");
+          } catch (err) {
+            console.error("Failed to sync admin user:", err);
+            // Verify continues below, but user will be undefined so it will fail safely
+          }
         }
       }
 
-      console.log("User login attempt:", emailLower);
-
-      // Find user by email
-      const matchingUsers = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, emailLower));
-
-      const user = matchingUsers[0];
-
-      // Use a dummy hash if user doesn't exist to maintain consistent timing
-      // This prevents timing attacks that leak whether an email is registered
+      // 3. Consistent timing check (Always use bcrypt)
+      // Use cost factor 10 to match SALT_ROUNDS
       const dummyHash =
-        "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.V5YRPJmRqG6Woy";
+        "$2a$10$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.V5YRPJmRqG6Woy";
+
       const isValid = await verifyPassword(
         data.password,
         user?.passwordHash || dummyHash,
       );
 
       if (!user || !isValid) {
+        // Return generic error message
         return NextResponse.json(
           { error: "Invalid email or password" },
           { status: 401 },
@@ -113,8 +138,6 @@ export async function POST(request: Request) {
 
       // Check if email is verified
       if (!user.emailVerified) {
-        // Return same 401 error to prevent enumeration of unverified accounts (security best practice)
-        // But logging the actual reason for debugging
         console.log(`Login blocked: User ${user.email} is not verified`);
         return NextResponse.json(
           {
@@ -133,7 +156,6 @@ export async function POST(request: Request) {
           .where(eq(users.id, user.id));
       } catch (err) {
         console.error("Failed to update last login:", err);
-        // Continue login even if update fails
       }
 
       await createSession(user.id, "user");

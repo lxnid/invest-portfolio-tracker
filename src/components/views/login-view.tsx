@@ -3,14 +3,15 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Lock,
   Mail,
   Eye,
   EyeOff,
-  TrendingUp,
   ArrowRight,
   User,
+  ArrowLeft,
 } from "lucide-react";
 
 function LoginContent() {
@@ -104,8 +105,16 @@ function LoginContent() {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen flex bg-zinc-950 overflow-hidden"
+      className="min-h-screen flex bg-zinc-950 overflow-hidden relative"
     >
+      {/* Home Navigation */}
+      <Link
+        href="/"
+        className="absolute top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800 transition-all"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm font-medium">Home</span>
+      </Link>
       {/* Left Panel - Branding & Decoration */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center">
         {/* Animated gradient background */}
@@ -133,8 +142,14 @@ function LoginContent() {
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 max-w-xl ml-auto mr-8 xl:mr-16">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800 backdrop-blur-sm">
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800 backdrop-blur-sm">
+              <Image
+                src="/logo.png"
+                alt="CSE Tracker"
+                width={20}
+                height={20}
+                className="object-contain"
+              />
               <span className="text-sm text-zinc-400">
                 CSE Portfolio Tracker
               </span>
@@ -178,8 +193,14 @@ function LoginContent() {
       <div className="flex-1 flex items-center justify-center px-6 lg:px-12">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-            <TrendingUp className="w-6 h-6 text-emerald-500" />
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-8">
+            <Image
+              src="/logo.png"
+              alt="CSE Tracker"
+              width={24}
+              height={24}
+              className="object-contain"
+            />
             <span className="text-lg font-semibold text-zinc-50">
               Portfolio Tracker
             </span>

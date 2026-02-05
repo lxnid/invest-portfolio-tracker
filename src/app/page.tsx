@@ -5,6 +5,7 @@ import {
   DemoPreview,
   CTASection,
   Footer,
+  LandingHeader,
 } from "@/components/landing";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-zinc-950">
+      <LandingHeader />
       <Hero />
       <FeaturesSection />
       <DemoPreview />

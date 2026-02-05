@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -13,10 +14,13 @@ import {
   X,
   Menu,
   PiggyBank,
+  User,
+  HelpCircle,
 } from "lucide-react";
 import { BrandingFooter } from "@/components/branding-footer";
 import { useState, useEffect } from "react";
 import { useMarketData } from "@/lib/hooks";
+import { useOnboardingContext } from "@/components/onboarding-provider";
 
 const navItems = [
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
@@ -26,6 +30,7 @@ const navItems = [
   { href: "/savings", label: "Savings", icon: PiggyBank },
   { href: "/alerts", label: "Trading Alerts", icon: ShieldCheck },
   { href: "/analytics", label: "Analytics", icon: TrendingUp },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function MobileSidebar() {
@@ -34,6 +39,7 @@ export function MobileSidebar() {
   const pathname = usePathname();
   const { data: marketData } = useMarketData();
   const marketStatus = marketData?.marketStatus;
+  const { openOnboarding } = useOnboardingContext();
 
   // Close sidebar on route change
   useEffect(() => {
@@ -69,9 +75,13 @@ export function MobileSidebar() {
       {/* Mobile Top Bar Trigger */}
       <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between border-b border-zinc-800 bg-zinc-950 p-4 md:px-16">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-            <TrendingUp className="h-5 w-5" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="CSE Tracker"
+            width={32}
+            height={32}
+            className="object-contain"
+          />
           <span className="text-lg font-bold text-zinc-50">CSE Tracker</span>
         </Link>
         <button
@@ -99,9 +109,13 @@ export function MobileSidebar() {
       >
         <div className="flex h-16 items-center justify-between border-b border-zinc-800 px-6 shrink-0">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-              <TrendingUp className="h-5 w-5" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="CSE Tracker"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
             <span className="text-lg font-bold text-zinc-50">CSE Tracker</span>
           </Link>
           <button
@@ -140,10 +154,22 @@ export function MobileSidebar() {
 
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50 transition-all duration-200 mb-3"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50 transition-all duration-200 mb-1"
           >
             <LogOut className="h-5 w-5" />
             Logout
+          </button>
+
+          {/* Help Button */}
+          <button
+            onClick={() => {
+              openOnboarding();
+              setIsOpen(false);
+            }}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50 transition-all duration-200 mb-3"
+          >
+            <HelpCircle className="h-5 w-5" />
+            Help / Tutorial
           </button>
 
           <div className="flex items-center gap-2 text-sm px-3">

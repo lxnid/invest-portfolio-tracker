@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -11,10 +12,13 @@ import {
   TrendingUp,
   LogOut,
   PiggyBank,
+  User,
+  HelpCircle,
 } from "lucide-react";
 
 import { BrandingFooter } from "@/components/branding-footer";
 import { useMarketData } from "@/lib/hooks";
+import { useOnboardingContext } from "@/components/onboarding-provider";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,6 +28,7 @@ const navItems = [
   { href: "/savings", label: "Savings", icon: PiggyBank },
   { href: "/alerts", label: "Trading Alerts", icon: ShieldCheck },
   { href: "/analytics", label: "Analytics", icon: TrendingUp },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function Sidebar() {
@@ -31,6 +36,7 @@ export function Sidebar() {
   const router = useRouter();
   const { data: marketData } = useMarketData();
   const marketStatus = marketData?.marketStatus;
+  const { openOnboarding } = useOnboardingContext();
 
   const handleLogout = async () => {
     // ... (same implementation)
@@ -53,9 +59,13 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-zinc-800 px-6 shrink-0">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-            <TrendingUp className="h-5 w-5" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="CSE Tracker"
+            width={32}
+            height={32}
+            className="object-contain"
+          />
           <span className="text-lg font-bold text-zinc-50">CSE Tracker</span>
         </Link>
       </div>
@@ -91,10 +101,19 @@ export function Sidebar() {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50 transition-all duration-200 mb-3"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50 transition-all duration-200 mb-1"
         >
           <LogOut className="h-5 w-5" />
           Logout
+        </button>
+
+        {/* Help Button */}
+        <button
+          onClick={openOnboarding}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50 transition-all duration-200 mb-3"
+        >
+          <HelpCircle className="h-5 w-5" />
+          Help / Tutorial
         </button>
 
         {/* Market Status */}

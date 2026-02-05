@@ -22,6 +22,13 @@
       "when": 1770266154174,
       "tag": "0002_abnormal_tomas",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770282902446,
+      "tag": "0003_add_onboarding_field",
+      "breakpoints": true
     }
   ]
 }

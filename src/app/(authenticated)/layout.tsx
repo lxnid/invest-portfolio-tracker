@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { DemoBanner } from "@/components/demo-banner";
 import { FloatingBranding } from "@/components/floating-branding";
+import { OnboardingProvider } from "@/components/onboarding-provider";
 
 export default function AuthenticatedLayout({
   children,
@@ -9,7 +10,7 @@ export default function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <OnboardingProvider>
       <DemoBanner />
       <div className="flex min-h-screen flex-col lg:flex-row">
         <Sidebar />
@@ -19,6 +20,6 @@ export default function AuthenticatedLayout({
         </main>
       </div>
       <FloatingBranding />
-    </>
+    </OnboardingProvider>
   );
 }

@@ -1,3 +1,4 @@
+import { createRequire } from "module";
 import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
 import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
 import * as schema from "./schema";
@@ -20,17 +21,29 @@ function createDb() {
   // Use standard pg driver for local development, Neon for production
   if (isLocalPostgres(connectionString)) {
     // Dynamically require 'pg' to prevent Cloudflare Workers crash
-    // caused by top-level import of Node.js modules
-    const { Pool } = require("pg");
-    const { drizzle } = require("drizzle-orm/node-postgres");
+    // caused by top-level import of Node.js modules.
+    // Using createRequire + dynamic string prevents bundling of 'pg'.
+    const require = createRequire(import.meta.url);
 
-    const pool = new Pool({
-      connectionString,
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
-    });
-    return drizzle(pool, { schema });
+    // Obscure module names to defeat static analysis by esbuild
+    const pgPkg = ["p", "g"].join("");
+    const drizzlePgPkg = ["drizzle-orm", "node-postgres"].join("/");
+
+    try {
+      const { Pool } = require(pgPkg);
+      const { drizzle } = require(drizzlePgPkg);
+
+      const pool = new Pool({
+        connectionString,
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      });
+      return drizzle(pool, { schema });
+    } catch (e) {
+      console.error("Failed to require pg driver:", e);
+      throw e;
+    }
   }
 
   // Use Neon serverless driver for production

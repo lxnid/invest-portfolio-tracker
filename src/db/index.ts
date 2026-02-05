@@ -22,12 +22,12 @@ function createDb() {
   if (isLocalPostgres(connectionString)) {
     // Dynamically require 'pg' to prevent Cloudflare Workers crash
     // caused by top-level import of Node.js modules.
-    // Using createRequire + dynamic string prevents bundling of 'pg'.
-    const require = createRequire(import.meta.url);
+    // Using eval('require') is the only way to definitely force bundlers (like esbuild)
+    // to ignore this dependency and treat it as purely runtime.
+    const require = eval("require");
 
-    // Obscure module names to defeat static analysis by esbuild
-    const pgPkg = ["p", "g"].join("");
-    const drizzlePgPkg = ["drizzle-orm", "node-postgres"].join("/");
+    const pgPkg = "pg";
+    const drizzlePgPkg = "drizzle-orm/node-postgres";
 
     try {
       const { Pool } = require(pgPkg);

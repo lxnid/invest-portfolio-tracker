@@ -149,11 +149,14 @@ export async function GET(request: Request, { params }: RouteParams) {
       .orderBy(desc(transactionsTable.date));
 
     const totalDividends = history
-      .filter((tx) => tx.type === "DIVIDEND")
-      .reduce((sum, tx) => sum + parseFloat(tx.price) * tx.quantity, 0);
+      .filter((tx: any) => tx.type === "DIVIDEND")
+      .reduce(
+        (sum: number, tx: any) => sum + parseFloat(tx.price) * tx.quantity,
+        0,
+      );
 
-    const buyCount = history.filter((tx) => tx.type === "BUY").length;
-    const sellCount = history.filter((tx) => tx.type === "SELL").length;
+    const buyCount = history.filter((tx: any) => tx.type === "BUY").length;
+    const sellCount = history.filter((tx: any) => tx.type === "SELL").length;
 
     return NextResponse.json({
       data: {
@@ -170,7 +173,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           buyCount,
           sellCount,
         },
-        transactions: history.map((tx) => ({
+        transactions: history.map((tx: any) => ({
           ...tx,
           totalAmount: (parseFloat(tx.price) * tx.quantity).toString(),
         })),

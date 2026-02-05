@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     const data = await query;
 
     // Compute totalAmount
-    const dataWithTotal = data.map((t) => {
+    const dataWithTotal = data.map((t: any) => {
       const gross = Number(t.quantity) * Number(t.price);
       const fees = Number(t.fees || 0);
       let totalAmount = gross;
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
 
     // Filter by type if specified
     const filteredData = type
-      ? dataWithTotal.filter((t) => t.type === type)
+      ? dataWithTotal.filter((t: any) => t.type === type)
       : dataWithTotal;
 
     return NextResponse.json({ data: filteredData });

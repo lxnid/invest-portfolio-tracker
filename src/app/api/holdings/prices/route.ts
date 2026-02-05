@@ -33,7 +33,9 @@ export async function GET() {
     }
 
     // 2. Get unique symbols
-    const symbols = [...new Set(userHoldings.map((h) => h.symbol))];
+    const symbols = Array.from<string>(
+      new Set(userHoldings.map((h: any) => h.symbol)),
+    );
 
     // 3. Fetch prices for each symbol in parallel
     // Using getCompanyInfo to fetch specific stock data (true lightweight)

@@ -11,7 +11,7 @@ export class PortfolioService {
     userId: string,
     txData: Omit<NewTransaction, "id" | "createdAt" | "updatedAt" | "userId">,
   ) {
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async (tx: any) => {
       // 1. Create the transaction record
       const [newTx] = await tx
         .insert(transactions)

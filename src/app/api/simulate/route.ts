@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     // For others, we'll assume price = avgBuyPrice (conservative) or just use totalInvested.
     // The rule engine uses `currentValue` if available, or fallback.
 
-    const enrichedHoldings = currentHoldings.map((h) => ({
+    const enrichedHoldings = currentHoldings.map((h: any) => ({
       ...h,
       // If it's the stock we are trading, use the simulated price?
       // No, currentHoldings is the starting state.

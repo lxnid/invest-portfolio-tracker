@@ -669,11 +669,6 @@ function TransactionModal({
                           setFormData({ ...formData, quantity: e.target.value })
                         }
                         required
-                        disabled={
-                          selectedType === "DIVIDEND" ||
-                          selectedType === "SELL" ||
-                          selectedType === "BUY"
-                        }
                       />
                     </div>
                     <div>

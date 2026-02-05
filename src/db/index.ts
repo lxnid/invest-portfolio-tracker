@@ -2,13 +2,10 @@ import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
 import { Pool as PgPool } from "pg";
 import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
-import ws from "ws";
 import * as schema from "./schema";
 
-// Configure Neon for Cloudflare Workers
-// We need to configure the WebSocket constructor for the serverless driver
-// to work in non-browser environments like Cloudflare Workers
-neonConfig.webSocketConstructor = ws;
+// Configure Neon - In Cloudflare Workers, WebSocket is global.
+// In Node.js (local dev), we use 'pg' driver so this config is irrelevant.
 
 // Determine if we're using a local PostgreSQL or Neon
 function isLocalPostgres(connectionString: string): boolean {

@@ -28,7 +28,7 @@ export async function POST() {
     name: "session",
     value: "",
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     expires: new Date(0),
     path: "/",
     sameSite: "lax",

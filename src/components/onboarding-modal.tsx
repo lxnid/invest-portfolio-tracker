@@ -12,6 +12,7 @@ import {
   TrendingUp,
   PiggyBank,
   HelpCircle,
+  Gamepad2,
 } from "lucide-react";
 
 interface OnboardingStep {
@@ -54,6 +55,14 @@ const steps: OnboardingStep[] = [
       "Visualize performance over time. Track sector allocation and compare against market indices.",
     color: "text-cyan-500",
     screenshot: "/onboarding/analytics.png",
+  },
+  {
+    icon: Gamepad2,
+    title: "Portfolio Simulator",
+    description:
+      "Practice your trading strategies with virtual money. Test your theories without risking real capital.",
+    color: "text-purple-500",
+    screenshot: "/onboarding/simulator.png",
   },
   {
     icon: PiggyBank,

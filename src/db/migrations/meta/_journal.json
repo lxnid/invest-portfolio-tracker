@@ -15,6 +15,13 @@
       "when": 1769656617259,
       "tag": "0001_free_spirit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770266154174,
+      "tag": "0002_abnormal_tomas",
+      "breakpoints": true
     }
   ]
 }

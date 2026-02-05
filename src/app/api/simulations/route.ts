@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { savedSimulations } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
+import { getSession } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { name, configuration } = body;
 
@@ -20,7 +26,7 @@ export async function POST(request: Request) {
       .values({
         name,
         configuration,
-        userId: "admin-user",
+        userId: session.userId,
       })
       .returning();
 
@@ -36,9 +42,15 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const list = await db
       .select()
       .from(savedSimulations)
+      .where(eq(savedSimulations.userId, session.userId))
       .orderBy(desc(savedSimulations.createdAt));
 
     return NextResponse.json(list);

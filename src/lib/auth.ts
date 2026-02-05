@@ -3,10 +3,18 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 // Secret for signing cookies
-// In production, this should be in .env
-const SECRET_KEY =
-  process.env.SESSION_SECRET || "default-secret-key-change-me-in-prod";
-const key = new TextEncoder().encode(SECRET_KEY);
+const SECRET_KEY = process.env.SESSION_SECRET;
+
+if (!SECRET_KEY) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SESSION_SECRET environment variable is required in production",
+    );
+  }
+}
+const key = new TextEncoder().encode(
+  SECRET_KEY || "default-secret-key-change-me-in-prod",
+);
 
 /**
  * Securely compare two passwords using timingSafeEqual
@@ -54,7 +62,9 @@ export async function comparePasswords(provided: string, actual: string) {
 
 export interface SessionPayload {
   userId: string;
-  role: "admin" | "guest";
+  role: "admin" | "guest" | "user";
+  email?: string;
+  plan?: string;
   expiresAt: Date;
 }
 
@@ -83,7 +93,10 @@ export async function getSession() {
   return await decrypt(session);
 }
 
-export async function createSession(userId: string, role: "admin" | "guest") {
+export async function createSession(
+  userId: string,
+  role: "admin" | "guest" | "user",
+) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const session = await encrypt({ userId, role, expiresAt });
 

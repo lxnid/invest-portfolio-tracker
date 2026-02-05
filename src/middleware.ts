@@ -5,11 +5,16 @@ import { updateSession, getSession } from "@/lib/auth";
 export async function middleware(request: NextRequest) {
   const session = await getSession();
 
-  // 1. Protect all routes except /login, public assets, and api/login
+  // 1. Protect all routes except public pages, assets, and auth endpoints
   if (!session) {
     if (
       !request.nextUrl.pathname.startsWith("/login") &&
-      !request.nextUrl.pathname.startsWith("/api/auth") && // Allow login endpoint
+      !request.nextUrl.pathname.startsWith("/register") &&
+      !request.nextUrl.pathname.startsWith("/forgot-password") &&
+      !request.nextUrl.pathname.startsWith("/reset-password") &&
+      !request.nextUrl.pathname.startsWith("/offline") &&
+      request.nextUrl.pathname !== "/" &&
+      !request.nextUrl.pathname.startsWith("/api/auth") &&
       !request.nextUrl.pathname.startsWith("/_next") &&
       !request.nextUrl.pathname.startsWith("/static") &&
       !request.nextUrl.pathname.includes(".") // Files like favicon.ico
@@ -37,11 +42,22 @@ export async function middleware(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith("/api/auth/logout")) {
       return NextResponse.next();
     }
-
-    return await updateSession();
   }
 
-  return NextResponse.next();
+  const response = session ? await updateSession() : NextResponse.next();
+
+  // Add Security Headers
+  if (response) {
+    response.headers.set("X-Frame-Options", "DENY");
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
+  }
+
+  return response;
 }
 
 export const config = {

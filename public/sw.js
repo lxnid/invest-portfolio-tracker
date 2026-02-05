@@ -55,10 +55,31 @@ self.addEventListener("fetch", (event) => {
 
   // For navigation requests (HTML pages)
   if (request.mode === "navigate") {
+    // Skip caching for authenticated routes to prevent sensitive data persistence
+    const authenticatedPaths = [
+      "/dashboard",
+      "/portfolio",
+      "/transactions",
+      "/settings",
+      "/rules",
+      "/alerts",
+      "/goals",
+      "/simulator",
+    ];
+    const isAuthenticatedRoute = authenticatedPaths.some((path) =>
+      url.pathname.startsWith(path),
+    );
+
+    if (isAuthenticatedRoute) {
+      // Always fetch from network for authenticated routes, fallback to offline page
+      event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
+      return;
+    }
+
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Cache successful responses
+          // Cache successful responses for non-authenticated pages
           if (response.ok) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {

@@ -1,5 +1,7 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
+import { Pool as PgPool } from "pg";
+import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import ws from "ws";
 import * as schema from "./schema";
 
@@ -8,9 +10,13 @@ import * as schema from "./schema";
 // to work in non-browser environments like Cloudflare Workers
 neonConfig.webSocketConstructor = ws;
 
-// In development/local environment, we create fresh connections per request
-// to avoid "Connection terminated unexpectedly" errors from idle timeouts.
-// The pool is NOT cached as a singleton because Neon has aggressive idle timeouts.
+// Determine if we're using a local PostgreSQL or Neon
+function isLocalPostgres(connectionString: string): boolean {
+  return (
+    connectionString.includes("localhost") ||
+    connectionString.includes("127.0.0.1")
+  );
+}
 
 function createDb() {
   const connectionString = process.env.DATABASE_URL;
@@ -18,20 +24,30 @@ function createDb() {
     throw new Error("DATABASE_URL environment variable is required");
   }
 
-  // Create a new Pool for each request context
-  // Neon's serverless driver is designed for this pattern
-  const pool = new Pool({
+  // Use standard pg driver for local development, Neon for production
+  if (isLocalPostgres(connectionString)) {
+    const pool = new PgPool({
+      connectionString,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+    });
+    return drizzlePg(pool, { schema });
+  }
+
+  // Use Neon serverless driver for production
+  const pool = new NeonPool({
     connectionString,
-    max: 10, // Maximum connections in the pool
-    idleTimeoutMillis: 30000, // 30 seconds idle timeout
-    connectionTimeoutMillis: 10000, // 10 seconds connection timeout
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
   });
-  return drizzle(pool, { schema });
+  return drizzleNeon(pool, { schema });
 }
 
 // Export a proxy that creates a fresh db connection on each access
 // This is the recommended pattern for serverless environments with Neon
-export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+export const db = new Proxy({} as ReturnType<typeof drizzleNeon>, {
   get(_, prop) {
     const database = createDb();
     const value = (database as any)[prop];

@@ -31,6 +31,27 @@ export const stocksRelations = relations(stocks, ({ many }) => ({
 }));
 
 // ============================================================================
+// USERS - Registered User Accounts (Multi-tenant Support)
+// ============================================================================
+export const users = pgTable("users", {
+  id: varchar("id", { length: 100 }).primaryKey(), // UUID
+  email: varchar("email", { length: 255 }).unique().notNull(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  verificationToken: varchar("verification_token", { length: 255 }),
+  verificationTokenExpiresAt: timestamp("verification_token_expires_at"),
+  resetToken: varchar("reset_token", { length: 255 }),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
+  plan: varchar("plan", { length: 50 }).default("free").notNull(), // free, pro
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  lastLoginAt: timestamp("last_login_at"),
+});
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+
+// ============================================================================
 // HOLDINGS - Current portfolio positions (User Specific)
 // ============================================================================
 export const holdings = pgTable("holdings", {

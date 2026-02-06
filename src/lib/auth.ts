@@ -2,19 +2,18 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-// Secret for signing cookies
-const SECRET_KEY = process.env.SESSION_SECRET;
-
-if (!SECRET_KEY) {
-  if (process.env.NODE_ENV === "production") {
+// Secret for signing cookies - Lazy evaluation to prevent module-level crashes
+function getSecretKey(): Uint8Array {
+  const SECRET_KEY = process.env.SESSION_SECRET;
+  if (!SECRET_KEY && process.env.NODE_ENV === "production") {
     throw new Error(
       "SESSION_SECRET environment variable is required in production",
     );
   }
+  return new TextEncoder().encode(
+    SECRET_KEY || "default-secret-key-change-me-in-prod",
+  );
 }
-const key = new TextEncoder().encode(
-  SECRET_KEY || "default-secret-key-change-me-in-prod",
-);
 
 /**
  * Securely compare two passwords using timingSafeEqual
@@ -73,12 +72,12 @@ export async function encrypt(payload: SessionPayload) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d") // Admin sessions last longer
-    .sign(key);
+    .sign(getSecretKey());
 }
 
 export async function decrypt(input: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(input, key, {
+    const { payload } = await jwtVerify(input, getSecretKey(), {
       algorithms: ["HS256"],
     });
     return payload as any;

@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
     response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
     response.headers.set(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: https://cloudflareinsights.com; font-src 'self' https:; frame-src 'self' https://s.tradingview.com;",
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://s3.tradingview.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: https://cloudflareinsights.com; font-src 'self' https:; frame-src 'self' https://s.tradingview.com;",
     );
     response.headers.set(
       "Strict-Transport-Security",

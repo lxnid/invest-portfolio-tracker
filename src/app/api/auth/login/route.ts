@@ -7,16 +7,6 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-
-if (!ADMIN_PASSWORD) {
-  throw new Error("ADMIN_PASSWORD environment variable is required");
-}
-if (!ADMIN_EMAIL) {
-  throw new Error("ADMIN_EMAIL environment variable is required");
-}
-
 const loginSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("guest"),
@@ -30,6 +20,9 @@ const loginSchema = z.discriminatedUnion("type", [
 
 export async function POST(request: Request) {
   try {
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+
     // 1. Rate Limiting
     let ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim();
     if (!ip) {
@@ -76,44 +69,46 @@ export async function POST(request: Request) {
 
       // 2. Special handling for Admin: Sync to DB if needed
       // This logic runs if the admin is trying to log in but isn't in the DB yet (first run)
-      // or if we want to ensure sync.
-      if (emailLower === ADMIN_EMAIL && !user) {
-        // Check ENV password (Fast)
-        const isValidEnv = await comparePasswords(
-          data.password,
-          ADMIN_PASSWORD!,
-        );
+      if (ADMIN_EMAIL && emailLower === ADMIN_EMAIL.toLowerCase() && !user) {
+        if (!ADMIN_PASSWORD) {
+          console.error("ADMIN_PASSWORD environment variable is missing");
+        } else {
+          // Check ENV password (Fast)
+          const isValidEnv = await comparePasswords(
+            data.password,
+            ADMIN_PASSWORD,
+          );
 
-        if (isValidEnv) {
-          // Valid Admin credential -> Sync to DB now
-          try {
-            const adminPasswordHash = await hashPassword(ADMIN_PASSWORD!);
-            const newUser = await db
-              .insert(users)
-              .values({
-                id: "admin-user",
-                email: ADMIN_EMAIL,
-                passwordHash: adminPasswordHash,
-                name: "Admin User",
-                plan: "pro",
-                emailVerified: true,
-                lastLoginAt: new Date(),
-              })
-              .onConflictDoUpdate({
-                target: users.email,
-                set: {
+          if (isValidEnv) {
+            // Valid Admin credential -> Sync to DB now
+            try {
+              const adminPasswordHash = await hashPassword(ADMIN_PASSWORD);
+              const newUser = await db
+                .insert(users)
+                .values({
                   id: "admin-user",
+                  email: emailLower,
                   passwordHash: adminPasswordHash,
+                  name: "Admin User",
+                  plan: "pro",
+                  emailVerified: true,
                   lastLoginAt: new Date(),
-                },
-              })
-              .returning();
+                })
+                .onConflictDoUpdate({
+                  target: users.email,
+                  set: {
+                    id: "admin-user",
+                    passwordHash: adminPasswordHash,
+                    lastLoginAt: new Date(),
+                  },
+                })
+                .returning();
 
-            user = newUser[0];
-            console.log("Admin user synced to database during login");
-          } catch (err) {
-            console.error("Failed to sync admin user:", err);
-            // Verify continues below, but user will be undefined so it will fail safely
+              user = newUser[0];
+              console.log("Admin user synced to database during login");
+            } catch (err) {
+              console.error("Failed to sync admin user:", err);
+            }
           }
         }
       }

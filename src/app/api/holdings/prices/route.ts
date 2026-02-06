@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { holdings, stocks } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { holdings, stocks, marketCache } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { getCompanyInfo } from "@/lib/cse-api";
 
 export const dynamic = "force-dynamic";
 
+interface PriceData {
+  price: number;
+  change: number;
+  percentChange: number;
+  fromCache?: boolean;
+  cachedAt?: string;
+}
+
 // GET prices only for user's holdings - lightweight alternative to /api/cse/market
+// Falls back to cached prices when market is closed (CSE API returns null)
 export async function GET() {
   try {
     const session = await getSession();
@@ -29,7 +38,7 @@ export async function GET() {
       );
 
     if (userHoldings.length === 0) {
-      return NextResponse.json({ data: { prices: {} } });
+      return NextResponse.json({ data: { prices: {}, fromCache: false } });
     }
 
     // 2. Get unique symbols
@@ -37,27 +46,105 @@ export async function GET() {
       new Set(userHoldings.map((h: any) => h.symbol)),
     );
 
-    // 3. Fetch prices for each symbol in parallel
-    // Using getCompanyInfo to fetch specific stock data (true lightweight)
-    // and matching the data source of the Stock Details page (trusted accuracy)
+    // 3. Pre-fetch all cached prices for fallback
+    const cacheKeys = symbols.map((s) => `STOCK_${s}`);
+    let cachedPrices: Map<string, { data: any; updatedAt: Date }> = new Map();
+    try {
+      const cachedEntries = await db
+        .select()
+        .from(marketCache)
+        .where(inArray(marketCache.key, cacheKeys));
+
+      for (const entry of cachedEntries) {
+        const symbol = entry.key.replace("STOCK_", "");
+        cachedPrices.set(symbol, {
+          data: entry.data as any,
+          updatedAt: entry.updatedAt,
+        });
+      }
+    } catch (cacheError) {
+      console.error("Failed to fetch cached prices:", cacheError);
+    }
+
+    // 4. Fetch prices for each symbol in parallel
     const pricePromises = symbols.map(async (symbol) => {
       const result = await getCompanyInfo(symbol);
       const info = result.data?.reqSymbolInfo;
+      const hasValidPrice = info?.lastTradedPrice != null;
+
+      // If API returned valid price, cache it
+      if (hasValidPrice) {
+        const priceData = {
+          price: {
+            price: info.lastTradedPrice,
+            change: info.change || 0,
+            changePercentage: info.changePercentage || 0,
+            qty: info.tdyShareVolume || 0,
+            trades: info.tdyTradeVolume || 0,
+            symbol: info.symbol,
+            name: info.name,
+          },
+          company: result.data,
+        };
+
+        // Update cache asynchronously (don't block response)
+        db.insert(marketCache)
+          .values({
+            key: `STOCK_${symbol}`,
+            data: priceData,
+            updatedAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: marketCache.key,
+            set: {
+              data: priceData,
+              updatedAt: new Date(),
+            },
+          })
+          .catch((e: unknown) =>
+            console.error(`Failed to cache ${symbol}:`, e),
+          );
+
+        return {
+          symbol,
+          price: info.lastTradedPrice,
+          change: info.change ?? 0,
+          percentChange: info.changePercentage ?? 0,
+          fromCache: false,
+        };
+      }
+
+      // API returned null - try cache fallback
+      const cached = cachedPrices.get(symbol);
+      if (cached?.data?.price) {
+        const cachedPrice = cached.data.price;
+        return {
+          symbol,
+          price: cachedPrice.price ?? null,
+          change: cachedPrice.change ?? 0,
+          percentChange: cachedPrice.changePercentage ?? 0,
+          fromCache: true,
+          cachedAt: cached.updatedAt.toISOString(),
+        };
+      }
+
+      // No API data and no cache
       return {
         symbol,
-        price: info?.lastTradedPrice ?? null,
-        change: info?.change ?? null,
-        percentChange: info?.changePercentage ?? null,
+        price: null,
+        change: null,
+        percentChange: null,
+        fromCache: false,
       };
     });
 
     const priceResults = await Promise.all(pricePromises);
 
-    // 4. Build price map
-    const prices: Record<
-      string,
-      { price: number; change: number; percentChange: number }
-    > = {};
+    // 5. Build price map and track cache usage
+    const prices: Record<string, PriceData> = {};
+    let hasAnyCachedPrice = false;
+    let oldestCacheTime: Date | null = null;
+
     for (const result of priceResults) {
       if (result.price !== null) {
         prices[result.symbol] = {
@@ -65,6 +152,19 @@ export async function GET() {
           change: result.change ?? 0,
           percentChange: result.percentChange ?? 0,
         };
+
+        if (result.fromCache) {
+          hasAnyCachedPrice = true;
+          prices[result.symbol].fromCache = true;
+          prices[result.symbol].cachedAt = result.cachedAt;
+
+          if (result.cachedAt) {
+            const cacheDate = new Date(result.cachedAt);
+            if (!oldestCacheTime || cacheDate < oldestCacheTime) {
+              oldestCacheTime = cacheDate;
+            }
+          }
+        }
       }
     }
 
@@ -73,6 +173,8 @@ export async function GET() {
         prices,
         fetchedAt: new Date().toISOString(),
         symbolCount: symbols.length,
+        fromCache: hasAnyCachedPrice,
+        cachedAt: oldestCacheTime?.toISOString() ?? null,
       },
     });
   } catch (error) {

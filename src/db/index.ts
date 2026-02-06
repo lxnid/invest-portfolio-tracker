@@ -4,7 +4,13 @@ import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
 import * as schema from "./schema";
 
 // Determine if we're using a local PostgreSQL or Neon
+// Determine if we're using a local PostgreSQL or Neon
 function isLocalPostgres(connectionString: string): boolean {
+  // STRICT SAFETY: Force false in production to prevent loading 'pg'/eval imports
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
+
   return (
     process.env.NODE_ENV === "development" ||
     connectionString.includes("localhost") ||

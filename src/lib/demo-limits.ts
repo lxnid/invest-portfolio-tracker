@@ -80,6 +80,50 @@ export async function checkDemoRulesLimit(
 }
 
 /**
+ * OPTIMIZED: Check all demo limits in parallel (batch)
+ * Reduces 2 sequential DB calls to 2 parallel calls
+ */
+export async function checkAllDemoLimits(userId: string): Promise<{
+  transactions: { allowed: boolean; current: number; max: number };
+  holdings: { allowed: boolean; current: number; max: number };
+}> {
+  if (!userId.startsWith("guest-")) {
+    return {
+      transactions: { allowed: true, current: 0, max: Infinity },
+      holdings: { allowed: true, current: 0, max: Infinity },
+    };
+  }
+
+  // Run both COUNT queries in parallel
+  const [txResult, holdingsResult] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(transactions)
+      .where(eq(transactions.userId, userId)),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(holdings)
+      .where(eq(holdings.userId, userId)),
+  ]);
+
+  const txCurrent = Number(txResult[0]?.count || 0);
+  const holdingsCurrent = Number(holdingsResult[0]?.count || 0);
+
+  return {
+    transactions: {
+      allowed: txCurrent < DEMO_LIMITS.MAX_TRANSACTIONS,
+      current: txCurrent,
+      max: DEMO_LIMITS.MAX_TRANSACTIONS,
+    },
+    holdings: {
+      allowed: holdingsCurrent < DEMO_LIMITS.MAX_HOLDINGS,
+      current: holdingsCurrent,
+      max: DEMO_LIMITS.MAX_HOLDINGS,
+    },
+  };
+}
+
+/**
  * Delete all data for a guest user (called on logout)
  */
 export async function cleanupGuestData(userId: string): Promise<void> {

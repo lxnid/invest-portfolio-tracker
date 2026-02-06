@@ -80,7 +80,7 @@ export async function GET() {
       const info = priceMap.get(symbol);
       const hasValidPrice = info?.price != null;
 
-      // If API returned valid price, queue cache update
+      // If API returned valid price, conditionally queue cache update
       if (hasValidPrice) {
         const priceData = {
           price: {
@@ -94,27 +94,35 @@ export async function GET() {
           },
         };
 
-        // Queue cache update (will await all at end)
-        cacheUpdates.push(
-          db
-            .insert(marketCache)
-            .values({
-              key: `STOCK_${symbol}`,
-              data: priceData,
-              updatedAt: new Date(),
-            })
-            .onConflictDoUpdate({
-              target: marketCache.key,
-              set: {
+        // WRITE-LESS STRATEGY: Only update cache if it's stale (> 5 minutes old) or doesn't exist
+        const existingCache = cachedPrices.get(symbol);
+        const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+        const isCacheStale =
+          !existingCache ||
+          Date.now() - existingCache.updatedAt.getTime() > CACHE_TTL_MS;
+
+        if (isCacheStale) {
+          cacheUpdates.push(
+            db
+              .insert(marketCache)
+              .values({
+                key: `STOCK_${symbol}`,
                 data: priceData,
                 updatedAt: new Date(),
-              },
-            })
-            .then(() => {})
-            .catch((e: unknown) =>
-              console.error(`Failed to cache ${symbol}:`, e),
-            ),
-        );
+              })
+              .onConflictDoUpdate({
+                target: marketCache.key,
+                set: {
+                  data: priceData,
+                  updatedAt: new Date(),
+                },
+              })
+              .then(() => {})
+              .catch((e: unknown) =>
+                console.error(`Failed to cache ${symbol}:`, e),
+              ),
+          );
+        }
 
         return {
           symbol,

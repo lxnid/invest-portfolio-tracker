@@ -9,6 +9,8 @@ import {
   boolean,
   text,
   json,
+  index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // ============================================================================
@@ -55,26 +57,37 @@ export type NewUser = typeof users.$inferInsert;
 // ============================================================================
 // HOLDINGS - Current portfolio positions (User Specific)
 // ============================================================================
-export const holdings = pgTable("holdings", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 100 })
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  stockId: integer("stock_id")
-    .references(() => stocks.id, { onDelete: "cascade" })
-    .notNull(),
-  quantity: integer("quantity").notNull(),
-  avgBuyPrice: decimal("avg_buy_price", { precision: 15, scale: 2 }).notNull(),
-  initialBuyPrice: decimal("initial_buy_price", { precision: 15, scale: 2 }),
-  lastBuyPrice: decimal("last_buy_price", { precision: 15, scale: 2 }),
-  totalInvested: decimal("total_invested", {
-    precision: 15,
-    scale: 2,
-  }).notNull(),
-  status: varchar("status", { length: 20 }).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const holdings = pgTable(
+  "holdings",
+  {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id", { length: 100 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stockId: integer("stock_id")
+      .references(() => stocks.id, { onDelete: "cascade" })
+      .notNull(),
+    quantity: integer("quantity").notNull(),
+    avgBuyPrice: decimal("avg_buy_price", {
+      precision: 15,
+      scale: 2,
+    }).notNull(),
+    initialBuyPrice: decimal("initial_buy_price", { precision: 15, scale: 2 }),
+    lastBuyPrice: decimal("last_buy_price", { precision: 15, scale: 2 }),
+    totalInvested: decimal("total_invested", {
+      precision: 15,
+      scale: 2,
+    }).notNull(),
+    status: varchar("status", { length: 20 }).default("active").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_holdings_user_stock").on(table.userId, table.stockId),
+    index("idx_holdings_user_status").on(table.userId, table.status),
+    uniqueIndex("uq_holdings_user_stock").on(table.userId, table.stockId),
+  ],
+);
 
 export const holdingsRelations = relations(holdings, ({ one }) => ({
   stock: one(stocks, {
@@ -86,23 +99,30 @@ export const holdingsRelations = relations(holdings, ({ one }) => ({
 // ============================================================================
 // TRANSACTIONS - Historical buy/sell records (User Specific)
 // ============================================================================
-export const transactions = pgTable("transactions", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 100 })
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  stockId: integer("stock_id")
-    .references(() => stocks.id, { onDelete: "cascade" })
-    .notNull(),
-  type: varchar("type", { length: 10 }).notNull(), // BUY, SELL, DIVIDEND
-  quantity: integer("quantity").notNull(),
-  price: decimal("price", { precision: 15, scale: 2 }).notNull(),
-  fees: decimal("fees", { precision: 15, scale: 2 }).default("0").notNull(),
-  date: timestamp("date").defaultNow().notNull(),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const transactions = pgTable(
+  "transactions",
+  {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id", { length: 100 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stockId: integer("stock_id")
+      .references(() => stocks.id, { onDelete: "cascade" })
+      .notNull(),
+    type: varchar("type", { length: 10 }).notNull(), // BUY, SELL, DIVIDEND
+    quantity: integer("quantity").notNull(),
+    price: decimal("price", { precision: 15, scale: 2 }).notNull(),
+    fees: decimal("fees", { precision: 15, scale: 2 }).default("0").notNull(),
+    date: timestamp("date").defaultNow().notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_transactions_user_date").on(table.userId, table.date),
+    index("idx_transactions_user_stock").on(table.userId, table.stockId),
+  ],
+);
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
   stock: one(stocks, {

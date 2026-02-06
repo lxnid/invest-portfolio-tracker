@@ -29,6 +29,13 @@
       "when": 1770282902446,
       "tag": "0003_add_onboarding_field",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770355192382,
+      "tag": "0004_powerful_true_believers",
+      "breakpoints": true
     }
   ]
 }

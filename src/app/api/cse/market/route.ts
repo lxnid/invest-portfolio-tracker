@@ -81,26 +81,32 @@ export async function GET(request: NextRequest) {
         sp20: sp20.error,
       };
 
-      // Update cache if data is valid
+      // WRITE-LESS STRATEGY: Only update cache if stale (> 5 minutes) or doesn't exist
       if (isDataValid) {
-        try {
-          await db
-            .insert(marketCache)
-            .values({
-              key: CACHE_KEY,
-              data: responseData,
-              updatedAt: new Date(),
-            })
-            .onConflictDoUpdate({
-              target: marketCache.key,
-              set: {
+        const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+        const isCacheStale =
+          !cachedAt || Date.now() - cachedAt.getTime() > CACHE_TTL_MS;
+
+        if (isCacheStale) {
+          try {
+            await db
+              .insert(marketCache)
+              .values({
+                key: CACHE_KEY,
                 data: responseData,
                 updatedAt: new Date(),
-              },
-            });
-          console.log("Market cache updated successfully");
-        } catch (cacheError) {
-          console.error("Failed to update market cache:", cacheError);
+              })
+              .onConflictDoUpdate({
+                target: marketCache.key,
+                set: {
+                  data: responseData,
+                  updatedAt: new Date(),
+                },
+              });
+            console.log("Market cache updated (was stale)");
+          } catch (cacheError) {
+            console.error("Failed to update market cache:", cacheError);
+          }
         }
 
         return NextResponse.json({

@@ -5,8 +5,9 @@ import {
   tradingRules,
   settings,
   stocks,
+  users,
 } from "@/db/schema";
-import { eq, like, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { DEMO_LIMITS } from "@/lib/demo-constants";
 
 /**
@@ -115,28 +116,15 @@ export async function cleanupGuestData(userId: string): Promise<void> {
 export async function cleanupStaleGuestData(): Promise<number> {
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  // Delete old guest transactions
-  const deletedTx = await db
-    .delete(transactions)
+  // Delete stale guest users - cascade will handle holdings, transactions, rules, and settings
+  const deletedUsers = await db
+    .delete(users)
     .where(
-      sql`${transactions.userId} LIKE 'guest-%' AND ${transactions.createdAt} < ${oneDayAgo}`,
+      sql`${users.id} LIKE 'guest-%' AND ${users.createdAt} < ${oneDayAgo}`,
     )
     .returning();
 
-  const deletedHoldings = await db
-    .delete(holdings)
-    .where(
-      sql`${holdings.userId} LIKE 'guest-%' AND ${holdings.createdAt} < ${oneDayAgo}`,
-    )
-    .returning();
-
-  const deletedRules = await db
-    .delete(tradingRules)
-    .where(
-      sql`${tradingRules.userId} LIKE 'guest-%' AND ${tradingRules.createdAt} < ${oneDayAgo}`,
-    )
-    .returning();
-
+  // Delete stocks created by stale guests (not cascaded from users since stocks can be shared)
   const deletedStocks = await db
     .delete(stocks)
     .where(
@@ -144,12 +132,10 @@ export async function cleanupStaleGuestData(): Promise<number> {
     )
     .returning();
 
-  const totalDeleted =
-    deletedTx.length +
-    deletedHoldings.length +
-    deletedRules.length +
-    deletedStocks.length;
-  console.log(`Cleaned up ${totalDeleted} stale guest records`);
+  const totalDeleted = deletedUsers.length + deletedStocks.length;
+  console.log(
+    `Cleaned up ${deletedUsers.length} stale guest users (cascade deleted their data) and ${deletedStocks.length} orphan stocks`,
+  );
 
   return totalDeleted;
 }

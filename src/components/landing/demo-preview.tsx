@@ -7,6 +7,16 @@ export function DemoPreview() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -43,21 +53,24 @@ export function DemoPreview() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative py-32 px-6 overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="relative py-16 md:py-32 px-6 overflow-hidden"
+    >
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-900/30 to-zinc-950" />
 
       <div className="relative z-10 max-w-6xl mx-auto">
         {/* Section header */}
         <div
-          className={`text-center mb-16 transition-all duration-700 ${
+          className={`text-center mb-12 md:mb-16 transition-all duration-700 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-zinc-50 mb-4">
+          <h2 className="text-3xl md:text-5xl font-bold text-zinc-50 mb-4">
             See it in action.
           </h2>
-          <p className="text-lg text-zinc-500 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-zinc-500 max-w-2xl mx-auto">
             A clean, professional interface designed for serious investors. No
             clutter, just insights.
           </p>
@@ -69,7 +82,9 @@ export function DemoPreview() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"
           }`}
           style={{
-            transform: `perspective(1000px) rotateX(${5 - scrollProgress * 10}deg)`,
+            transform: `perspective(1000px) rotateX(${
+              isMobile ? 0 : 5 - scrollProgress * 10
+            }deg)`,
           }}
         >
           {/* Desktop frame */}

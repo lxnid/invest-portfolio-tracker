@@ -29,14 +29,14 @@ function createDb() {
     // caused by top-level import of Node.js modules.
     // Using eval('require') is the only way to definitely force bundlers (like esbuild)
     // to ignore this dependency and treat it as purely runtime.
-    const require = eval("require");
+    const dynamicRequire = eval("require");
 
     const pgPkg = "pg";
     const drizzlePgPkg = "drizzle-orm/node-postgres";
 
     try {
-      const { Pool } = require(pgPkg);
-      const { drizzle } = require(drizzlePgPkg);
+      const { Pool } = dynamicRequire(pgPkg);
+      const { drizzle } = dynamicRequire(drizzlePgPkg);
 
       const pool = new Pool({
         connectionString,

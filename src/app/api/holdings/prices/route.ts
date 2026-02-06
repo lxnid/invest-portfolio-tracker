@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { holdings, stocks, marketCache } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
-import { getCompanyInfo } from "@/lib/cse-api";
+import { getAllStockPrices, type StockTrade } from "@/lib/cse-api";
 
 export const dynamic = "force-dynamic";
 
@@ -66,48 +66,59 @@ export async function GET() {
       console.error("Failed to fetch cached prices:", cacheError);
     }
 
-    // 4. Fetch prices for each symbol in parallel
-    const pricePromises = symbols.map(async (symbol) => {
-      const result = await getCompanyInfo(symbol);
-      const info = result.data?.reqSymbolInfo;
-      const hasValidPrice = info?.lastTradedPrice != null;
+    // 4. Fetch all prices in a single batch call for efficiency
+    const result = await getAllStockPrices();
+    const allPrices = result.data?.reqDetailTrades || [];
+    const priceMap = new Map<string, StockTrade>(
+      allPrices.map((p) => [p.symbol, p]),
+    );
 
-      // If API returned valid price, cache it
+    // 5. Process each symbol - use batch data or fall back to cache
+    const cacheUpdates: Promise<void>[] = [];
+
+    const priceResults = symbols.map((symbol) => {
+      const info = priceMap.get(symbol);
+      const hasValidPrice = info?.price != null;
+
+      // If API returned valid price, queue cache update
       if (hasValidPrice) {
         const priceData = {
           price: {
-            price: info.lastTradedPrice,
+            price: info.price,
             change: info.change || 0,
             changePercentage: info.changePercentage || 0,
-            qty: info.tdyShareVolume || 0,
-            trades: info.tdyTradeVolume || 0,
+            qty: info.qty || 0,
+            trades: info.trades || 0,
             symbol: info.symbol,
             name: info.name,
           },
-          company: result.data,
         };
 
-        // Update cache asynchronously (don't block response)
-        db.insert(marketCache)
-          .values({
-            key: `STOCK_${symbol}`,
-            data: priceData,
-            updatedAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: marketCache.key,
-            set: {
+        // Queue cache update (will await all at end)
+        cacheUpdates.push(
+          db
+            .insert(marketCache)
+            .values({
+              key: `STOCK_${symbol}`,
               data: priceData,
               updatedAt: new Date(),
-            },
-          })
-          .catch((e: unknown) =>
-            console.error(`Failed to cache ${symbol}:`, e),
-          );
+            })
+            .onConflictDoUpdate({
+              target: marketCache.key,
+              set: {
+                data: priceData,
+                updatedAt: new Date(),
+              },
+            })
+            .then(() => {})
+            .catch((e: unknown) =>
+              console.error(`Failed to cache ${symbol}:`, e),
+            ),
+        );
 
         return {
           symbol,
-          price: info.lastTradedPrice,
+          price: info.price,
           change: info.change ?? 0,
           percentChange: info.changePercentage ?? 0,
           fromCache: false,
@@ -138,7 +149,8 @@ export async function GET() {
       };
     });
 
-    const priceResults = await Promise.all(pricePromises);
+    // Await all cache updates to ensure they complete in serverless environment
+    await Promise.all(cacheUpdates);
 
     // 5. Build price map and track cache usage
     const prices: Record<string, PriceData> = {};

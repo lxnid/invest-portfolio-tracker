@@ -26,11 +26,14 @@ export function CTASection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative py-32 px-6 overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="relative py-16 md:py-32 px-6 overflow-hidden"
+    >
       {/* Gradient background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-blue-950/20 to-zinc-950" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-500/10 rounded-full blur-3xl opacity-50 md:opacity-100" />
       </div>
 
       <div className="relative z-10 max-w-3xl mx-auto text-center">
@@ -46,7 +49,7 @@ export function CTASection() {
           </div>
 
           {/* Heading */}
-          <h2 className="text-4xl md:text-5xl font-bold text-zinc-50 mb-6">
+          <h2 className="text-3xl md:text-5xl font-bold text-zinc-50 mb-6">
             Ready to take control of your
             <br />
             <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
@@ -55,7 +58,7 @@ export function CTASection() {
           </h2>
 
           {/* Description */}
-          <p className="text-lg text-zinc-400 mb-10 max-w-xl mx-auto">
+          <p className="text-base md:text-lg text-zinc-400 mb-10 max-w-xl mx-auto">
             Join the CSE Portfolio Tracker and gain clarity on your portfolio.
             No complex setup — just log in and start tracking.
           </p>

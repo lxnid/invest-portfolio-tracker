@@ -37,9 +37,9 @@ export function Hero() {
           }}
         />
         {/* Floating orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-violet-500/10 rounded-full blur-3xl animate-float-delayed" />
-        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 md:w-96 md:h-96 bg-blue-500/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 md:w-80 md:h-80 bg-violet-500/10 rounded-full blur-3xl animate-float-delayed" />
+        <div className="absolute top-1/2 right-1/3 w-40 h-40 md:w-64 md:h-64 bg-cyan-500/10 rounded-full blur-3xl animate-float-slow" />
       </div>
 
       {/* Grid pattern overlay */}
@@ -62,7 +62,7 @@ export function Hero() {
         </div>
 
         {/* Main heading */}
-        <h1 className="text-5xl md:text-7xl font-bold text-zinc-50 mb-6 animate-fade-in-up">
+        <h1 className="text-4xl md:text-7xl font-bold text-zinc-50 mb-6 animate-fade-in-up">
           One portfolio.
           <br />
           <span className="bg-gradient-to-r from-blue-500 via-violet-500 to-cyan-500 bg-clip-text text-transparent">
@@ -71,7 +71,7 @@ export function Hero() {
         </h1>
 
         {/* Subheading */}
-        <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 animate-fade-in-up-delayed">
+        <p className="text-base md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 animate-fade-in-up-delayed px-4">
           A personal investment tracker built for the Colombo Stock Exchange.
           Real-time data, smart analytics, and trading discipline — all in one
           place.
@@ -99,14 +99,22 @@ export function Hero() {
           <p className="text-sm text-zinc-500 mb-4">
             Built with modern technologies
           </p>
-          <div className="flex items-center justify-center gap-8 text-zinc-600">
-            <span className="text-xs font-medium">Next.js</span>
-            <span className="text-zinc-800">•</span>
-            <span className="text-xs font-medium">TypeScript</span>
-            <span className="text-zinc-800">•</span>
-            <span className="text-xs font-medium">TradingView</span>
-            <span className="text-zinc-800">•</span>
-            <span className="text-xs font-medium">Cloudflare</span>
+          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-zinc-600 px-4">
+            <span className="text-xs font-medium whitespace-nowrap">
+              Next.js
+            </span>
+            <span className="text-zinc-800 hidden md:inline">•</span>
+            <span className="text-xs font-medium whitespace-nowrap">
+              TypeScript
+            </span>
+            <span className="text-zinc-800 hidden md:inline">•</span>
+            <span className="text-xs font-medium whitespace-nowrap">
+              TradingView
+            </span>
+            <span className="text-zinc-800 hidden md:inline">•</span>
+            <span className="text-xs font-medium whitespace-nowrap">
+              Cloudflare
+            </span>
           </div>
         </div>
       </div>

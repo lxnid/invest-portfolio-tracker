@@ -58,7 +58,7 @@ function FeatureCard({ feature, index, isActive, onClick }: FeatureCardProps) {
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-6 rounded-2xl border transition-all duration-300 ${
+      className={`w-full text-left p-4 md:p-6 rounded-2xl border transition-all duration-300 ${
         isActive
           ? "bg-zinc-900/80 border-blue-500/50 shadow-lg shadow-blue-500/10"
           : "bg-zinc-900/40 border-zinc-800 hover:border-zinc-700"
@@ -146,18 +146,21 @@ export function FeaturesSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative py-32 px-6 overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="relative py-16 md:py-32 px-6 overflow-hidden"
+    >
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-900/50 to-zinc-950" />
 
       <div className="relative z-10 max-w-6xl mx-auto">
         {/* Section header */}
         <div
-          className={`text-center mb-16 transition-all duration-700 ${
+          className={`text-center mb-12 md:mb-16 transition-all duration-700 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-zinc-50 mb-4">
+          <h2 className="text-3xl md:text-5xl font-bold text-zinc-50 mb-4">
             Everything you need.
             <br />
             <span className="text-zinc-400">Nothing you don't.</span>
@@ -178,7 +181,7 @@ export function FeaturesSection() {
                 : "opacity-0 -translate-x-8"
             }`}
           >
-            <div className="sticky top-32">
+            <div className="sticky top-24 md:top-32">
               {/* Glassmorphism card */}
               <div className="relative aspect-square rounded-3xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-violet-500/20 to-cyan-500/20" />

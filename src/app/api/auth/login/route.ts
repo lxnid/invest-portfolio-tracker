@@ -54,6 +54,19 @@ export async function POST(request: Request) {
     // Guest Login
     if (data.type === "guest") {
       const guestId = `guest-${crypto.randomUUID()}`;
+
+      // Create guest user in DB to satisfy Foreign Key constraints
+      // Using a dummy email and password hash since they won't be used for login
+      await db.insert(users).values({
+        id: guestId,
+        email: `${guestId}@guest.local`,
+        passwordHash: "guest-mode-no-password",
+        name: "Guest User",
+        plan: "free",
+        emailVerified: true,
+        lastLoginAt: new Date(),
+      });
+
       await createSession(guestId, "guest");
       return NextResponse.json({ success: true });
     }
